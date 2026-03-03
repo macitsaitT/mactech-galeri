@@ -53,7 +53,10 @@
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
-    "zod": "^3.24.4"
+    "zod": "^3.24.4",
+    "ajv-keywords": "3.5.2",
+    "ajv": "6.12.6",
+    "schema-utils": "3.3.0"
   },
   "scripts": {
     "start": "craco start",
