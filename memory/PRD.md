@@ -22,7 +22,7 @@ Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek 
 - [x] Çift satış engelleme (SaleModal guard + App.js guard)
 - [x] Satış/Kapora iptalinde araç durumu otomatik geri dönüşü
 - [x] Satılan araçlarda aksiyon menüsü: Satışı İptal Et, Düzenle, Detay, Ekspertiz PDF, Sil
-- [x] Kapsamlı mobil responsive tasarım: AddCarModal (2-col grid), PromoCard (3-col specs), Raporlar, LoginPage (dvh fix)
+- [x] Tanıtım Kartı ekspertiz diyagramı: dangerouslySetInnerHTML ile SVG render, 13 parça renkli etiketlerle, legend eklendi
 
 ### Finans Yönetimi
 - [x] Gelir/Gider takibi, filtreleme, arama

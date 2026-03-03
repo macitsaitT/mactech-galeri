@@ -18,20 +18,20 @@ const getLogoUrl = (logoPath) => {
 
 const getPartColor = (status) => {
   switch (status) {
-    case 'orijinal': return '#86efac';
-    case 'boyali': return '#fcd34d';
-    case 'lokal': return '#93c5fd';
-    case 'degisen': return '#fca5a5';
-    default: return '#86efac';
+    case 'orijinal': return '#22c55e';
+    case 'boyali': return '#eab308';
+    case 'lokal': return '#3b82f6';
+    case 'degisen': return '#ef4444';
+    default: return '#22c55e';
   }
 };
 const getPartBorder = (status) => {
   switch (status) {
-    case 'orijinal': return '#16a34a';
-    case 'boyali': return '#ca8a04';
-    case 'lokal': return '#2563eb';
-    case 'degisen': return '#dc2626';
-    default: return '#16a34a';
+    case 'orijinal': return '#15803d';
+    case 'boyali': return '#a16207';
+    case 'lokal': return '#1d4ed8';
+    case 'degisen': return '#b91c1c';
+    default: return '#15803d';
   }
 };
 const getPartLabel = (status) => {
@@ -47,37 +47,60 @@ const getPartLabel = (status) => {
 const TopDownDiagram = ({ expertise }) => {
   const p = (id) => expertise?.parts?.[id] || 'orijinal';
   const parts = [
-    { id: 'arka_tampon', x: 30, y: 5, w: 140, h: 22, rx: 8 },
-    { id: 'bagaj', x: 40, y: 30, w: 120, h: 45, rx: 4 },
-    { id: 'sol_arka_camurluk', x: 12, y: 30, w: 25, h: 55, rx: 4 },
-    { id: 'sag_arka_camurluk', x: 163, y: 30, w: 25, h: 55, rx: 4 },
-    { id: 'sol_arka_kapi', x: 12, y: 90, w: 25, h: 50, rx: 4 },
-    { id: 'sag_arka_kapi', x: 163, y: 90, w: 25, h: 50, rx: 4 },
-    { id: 'tavan', x: 40, y: 80, w: 120, h: 90, rx: 4 },
-    { id: 'sol_on_kapi', x: 12, y: 145, w: 25, h: 50, rx: 4 },
-    { id: 'sag_on_kapi', x: 163, y: 145, w: 25, h: 50, rx: 4 },
-    { id: 'sol_on_camurluk', x: 12, y: 200, w: 25, h: 50, rx: 4 },
-    { id: 'sag_on_camurluk', x: 163, y: 200, w: 25, h: 50, rx: 4 },
-    { id: 'kaput', x: 40, y: 175, w: 120, h: 55, rx: 4 },
-    { id: 'on_tampon', x: 30, y: 235, w: 140, h: 22, rx: 8 },
+    { id: 'arka_tampon', x: 30, y: 5, w: 140, h: 22, rx: 8, label: 'A.Tampon' },
+    { id: 'bagaj', x: 40, y: 30, w: 120, h: 45, rx: 4, label: 'Bagaj' },
+    { id: 'sol_arka_camurluk', x: 12, y: 30, w: 25, h: 55, rx: 4, label: '' },
+    { id: 'sag_arka_camurluk', x: 163, y: 30, w: 25, h: 55, rx: 4, label: '' },
+    { id: 'sol_arka_kapi', x: 12, y: 90, w: 25, h: 50, rx: 4, label: '' },
+    { id: 'sag_arka_kapi', x: 163, y: 90, w: 25, h: 50, rx: 4, label: '' },
+    { id: 'tavan', x: 40, y: 80, w: 120, h: 90, rx: 4, label: 'Tavan' },
+    { id: 'sol_on_kapi', x: 12, y: 145, w: 25, h: 50, rx: 4, label: '' },
+    { id: 'sag_on_kapi', x: 163, y: 145, w: 25, h: 50, rx: 4, label: '' },
+    { id: 'sol_on_camurluk', x: 12, y: 200, w: 25, h: 50, rx: 4, label: '' },
+    { id: 'sag_on_camurluk', x: 163, y: 200, w: 25, h: 50, rx: 4, label: '' },
+    { id: 'kaput', x: 40, y: 175, w: 120, h: 55, rx: 4, label: 'Kaput' },
+    { id: 'on_tampon', x: 30, y: 235, w: 140, h: 22, rx: 8, label: 'Ö.Tampon' },
   ];
 
+  const partsHtml = parts.map(({ id, x, y, w, h, rx, label }) => {
+    const status = p(id);
+    const color = getPartColor(status);
+    const border = getPartBorder(status);
+    const lbl = getPartLabel(status);
+    const fs = w < 30 ? 7 : 9;
+    let html = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${color}" stroke="${border}" stroke-width="2"/>`;
+    html += `<text x="${x + w / 2}" y="${y + h / 2 + (label ? 0 : 4)}" text-anchor="middle" font-size="${fs}" font-weight="800" fill="#fff">${lbl}</text>`;
+    if (label && w > 30) {
+      html += `<text x="${x + w / 2}" y="${y + h / 2 + 11}" text-anchor="middle" font-size="7" fill="#fff" opacity="0.85">${label}</text>`;
+    }
+    return html;
+  }).join('');
+
+  const legendItems = [
+    { color: '#22c55e', label: 'Orijinal' },
+    { color: '#eab308', label: 'Boyalı' },
+    { color: '#3b82f6', label: 'Lokal' },
+    { color: '#ef4444', label: 'Değişen' },
+  ];
+  const legendHtml = legendItems.map((item, i) =>
+    `<g transform="translate(${i * 47}, 0)"><rect x="0" y="0" width="10" height="10" rx="2" fill="${item.color}"/><text x="13" y="8" font-size="7" font-weight="600" fill="#555">${item.label}</text></g>`
+  ).join('');
+
+  const svgContent = `
+    <rect x="30" y="25" width="140" height="210" rx="22" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
+    <rect x="45" y="77" width="110" height="28" rx="4" fill="#a8d8ea" stroke="#7bb8d0" stroke-width="1"/>
+    <rect x="45" y="170" width="110" height="28" rx="4" fill="#a8d8ea" stroke="#7bb8d0" stroke-width="1"/>
+    ${partsHtml}
+    <g transform="translate(10, 268)">${legendHtml}</g>
+  `;
+
   return (
-    <svg viewBox="0 0 200 265" className="w-full max-w-[200px] mx-auto">
-      <rect x="30" y="25" width="140" height="210" rx="22" fill="none" stroke="#999" strokeWidth="1.5" />
-      <rect x="45" y="77" width="110" height="28" rx="4" fill="#87CEEB" opacity="0.3" stroke="#999" strokeWidth="0.8" />
-      <rect x="45" y="170" width="110" height="28" rx="4" fill="#87CEEB" opacity="0.3" stroke="#999" strokeWidth="0.8" />
-      {parts.map(({ id, x, y, w, h, rx }) => (
-        <g key={id}>
-          <rect x={x} y={y} width={w} height={h} rx={rx}
-            fill={getPartColor(p(id))} stroke={getPartBorder(p(id))} strokeWidth="1.2" />
-          <text x={x + w / 2} y={y + h / 2 + 4} textAnchor="middle"
-            fontSize="8" fontWeight="600" fill="#333">
-            {getPartLabel(p(id))}
-          </text>
-        </g>
-      ))}
-    </svg>
+    <svg
+      viewBox="0 0 200 290"
+      className="w-full mx-auto"
+      style={{ maxWidth: '220px' }}
+      dangerouslySetInnerHTML={{ __html: svgContent }}
+    />
   );
 };
 
@@ -320,8 +343,8 @@ ${watermarkHTML}
                 </div>
 
                 {/* Right: Body Diagram */}
-                <div className="w-full sm:w-[240px] p-4">
-                  <h4 className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2 pb-1 border-b border-[#eee]">Kaporta Durum Özeti</h4>
+                <div className="w-full sm:w-[260px] p-4 flex flex-col items-center">
+                  <h4 className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-3 pb-1 border-b border-[#eee] w-full">Kaporta Durum Özeti</h4>
                   <TopDownDiagram expertise={selectedCar.expertise} />
                 </div>
               </div>
