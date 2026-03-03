@@ -22,7 +22,8 @@ Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek 
 - [x] Çift satış engelleme (SaleModal guard + App.js guard)
 - [x] Satış/Kapora iptalinde araç durumu otomatik geri dönüşü
 - [x] Satılan araçlarda aksiyon menüsü: Satışı İptal Et, Düzenle, Detay, Ekspertiz PDF, Sil
-- [x] Tanıtım Kartı ekspertiz diyagramı: dangerouslySetInnerHTML ile SVG render, 13 parça renkli etiketlerle, legend eklendi
+- [x] PWA manifest: short_name="ASLANBAŞ", logo192/512 ikonları, favicon, theme_color
+- [x] Logo entegrasyonu: Giriş ekranı (hero yerine), Sidebar header (sadece logo, yazı yok)
 
 ### Finans Yönetimi
 - [x] Gelir/Gider takibi, filtreleme, arama
