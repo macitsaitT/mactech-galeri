@@ -2,100 +2,90 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 3.0.0
+- **Version:** 4.0.0
 - **Last Updated:** 2026-03-04
-- **Status:** MVP Complete + Kullanıcı Yönetimi Aktif
+- **Status:** MVP Complete + Organizasyon Tabanlı Çoklu Kullanıcı Sistemi Aktif
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Core Requirements & Implementation Status
 
+### Organizasyon Tabanlı Çoklu Kullanıcı Sistemi (v4.0)
+- [x] Her yeni kayıt = Admin, kendi org_id'si oluşturulur
+- [x] Admin kullanıcı ekleyebilir (Muhasebe, Satış Elemanı, Admin)
+- [x] **Veri İzolasyonu:** Farklı adminlerin verileri asla karışmaz
+- [x] **Satış Elemanı:** Sadece kendi eklediği araçları/müşterileri/işlemleri görür
+- [x] **Muhasebe:** Tüm organizasyon verilerini görür + kişiye özel filtreleme
+- [x] **Admin:** Her şeyi görür + kullanıcı yönetimi
+- [x] Rol tabanlı sidebar ve bottom nav filtreleme
+- [x] Muhasebe/Admin raporlarında kişi filtresi dropdown'u
+- [x] Çalışan payı → kişi seçimi (satışta hangi çalışanın payı olduğu)
+
 ### Dashboard
-- [x] Stat kartları, Quick Actions, Son İşlemler, Stok Durumu, Raporlar
-- [x] Recharts grafikleri (Gelir/Gider, Araç Dağılımı, Satış Trendi, Marka Sıralaması)
+- [x] Stat kartları, Quick Actions, Son İşlemler, Stok Durumu
+- [x] Recharts grafikleri (role göre filtrelenmiş veriler)
 
 ### Araç Yönetimi
-- [x] 4 Sekmeli Form (Genel, Ekspertiz, Fotoğraf, Sahiplik)
-- [x] Zincirleme dropdown: Marka -> Model -> Motor -> Paket
-- [x] Ekspertiz diagram, fotoğraf yükleme, konsinye/stok
-- [x] Çift satış engelleme
-- [x] Satış/Kapora iptalinde araç durumu otomatik geri dönüşü
-- [x] **Detay Görüntüle Modal** (VehicleDetailModal) - tüm araç bilgileri, fotoğraflar, ekspertiz
-- [x] **Masraflar Modal** (VehicleExpensesModal) - araca ait masraflar ve yeni masraf ekleme
-- [x] PWA manifest, logo entegrasyonu
+- [x] 4 Sekmeli Form, Ekspertiz diagram, fotoğraf yükleme
+- [x] **Detay Görüntüle Modal** (VehicleDetailModal)
+- [x] **Masraflar Modal** (VehicleExpensesModal)
+- [x] Çift satış engelleme, durum geri dönüşü
 
 ### Finans Yönetimi
-- [x] Gelir/Gider takibi, filtreleme, arama
-- [x] İşlem İptal / Kalıcı Silme
-- [x] **Word Export** (Excel'den Word'e çevrildi)
+- [x] Gelir/Gider takibi, filtreleme
+- [x] **Word Export** (.docx formatında)
+- [x] Kişi filtresi (muhasebe/admin için)
 
-### Kullanıcı Yönetimi & Yetki Sistemi (YENİ v3.0)
-- [x] **3 Rol:** Admin, Muhasebe, Satış Elemanı
-- [x] **Admin:** Tam yetki (her şeyi görebilir/yapabilir + kullanıcı yönetimi)
-- [x] **Muhasebe:** Dashboard, Gelir&Gider, Raporlar, Müşteriler
-- [x] **Satış Elemanı:** Dashboard, Stok/Konsinye/Satılan Araçlar, Müşteriler, Randevular
-- [x] Rol tabanlı sidebar ve bottom nav filtreleme
-- [x] Kullanıcılar sayfası (CRUD) - sadece admin erişebilir
-- [x] **Çalışan Payı → Kişi Seçimi** - satışta hangi çalışanın payı olduğu seçilebilir
-
-### Raporlama & PDF
-- [x] Rapor Oluşturucu Modal, PDF/Yazdır düzeni
-- [x] Tanıtım Kartı, Ekspertiz PDF
-
-### Logo Yönetimi
-- [x] Ayarlar'da logo yükleme/silme/önizleme
-- [x] PDF çıktılarında transparent watermark
-
-### Diğer
-- [x] JWT auth, dark theme, KVKK silme, şifreleme, PWA, takvim
-- [x] **Word export** (araçlar, müşteriler, işlemler)
-- [x] Tüm modallar viewport ortasında, canlı saat, bildirim zili, responsive mobil
+### Diğer Tamamlananlar
+- [x] JWT auth, dark theme, PWA, takvim, müşteri yönetimi
+- [x] Logo yönetimi, Tanıtım Kartı, Ekspertiz PDF
+- [x] "Made with Emergent" rozeti kaldırıldı
 
 ## API Endpoints
 ```
-POST /api/auth/register, /api/auth/login
-GET /api/auth/me, PUT /api/auth/profile, DELETE /api/auth/delete-account
+POST /api/auth/register (yeni org oluşturur, admin rolü)
+POST /api/auth/login (org_id, role token'da)
+GET /api/auth/me, PUT /api/auth/profile
 CRUD: /api/cars, /api/customers, /api/transactions, /api/appointments
-PATCH /api/cars/{car_id}
-GET /api/stats
-POST /api/upload, GET /api/files/{path}
-GET /api/export/cars, /api/export/customers, /api/export/transactions (Word .docx)
-GET /api/export/expertise/{car_id} (PDF)
+GET /api/stats (role-based filtering)
 GET /api/users, POST /api/users, PUT /api/users/{id}, DELETE /api/users/{id}
-GET /api/employees
+GET /api/employees, GET /api/org-users
+GET /api/export/cars, /api/export/customers, /api/export/transactions (Word .docx)
+POST /api/upload, GET /api/files/{path}
 ```
 
 ## Test Credentials
-- test@test.com / password
+- Admin: test@test.com / password
+- Satış: satis@test.com / password
+- Muhasebe: muhasebe@test.com / password
+
+## DB Schema
+- **users:** `{ id, email, password_hash, company_name, phone, role: (admin|muhasebe|satis), org_id, logo_url, theme }`
+- **cars:** `{ id, brand, model, year, plate, status, org_id, created_by, user_id, ... }`
+- **customers:** `{ id, name, phone, type, notes, org_id, created_by, user_id, ... }`
+- **transactions:** `{ id, type, category, amount, date, car_id, employee_name, org_id, created_by, user_id, ... }`
+- **appointments:** `{ id, title, date, time, status, org_id, created_by, user_id, ... }`
 
 ## Prioritized Backlog
-### P1 - Next
-- [ ] Real email verification (MOCKED currently)
-- [ ] Capacitor native build for app stores
+### P1
+- [ ] Real email verification (MOCKED)
+- [ ] Capacitor native build
 
 ### P2
-- [ ] Google Social Login (MOCKED currently)
+- [ ] Google Social Login (MOCKED)
 - [ ] Backend refactoring (server.py -> routes/models/services)
-- [ ] AppContext splitting (VehicleContext, FinanceContext)
 
 ### P3
 - [ ] AI vehicle valuation
-- [ ] Push notifications (real service)
+- [ ] Push notifications
 
 ## Mocked Services
 - Email sending (verification & reminders)
 - Google Authentication
 
 ## Tech Stack
-- Frontend: React, Tailwind CSS, Shadcn/UI, Recharts, react-big-calendar
-- Backend: FastAPI, Python, MongoDB (motor), Pydantic, reportlab, python-docx
+- Frontend: React, Tailwind CSS, Shadcn/UI, Recharts
+- Backend: FastAPI, Python, MongoDB (motor), python-docx, reportlab
 - Storage: Emergent Object Storage
 - Architecture: SPA + RESTful API, PWA configured
-
-## DB Schema
-- **users:** `{ id, email, password_hash, company_name, phone, role: (admin|muhasebe|satis), logo_url, theme }`
-- **cars:** `{ id, brand, model, year, plate, status, expertise, photos, user_id ... }`
-- **customers:** `{ id, name, phone, type, notes, user_id ... }`
-- **transactions:** `{ id, type, category, amount, date, car_id, employee_name, user_id ... }`
-- **appointments:** `{ id, title, date, time, status, user_id ... }`
