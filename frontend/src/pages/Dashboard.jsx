@@ -112,7 +112,7 @@ const Dashboard = ({ onOpenReport }) => {
   const consignmentCars = activeCars.filter(c => c.ownership === 'consignment' && c.status !== 'Satıldı');
   const depositCars = activeCars.filter(c => c.status === 'Kapora Alındı');
   
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const thisMonthSales = activeCars.filter(c => 
     c.status === 'Satıldı' && c.sold_date && new Date(c.sold_date) >= thisMonthStart
