@@ -231,13 +231,13 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
       </div>
 
       {/* Stats + Export */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6 text-sm">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm flex-wrap">
           <span className="text-muted-foreground">
             Toplam: <strong className="text-foreground">{filteredCustomers.length}</strong>
           </span>
           <span className="text-warning">
-            Potansiyel: {customers.filter(c => !c.deleted && c.type === 'Potansiyel').length}
+            Pot: {customers.filter(c => !c.deleted && c.type === 'Potansiyel').length}
           </span>
           <span className="text-primary">
             Aktif: {customers.filter(c => !c.deleted && c.type === 'Aktif').length}

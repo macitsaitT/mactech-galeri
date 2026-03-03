@@ -1,6 +1,6 @@
 {
-  "short_name": "Aslanbaş Oto",
-  "name": "Aslanbaş Oto - Galeri CRM",
+  "short_name": "ASLANBAŞ",
+  "name": "ASLANBAŞ - Galeri CRM",
   "description": "Profesyonel Galeri CRM Sistemi - Araç, Müşteri ve Finans Yönetimi",
   "icons": [
     {
@@ -23,8 +23,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#131b2e",
-  "background_color": "#131b2e",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
   "orientation": "portrait-primary",
   "categories": ["business", "productivity"],
   "lang": "tr",
