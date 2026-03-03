@@ -236,10 +236,12 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
-def create_token(user_id: str, email: str) -> str:
+def create_token(user_id: str, email: str, org_id: str = "", role: str = "admin") -> str:
     payload = {
         "user_id": user_id,
         "email": email,
+        "org_id": org_id,
+        "role": role,
         "exp": datetime.now(timezone.utc).timestamp() + 86400 * 30  # 30 days
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -251,7 +253,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         user_id = payload.get("user_id")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"user_id": user_id, "email": payload.get("email")}
+        return {
+            "user_id": user_id,
+            "email": payload.get("email"),
+            "org_id": payload.get("org_id", user_id),
+            "role": payload.get("role", "admin")
+        }
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
@@ -269,6 +276,8 @@ async def register(user: UserCreate):
     verification_code = str(secrets.randbelow(900000) + 100000)  # 6-digit code
     
     user_id = str(uuid.uuid4())
+    # New registrations are always admin with their own org_id
+    org_id = user_id
     user_doc = {
         "id": user_id,
         "email": user.email,
@@ -278,17 +287,18 @@ async def register(user: UserCreate):
         "address": "",
         "logo_url": "",
         "theme": "dark",
-        "role": user.role,
+        "role": "admin",
+        "org_id": org_id,
         "email_verified": False,
         "verification_code": verification_code,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
     
-    token = create_token(user_id, user.email)
+    token = create_token(user_id, user.email, org_id, "admin")
     return {
         "token": token,
-        "user": {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "logo_url": "", "address": "", "role": user.role},
+        "user": {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "logo_url": "", "address": "", "role": "admin", "org_id": org_id},
         "verification_code": verification_code,
         "requires_verification": True
     }
@@ -340,7 +350,9 @@ async def login(credentials: UserLogin):
     if not verify_password(credentials.password, user.get("password_hash", "")):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_token(user["id"], user["email"])
+    org_id = user.get("org_id", user["id"])
+    role = user.get("role", "admin")
+    token = create_token(user["id"], user["email"], org_id, role)
     return {
         "token": token,
         "user": {
@@ -351,7 +363,8 @@ async def login(credentials: UserLogin):
             "address": user.get("address", ""),
             "logo_url": user.get("logo_url", ""),
             "theme": user.get("theme", "dark"),
-            "role": user.get("role", "admin")
+            "role": role,
+            "org_id": org_id
         }
     }
 
@@ -388,11 +401,38 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     
     return {"success": True, "message": "Account and all data deleted"}
 
+# ==================== DATA QUERY HELPERS ====================
+
+def build_data_filter(current_user: dict, extra_filter: dict = None, include_deleted: bool = True) -> dict:
+    """Build MongoDB filter based on user role and org.
+    - Admin: sees all org data
+    - Muhasebe: sees all org data
+    - Satis: sees only their own data
+    """
+    role = current_user.get("role", "admin")
+    org_id = current_user.get("org_id", current_user["user_id"])
+    
+    if role == "satis":
+        query = {"org_id": org_id, "created_by": current_user["user_id"]}
+    else:
+        query = {"org_id": org_id}
+    
+    if not include_deleted:
+        query["deleted"] = False
+    
+    if extra_filter:
+        query.update(extra_filter)
+    return query
+
 # ==================== CAR ROUTES ====================
 
 @api_router.get("/cars", response_model=List[Car])
-async def get_cars(current_user: dict = Depends(get_current_user)):
-    cars = await db.cars.find({"user_id": current_user["user_id"]}, {"_id": 0}).to_list(1000)
+async def get_cars(created_by: str = None, current_user: dict = Depends(get_current_user)):
+    extra = {}
+    if created_by:
+        extra["created_by"] = created_by
+    query = build_data_filter(current_user, extra)
+    cars = await db.cars.find(query, {"_id": 0}).to_list(1000)
     return cars
 
 @api_router.post("/cars", response_model=Car)
@@ -404,6 +444,8 @@ async def create_car(car: CarCreate, current_user: dict = Depends(get_current_us
     car_doc.update({
         "id": car_id,
         "user_id": current_user["user_id"],
+        "org_id": current_user.get("org_id", current_user["user_id"]),
+        "created_by": current_user["user_id"],
         "deleted": False,
         "deleted_at": None,
         "created_at": now,
@@ -418,7 +460,8 @@ async def create_car(car: CarCreate, current_user: dict = Depends(get_current_us
 
 @api_router.put("/cars/{car_id}", response_model=Car)
 async def update_car(car_id: str, car: CarCreate, current_user: dict = Depends(get_current_user)):
-    existing = await db.cars.find_one({"id": car_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.cars.find_one({"id": car_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
     
@@ -431,7 +474,8 @@ async def update_car(car_id: str, car: CarCreate, current_user: dict = Depends(g
 
 @api_router.patch("/cars/{car_id}")
 async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get_current_user)):
-    existing = await db.cars.find_one({"id": car_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.cars.find_one({"id": car_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
     
@@ -442,22 +486,21 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
 
 @api_router.delete("/cars/{car_id}")
 async def delete_car(car_id: str, permanent: bool = False, current_user: dict = Depends(get_current_user)):
-    existing = await db.cars.find_one({"id": car_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.cars.find_one({"id": car_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
     
     if permanent:
         await db.cars.delete_one({"id": car_id})
-        # Also delete related transactions
-        await db.transactions.delete_many({"car_id": car_id, "user_id": current_user["user_id"]})
+        await db.transactions.delete_many({"car_id": car_id, "org_id": org_id})
     else:
         await db.cars.update_one({"id": car_id}, {"$set": {
             "deleted": True,
             "deleted_at": datetime.now(timezone.utc).isoformat()
         }})
-        # Soft delete related transactions
         await db.transactions.update_many(
-            {"car_id": car_id, "user_id": current_user["user_id"]},
+            {"car_id": car_id, "org_id": org_id},
             {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat()}}
         )
     
@@ -465,14 +508,14 @@ async def delete_car(car_id: str, permanent: bool = False, current_user: dict = 
 
 @api_router.post("/cars/{car_id}/restore")
 async def restore_car(car_id: str, current_user: dict = Depends(get_current_user)):
-    existing = await db.cars.find_one({"id": car_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.cars.find_one({"id": car_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
     
     await db.cars.update_one({"id": car_id}, {"$set": {"deleted": False, "deleted_at": None}})
-    # Restore related transactions
     await db.transactions.update_many(
-        {"car_id": car_id, "user_id": current_user["user_id"]},
+        {"car_id": car_id, "org_id": org_id},
         {"$set": {"deleted": False, "deleted_at": None}}
     )
     
@@ -482,8 +525,12 @@ async def restore_car(car_id: str, current_user: dict = Depends(get_current_user
 # ==================== CUSTOMER ROUTES ====================
 
 @api_router.get("/customers", response_model=List[Customer])
-async def get_customers(current_user: dict = Depends(get_current_user)):
-    customers = await db.customers.find({"user_id": current_user["user_id"]}, {"_id": 0}).to_list(1000)
+async def get_customers(created_by: str = None, current_user: dict = Depends(get_current_user)):
+    extra = {}
+    if created_by:
+        extra["created_by"] = created_by
+    query = build_data_filter(current_user, extra)
+    customers = await db.customers.find(query, {"_id": 0}).to_list(1000)
     return customers
 
 @api_router.post("/customers", response_model=Customer)
@@ -495,6 +542,8 @@ async def create_customer(customer: CustomerCreate, current_user: dict = Depends
     customer_doc.update({
         "id": customer_id,
         "user_id": current_user["user_id"],
+        "org_id": current_user.get("org_id", current_user["user_id"]),
+        "created_by": current_user["user_id"],
         "deleted": False,
         "deleted_at": None,
         "created_at": now
@@ -506,7 +555,8 @@ async def create_customer(customer: CustomerCreate, current_user: dict = Depends
 
 @api_router.put("/customers/{customer_id}", response_model=Customer)
 async def update_customer(customer_id: str, customer: CustomerCreate, current_user: dict = Depends(get_current_user)):
-    existing = await db.customers.find_one({"id": customer_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.customers.find_one({"id": customer_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Customer not found")
     
@@ -517,7 +567,8 @@ async def update_customer(customer_id: str, customer: CustomerCreate, current_us
 
 @api_router.delete("/customers/{customer_id}")
 async def delete_customer(customer_id: str, permanent: bool = False, current_user: dict = Depends(get_current_user)):
-    existing = await db.customers.find_one({"id": customer_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.customers.find_one({"id": customer_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Customer not found")
     
@@ -533,7 +584,8 @@ async def delete_customer(customer_id: str, permanent: bool = False, current_use
 
 @api_router.post("/customers/{customer_id}/restore")
 async def restore_customer(customer_id: str, current_user: dict = Depends(get_current_user)):
-    existing = await db.customers.find_one({"id": customer_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.customers.find_one({"id": customer_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Customer not found")
     
@@ -544,8 +596,12 @@ async def restore_customer(customer_id: str, current_user: dict = Depends(get_cu
 # ==================== TRANSACTION ROUTES ====================
 
 @api_router.get("/transactions", response_model=List[Transaction])
-async def get_transactions(current_user: dict = Depends(get_current_user)):
-    transactions = await db.transactions.find({"user_id": current_user["user_id"]}, {"_id": 0}).to_list(5000)
+async def get_transactions(created_by: str = None, current_user: dict = Depends(get_current_user)):
+    extra = {}
+    if created_by:
+        extra["created_by"] = created_by
+    query = build_data_filter(current_user, extra)
+    transactions = await db.transactions.find(query, {"_id": 0}).to_list(5000)
     return transactions
 
 @api_router.post("/transactions", response_model=Transaction)
@@ -557,6 +613,8 @@ async def create_transaction(transaction: TransactionCreate, current_user: dict 
     transaction_doc.update({
         "id": transaction_id,
         "user_id": current_user["user_id"],
+        "org_id": current_user.get("org_id", current_user["user_id"]),
+        "created_by": current_user["user_id"],
         "deleted": False,
         "deleted_at": None,
         "created_at": now
@@ -568,7 +626,8 @@ async def create_transaction(transaction: TransactionCreate, current_user: dict 
 
 @api_router.put("/transactions/{transaction_id}")
 async def update_transaction(transaction_id: str, updates: dict, current_user: dict = Depends(get_current_user)):
-    existing = await db.transactions.find_one({"id": transaction_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.transactions.find_one({"id": transaction_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Transaction not found")
     
@@ -578,7 +637,8 @@ async def update_transaction(transaction_id: str, updates: dict, current_user: d
 
 @api_router.delete("/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: str, permanent: bool = False, current_user: dict = Depends(get_current_user)):
-    existing = await db.transactions.find_one({"id": transaction_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.transactions.find_one({"id": transaction_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Transaction not found")
     
@@ -596,27 +656,24 @@ async def delete_transaction(transaction_id: str, permanent: bool = False, curre
 
 @api_router.get("/stats")
 async def get_stats(current_user: dict = Depends(get_current_user)):
-    user_id = current_user["user_id"]
+    query = build_data_filter(current_user, include_deleted=False)
     
-    # Get all non-deleted cars
-    cars = await db.cars.find({"user_id": user_id, "deleted": False}, {"_id": 0}).to_list(1000)
+    cars = await db.cars.find(query, {"_id": 0}).to_list(1000)
     
     stock_cars = [c for c in cars if c.get("status") == "Stokta"]
     consignment_cars = [c for c in cars if c.get("ownership") == "consignment" and c.get("status") != "Satıldı"]
     sold_cars = [c for c in cars if c.get("status") == "Satıldı"]
     deposit_cars = [c for c in cars if c.get("status") == "Kapora Alındı"]
     
-    # Get all non-deleted transactions
-    transactions = await db.transactions.find({"user_id": user_id, "deleted": False}, {"_id": 0}).to_list(5000)
+    transactions = await db.transactions.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     total_income = sum(t.get("amount", 0) for t in transactions if t.get("type") == "income")
     total_expense = sum(t.get("amount", 0) for t in transactions if t.get("type") == "expense")
     
-    # Stock value
     stock_value = sum(c.get("purchase_price", 0) for c in stock_cars)
     
-    # Get customers count
-    customers = await db.customers.count_documents({"user_id": user_id, "deleted": False})
+    cust_query = build_data_filter(current_user, include_deleted=False)
+    customers = await db.customers.count_documents(cust_query)
     
     return {
         "total_cars": len(cars),
@@ -635,26 +692,28 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/users")
 async def get_users(current_user: dict = Depends(get_current_user)):
-    """Get all users - admin only. Others get just their own info."""
-    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
-    if not admin_user or admin_user.get("role", "admin") != "admin":
-        # Non-admin: return just themselves
-        return [{"id": admin_user["id"], "email": admin_user["email"], "company_name": admin_user.get("company_name", ""), "phone": admin_user.get("phone", ""), "role": admin_user.get("role", "satis")}]
+    """Get users in same org - admin only. Others get just their own info."""
+    org_id = current_user.get("org_id", current_user["user_id"])
+    role = current_user.get("role", "admin")
     
-    users = await db.users.find({}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
+    if role != "admin":
+        me = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0, "verification_code": 0})
+        return [me] if me else []
+    
+    users = await db.users.find({"org_id": org_id}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
     return users
 
 @api_router.post("/users")
 async def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)):
-    """Create a new user - admin only."""
-    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
-    if not admin_user or admin_user.get("role", "admin") != "admin":
+    """Create a new user - admin only. Inherits admin's org_id."""
+    if current_user.get("role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Sadece admin kullanıcı ekleyebilir")
     
     existing = await db.users.find_one({"email": user.email})
     if existing:
         raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı")
     
+    org_id = current_user.get("org_id", current_user["user_id"])
     user_id = str(uuid.uuid4())
     user_doc = {
         "id": user_id,
@@ -666,21 +725,22 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         "logo_url": "",
         "theme": "dark",
         "role": user.role,
+        "org_id": org_id,
         "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
     
-    return {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "role": user.role}
+    return {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
 
 @api_router.put("/users/{user_id}")
 async def update_user(user_id: str, updates: dict, current_user: dict = Depends(get_current_user)):
-    """Update user role/info - admin only."""
-    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
-    if not admin_user or admin_user.get("role", "admin") != "admin":
+    """Update user role/info - admin only, same org."""
+    if current_user.get("role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Sadece admin kullanıcı düzenleyebilir")
     
-    target = await db.users.find_one({"id": user_id})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    target = await db.users.find_one({"id": user_id, "org_id": org_id})
     if not target:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
     
@@ -699,15 +759,15 @@ async def update_user(user_id: str, updates: dict, current_user: dict = Depends(
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
-    """Delete a user - admin only. Cannot delete self."""
-    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
-    if not admin_user or admin_user.get("role", "admin") != "admin":
+    """Delete a user - admin only, same org. Cannot delete self."""
+    if current_user.get("role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Sadece admin kullanıcı silebilir")
     
     if user_id == current_user["user_id"]:
         raise HTTPException(status_code=400, detail="Kendinizi silemezsiniz")
     
-    target = await db.users.find_one({"id": user_id})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    target = await db.users.find_one({"id": user_id, "org_id": org_id})
     if not target:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
     
@@ -716,9 +776,17 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
 
 @api_router.get("/employees")
 async def get_employees(current_user: dict = Depends(get_current_user)):
-    """Get all employees (users) for dropdown selections."""
-    users = await db.users.find({}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
+    """Get all employees in same org for dropdown selections."""
+    org_id = current_user.get("org_id", current_user["user_id"])
+    users = await db.users.find({"org_id": org_id}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
     return [{"id": u["id"], "email": u["email"], "name": u.get("company_name", u["email"]), "phone": u.get("phone", ""), "role": u.get("role", "satis")} for u in users]
+
+@api_router.get("/org-users")
+async def get_org_users(current_user: dict = Depends(get_current_user)):
+    """Get all users in same org for muhasebe filtering."""
+    org_id = current_user.get("org_id", current_user["user_id"])
+    users = await db.users.find({"org_id": org_id}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
+    return [{"id": u["id"], "name": u.get("company_name", u["email"]), "role": u.get("role", "satis")} for u in users]
 
 # ==================== HEALTH CHECK ====================
 
@@ -825,7 +893,7 @@ async def export_cars_word(current_user: dict = Depends(get_current_user)):
     from docx import Document
     from docx.shared import Pt
     
-    cars = await db.cars.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
+    cars = await db.cars.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     doc = Document()
     doc.add_heading('Araç Listesi', level=1)
@@ -868,7 +936,7 @@ async def export_cars_word(current_user: dict = Depends(get_current_user)):
 async def export_customers_word(current_user: dict = Depends(get_current_user)):
     from docx import Document
     
-    customers = await db.customers.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
+    customers = await db.customers.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     doc = Document()
     doc.add_heading('Müşteri Listesi', level=1)
@@ -902,7 +970,7 @@ async def export_customers_word(current_user: dict = Depends(get_current_user)):
 async def export_transactions_word(current_user: dict = Depends(get_current_user)):
     from docx import Document
     
-    transactions_list = await db.transactions.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
+    transactions_list = await db.transactions.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     doc = Document()
     doc.add_heading('İşlem Geçmişi', level=1)
@@ -944,7 +1012,7 @@ async def export_expertise_pdf(car_id: str, current_user: dict = Depends(get_cur
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     
-    car = await db.cars.find_one({"id": car_id, "user_id": current_user["user_id"]}, {"_id": 0})
+    car = await db.cars.find_one({"id": car_id, "org_id": current_user.get("org_id", current_user["user_id"])}, {"_id": 0})
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
     
@@ -1095,7 +1163,7 @@ async def export_expertise_pdf(car_id: str, current_user: dict = Depends(get_cur
 
 @api_router.post("/encrypt-customer/{customer_id}")
 async def encrypt_customer_data(customer_id: str, current_user: dict = Depends(get_current_user)):
-    customer = await db.customers.find_one({"id": customer_id, "user_id": current_user["user_id"]})
+    customer = await db.customers.find_one({"id": customer_id, "org_id": current_user.get("org_id", current_user["user_id"])})
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
@@ -1126,10 +1194,9 @@ class AppointmentBase(BaseModel):
 
 @api_router.get("/appointments")
 async def get_appointments(current_user: dict = Depends(get_current_user)):
-    appointments = await db.appointments.find(
-        {"user_id": current_user["user_id"]},
-        {"_id": 0}
-    ).sort("date", 1).to_list(1000)
+    query = build_data_filter(current_user)
+    query.pop("deleted", None)  # appointments don't have soft delete
+    appointments = await db.appointments.find(query, {"_id": 0}).sort("date", 1).to_list(1000)
     return appointments
 
 @api_router.post("/appointments")
@@ -1137,6 +1204,8 @@ async def create_appointment(appointment: AppointmentBase, current_user: dict = 
     doc = appointment.model_dump()
     doc["id"] = str(uuid.uuid4())
     doc["user_id"] = current_user["user_id"]
+    doc["org_id"] = current_user.get("org_id", current_user["user_id"])
+    doc["created_by"] = current_user["user_id"]
     doc["created_at"] = datetime.now(timezone.utc).isoformat()
     await db.appointments.insert_one(doc)
     doc.pop("_id", None)
@@ -1144,11 +1213,12 @@ async def create_appointment(appointment: AppointmentBase, current_user: dict = 
 
 @api_router.put("/appointments/{appointment_id}")
 async def update_appointment(appointment_id: str, data: dict, current_user: dict = Depends(get_current_user)):
+    org_id = current_user.get("org_id", current_user["user_id"])
     data.pop("_id", None)
     data.pop("id", None)
     data["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.appointments.update_one(
-        {"id": appointment_id, "user_id": current_user["user_id"]},
+        {"id": appointment_id, "org_id": org_id},
         {"$set": data}
     )
     updated = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
@@ -1156,7 +1226,8 @@ async def update_appointment(appointment_id: str, data: dict, current_user: dict
 
 @api_router.delete("/appointments/{appointment_id}")
 async def delete_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
-    await db.appointments.delete_one({"id": appointment_id, "user_id": current_user["user_id"]})
+    org_id = current_user.get("org_id", current_user["user_id"])
+    await db.appointments.delete_one({"id": appointment_id, "org_id": org_id})
     return {"success": True}
 
 # Include router
@@ -1179,12 +1250,28 @@ async def startup():
     except Exception as e:
         logger.warning(f"Storage init deferred: {e}")
     
-    # Migrate: set role=admin for users without a role
+    # Migration: set role=admin and org_id=user_id for users without these fields
     await db.users.update_many(
         {"role": {"$exists": False}},
         {"$set": {"role": "admin"}}
     )
-    logger.info("User role migration complete")
+    
+    # Set org_id for users without it (org_id = their own user_id for admins)
+    users_without_org = await db.users.find({"org_id": {"$exists": False}}, {"_id": 0, "id": 1}).to_list(1000)
+    for u in users_without_org:
+        await db.users.update_one({"id": u["id"]}, {"$set": {"org_id": u["id"]}})
+    
+    # Set org_id and created_by on data documents that don't have them
+    for collection_name in ["cars", "customers", "transactions", "appointments"]:
+        col = db[collection_name]
+        docs = await col.find({"org_id": {"$exists": False}, "user_id": {"$exists": True}}, {"_id": 0, "id": 1, "user_id": 1}).to_list(10000)
+        for d in docs:
+            await col.update_one(
+                {"id": d["id"]},
+                {"$set": {"org_id": d["user_id"], "created_by": d["user_id"]}}
+            )
+    
+    logger.info("Data migration complete (org_id, created_by, role)")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

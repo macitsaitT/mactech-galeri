@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency, formatDate } from '../utils/helpers';
 import { 
@@ -10,9 +10,10 @@ import {
   RotateCcw,
   Calendar,
   Filter,
-  Download
+  Download,
+  Users
 } from 'lucide-react';
-import { exportAPI } from '../services/api';
+import { exportAPI, usersAPI } from '../services/api';
 
 const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
@@ -29,14 +30,30 @@ const downloadBlob = (blob, filename) => {
 };
 
 const FinancePage = () => {
-  const { transactions, cars, deleteTransaction, patchCar } = useApp();
+  const { transactions, cars, deleteTransaction, patchCar, user } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [dateRange, setDateRange] = useState('all');
+  const [filterUser, setFilterUser] = useState('all');
+  const [orgUsers, setOrgUsers] = useState([]);
   const [exporting, setExporting] = useState(false);
+
+  const userRole = user?.role || 'admin';
+
+  // Fetch org users for person filter (muhasebe & admin)
+  useEffect(() => {
+    if (userRole === 'muhasebe' || userRole === 'admin') {
+      usersAPI.getEmployees().then(res => setOrgUsers(res.data || [])).catch(() => {});
+    }
+  }, [userRole]);
 
   const filteredTransactions = useMemo(() => {
     let result = transactions.filter(t => !t.deleted);
+
+    // Person filter
+    if (filterUser !== 'all') {
+      result = result.filter(t => t.created_by === filterUser);
+    }
 
     // Type filter
     if (filterType === 'income') {
@@ -71,7 +88,7 @@ const FinancePage = () => {
     result.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return result;
-  }, [transactions, searchQuery, filterType, dateRange]);
+  }, [transactions, searchQuery, filterType, dateRange, filterUser]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -219,6 +236,23 @@ const FinancePage = () => {
           <option value="week">Son 7 Gün</option>
           <option value="month">Son 30 Gün</option>
         </select>
+
+        {/* Person Filter (Muhasebe & Admin) */}
+        {(userRole === 'muhasebe' || userRole === 'admin') && orgUsers.length > 1 && (
+          <select
+            value={filterUser}
+            onChange={(e) => setFilterUser(e.target.value)}
+            className="h-12 px-4 bg-card border border-border rounded-lg focus:border-primary outline-none text-sm"
+            data-testid="person-filter"
+          >
+            <option value="all">Tüm Kişiler</option>
+            {orgUsers.map(u => (
+              <option key={u.id} value={u.id}>
+                {u.name} ({u.role === 'admin' ? 'Admin' : u.role === 'muhasebe' ? 'Muhasebe' : 'Satış'})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Transactions List */}
