@@ -63,11 +63,14 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
       >
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-          <div>
-            <h1 className="font-heading font-bold text-lg tracking-tight uppercase text-white">
-              ASLANBAŞ
-            </h1>
-            <p className="text-[10px] text-white/50 uppercase tracking-wider">Yönetim Paneli</p>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-10 w-auto object-contain" />
+            <div>
+              <h1 className="font-heading font-bold text-sm tracking-tight uppercase text-white leading-tight">
+                ASLANBAŞ
+              </h1>
+              <p className="text-[9px] text-white/50 uppercase tracking-wider">Yönetim Paneli</p>
+            </div>
           </div>
           <button 
             onClick={onClose}

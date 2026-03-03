@@ -164,9 +164,12 @@ const LoginPage = () => {
         {/* Login / Register Form */}
         {mode !== 'verify' && (
           <div className="bg-card border border-border rounded-2xl p-8 shadow-xl animate-slide-up">
-            <h2 className="font-heading font-semibold text-xl text-center mb-6">
-              {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
-            </h2>
+            <div className="flex flex-col items-center mb-6">
+              <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-16 w-auto object-contain mb-3" />
+              <h2 className="font-heading font-semibold text-xl text-center">
+                {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
+              </h2>
+            </div>
 
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg p-3 mb-4" data-testid="login-error">
