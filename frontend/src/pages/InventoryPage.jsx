@@ -127,10 +127,10 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
             setExporting(true);
             try {
               const res = await exportAPI.cars();
-              downloadBlob(new Blob([res.data]), 'araclar.xlsx');
+              downloadBlob(new Blob([res.data]), 'araclar.docx');
             } catch (e) {
               console.error(e);
-              alert('Excel indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
+              alert('Word indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
             } finally {
               setExporting(false);
             }
@@ -140,7 +140,7 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
           data-testid="export-cars-btn"
         >
           <Download size={16} className={exporting ? 'animate-bounce' : ''} />
-          {exporting ? 'İndiriliyor...' : 'Excel'}
+          {exporting ? 'İndiriliyor...' : 'Word'}
         </button>
       </div>
 

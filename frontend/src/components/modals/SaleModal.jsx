@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
+import { usersAPI } from '../../services/api';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
   const [formData, setFormData] = useState({
     price: '',
     employee_share: '',
+    employee_name: '',
     customer_id: '',
     sale_date: new Date().toISOString().split('T')[0]
   });
@@ -21,15 +23,19 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
+  const [employees, setEmployees] = useState([]);
 
   React.useEffect(() => {
     if (car && isOpen) {
       setFormData({
         price: formatNumberInput(car.sale_price),
         employee_share: '',
+        employee_name: '',
         customer_id: '',
         sale_date: new Date().toISOString().split('T')[0]
       });
+      // Fetch employees
+      usersAPI.getEmployees().then(res => setEmployees(res.data || [])).catch(() => {});
     }
   }, [car, isOpen]);
 
@@ -70,6 +76,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         carId: car.id,
         price: parseNumber(formData.price),
         employeeShare: parseNumber(formData.employee_share),
+        employeeName: formData.employee_name,
         customerId: formData.customer_id,
         saleDate: formData.sale_date
       });
@@ -147,6 +154,23 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
                 placeholder="0"
                 data-testid="employee-share-input"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Çalışan Seçimi</label>
+              <select
+                value={formData.employee_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, employee_name: e.target.value }))}
+                className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors"
+                data-testid="employee-select"
+              >
+                <option value="">Çalışan seçilmedi</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.name}>
+                    {emp.name} ({emp.role === 'admin' ? 'Admin' : emp.role === 'muhasebe' ? 'Muhasebe' : 'Satış'})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

@@ -233,10 +233,10 @@ const FinancePage = () => {
               setExporting(true);
               try {
                 const res = await exportAPI.transactions();
-                downloadBlob(new Blob([res.data]), 'islemler.xlsx');
+                downloadBlob(new Blob([res.data]), 'islemler.docx');
               } catch (e) {
                 console.error(e);
-                alert('Excel indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
+                alert('Word indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
               } finally {
                 setExporting(false);
               }
@@ -246,7 +246,7 @@ const FinancePage = () => {
             data-testid="export-transactions-btn"
           >
             <Download size={16} className={exporting ? 'animate-bounce' : ''} />
-            {exporting ? 'İndiriliyor...' : 'Excel'}
+            {exporting ? 'İndiriliyor...' : 'Word'}
           </button>
         </div>
 

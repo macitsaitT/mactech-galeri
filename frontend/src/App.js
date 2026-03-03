@@ -17,6 +17,7 @@ import FinancePage from './pages/FinancePage';
 import TrashPage from './pages/TrashPage';
 import SettingsPage from './pages/SettingsPage';
 import CalendarPage from './pages/CalendarPage';
+import UsersPage from './pages/UsersPage';
 
 // Modals
 import AddCarModal from './components/modals/AddCarModal';
@@ -27,6 +28,8 @@ import ReportModal from './components/modals/ReportModal';
 import PromoCardModal from './components/modals/PromoCardModal';
 import ExpenseModal from './components/modals/ExpenseModal';
 import TransactionModal from './components/modals/TransactionModal';
+import VehicleDetailModal from './components/modals/VehicleDetailModal';
+import VehicleExpensesModal from './components/modals/VehicleExpensesModal';
 
 const getViewTitle = (view) => {
   switch (view) {
@@ -39,6 +42,7 @@ const getViewTitle = (view) => {
     case 'trash': return 'Çöp Kutusu';
     case 'settings': return 'Ayarlar';
     case 'calendar': return 'Randevular';
+    case 'users': return 'Kullanıcı Yönetimi';
     default: return 'Dashboard';
   }
 };
@@ -87,6 +91,8 @@ const AppContent = () => {
   const [promoCardModal, setPromoCardModal] = useState(false);
   const [expenseModal, setExpenseModal] = useState(false);
   const [transactionModal, setTransactionModal] = useState(false);
+  const [vehicleDetailModal, setVehicleDetailModal] = useState({ open: false, car: null });
+  const [vehicleExpensesModal, setVehicleExpensesModal] = useState({ open: false, car: null });
 
   // Handle special view changes from sidebar quick actions
   useEffect(() => {
@@ -167,7 +173,7 @@ const AppContent = () => {
   };
 
   // Sale handler
-  const handleConfirmSale = async ({ carId, price, employeeShare, customerId, saleDate }) => {
+  const handleConfirmSale = async ({ carId, price, employeeShare, employeeName, customerId, saleDate }) => {
     const car = saleModal.car;
     if (!car) return;
     if (car.status === 'Satıldı') {
@@ -202,13 +208,15 @@ const AppContent = () => {
 
     // Add employee share expense
     if (employeeShare > 0) {
+      const empLabel = employeeName ? ` (${employeeName})` : '';
       await addTransaction({
         type: 'expense',
         category: 'Çalışan Payı',
         amount: employeeShare,
         date: saleDate,
-        description: `Çalışan Payı - ${car.plate?.toUpperCase()}`,
-        car_id: carId
+        description: `Çalışan Payı${empLabel} - ${car.plate?.toUpperCase()}`,
+        car_id: carId,
+        employee_name: employeeName || null
       });
     }
 
@@ -354,8 +362,8 @@ const AppContent = () => {
             <InventoryPage
               viewType={activeView}
               onEditCar={(car) => setCarModal({ open: true, car })}
-              onViewCar={(car) => console.log('View car:', car)}
-              onExpenses={(car) => console.log('Expenses:', car)}
+              onViewCar={(car) => setVehicleDetailModal({ open: true, car })}
+              onExpenses={(car) => setVehicleExpensesModal({ open: true, car })}
               onDeposit={(car) => setDepositModal({ open: true, car })}
               onSale={(car) => setSaleModal({ open: true, car })}
               onDeleteCar={handleDeleteCar}
@@ -378,6 +386,8 @@ const AppContent = () => {
           {activeView === 'settings' && <SettingsPage />}
           
           {activeView === 'calendar' && <CalendarPage />}
+          
+          {activeView === 'users' && <UsersPage />}
         </main>
       </div>
 
@@ -435,6 +445,18 @@ const AppContent = () => {
       <TransactionModal
         isOpen={transactionModal}
         onClose={() => setTransactionModal(false)}
+      />
+
+      <VehicleDetailModal
+        isOpen={vehicleDetailModal.open}
+        onClose={() => setVehicleDetailModal({ open: false, car: null })}
+        car={vehicleDetailModal.car}
+      />
+
+      <VehicleExpensesModal
+        isOpen={vehicleExpensesModal.open}
+        onClose={() => setVehicleExpensesModal({ open: false, car: null })}
+        car={vehicleExpensesModal.car}
       />
     </div>
   );

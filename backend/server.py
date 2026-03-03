@@ -115,6 +115,7 @@ class UserCreate(BaseModel):
     company_name: str = "Aslanbaş Oto"
     phone: str = ""
     email_verified: bool = False
+    role: str = "satis"  # admin, muhasebe, satis
 
 class UserLogin(BaseModel):
     email: str
@@ -129,6 +130,7 @@ class UserProfile(BaseModel):
     address: str = ""
     logo_url: str = ""
     theme: str = "dark"
+    role: str = "admin"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class ProfileUpdate(BaseModel):
@@ -138,6 +140,7 @@ class ProfileUpdate(BaseModel):
     logo_url: Optional[str] = None
     theme: Optional[str] = None
     password: Optional[str] = None
+    role: Optional[str] = None
 
 class CarBase(BaseModel):
     brand: str
@@ -212,6 +215,7 @@ class TransactionBase(BaseModel):
     amount: float
     date: str
     car_id: Optional[str] = None
+    employee_name: Optional[str] = None
 
 class TransactionCreate(TransactionBase):
     pass
@@ -274,6 +278,7 @@ async def register(user: UserCreate):
         "address": "",
         "logo_url": "",
         "theme": "dark",
+        "role": user.role,
         "email_verified": False,
         "verification_code": verification_code,
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -283,7 +288,7 @@ async def register(user: UserCreate):
     token = create_token(user_id, user.email)
     return {
         "token": token,
-        "user": {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "logo_url": "", "address": ""},
+        "user": {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "logo_url": "", "address": "", "role": user.role},
         "verification_code": verification_code,
         "requires_verification": True
     }
@@ -345,7 +350,8 @@ async def login(credentials: UserLogin):
             "phone": user.get("phone", ""),
             "address": user.get("address", ""),
             "logo_url": user.get("logo_url", ""),
-            "theme": user.get("theme", "dark")
+            "theme": user.get("theme", "dark"),
+            "role": user.get("role", "admin")
         }
     }
 
@@ -625,6 +631,95 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         "total_customers": customers
     }
 
+# ==================== USER MANAGEMENT (Admin) ====================
+
+@api_router.get("/users")
+async def get_users(current_user: dict = Depends(get_current_user)):
+    """Get all users - admin only. Others get just their own info."""
+    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+    if not admin_user or admin_user.get("role", "admin") != "admin":
+        # Non-admin: return just themselves
+        return [{"id": admin_user["id"], "email": admin_user["email"], "company_name": admin_user.get("company_name", ""), "phone": admin_user.get("phone", ""), "role": admin_user.get("role", "satis")}]
+    
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
+    return users
+
+@api_router.post("/users")
+async def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new user - admin only."""
+    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+    if not admin_user or admin_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Sadece admin kullanıcı ekleyebilir")
+    
+    existing = await db.users.find_one({"email": user.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı")
+    
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "email": user.email,
+        "password_hash": hash_password(user.password),
+        "company_name": user.company_name,
+        "phone": user.phone,
+        "address": "",
+        "logo_url": "",
+        "theme": "dark",
+        "role": user.role,
+        "email_verified": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    
+    return {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "role": user.role}
+
+@api_router.put("/users/{user_id}")
+async def update_user(user_id: str, updates: dict, current_user: dict = Depends(get_current_user)):
+    """Update user role/info - admin only."""
+    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+    if not admin_user or admin_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Sadece admin kullanıcı düzenleyebilir")
+    
+    target = await db.users.find_one({"id": user_id})
+    if not target:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    
+    allowed = {"role", "company_name", "phone", "email"}
+    safe_updates = {k: v for k, v in updates.items() if k in allowed and v is not None}
+    
+    if "password" in updates and updates["password"]:
+        safe_updates["password_hash"] = hash_password(updates["password"])
+    
+    if safe_updates:
+        safe_updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.users.update_one({"id": user_id}, {"$set": safe_updates})
+    
+    updated = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    return updated
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a user - admin only. Cannot delete self."""
+    admin_user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+    if not admin_user or admin_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Sadece admin kullanıcı silebilir")
+    
+    if user_id == current_user["user_id"]:
+        raise HTTPException(status_code=400, detail="Kendinizi silemezsiniz")
+    
+    target = await db.users.find_one({"id": user_id})
+    if not target:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    
+    await db.users.delete_one({"id": user_id})
+    return {"success": True}
+
+@api_router.get("/employees")
+async def get_employees(current_user: dict = Depends(get_current_user)):
+    """Get all employees (users) for dropdown selections."""
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
+    return [{"id": u["id"], "email": u["email"], "name": u.get("company_name", u["email"]), "phone": u.get("phone", ""), "role": u.get("role", "satis")} for u in users]
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
@@ -686,143 +781,155 @@ async def download_file(file_path: str, auth: str = Query(None), authorization: 
     data, content_type = get_object(file_path)
     return Response(content=data, media_type=record.get("content_type", content_type))
 
-# ==================== EXCEL EXPORT ====================
+# ==================== WORD EXPORT ====================
+
+def _add_table_to_doc(doc, headers, rows):
+    """Helper to add a styled table to a Word document."""
+    from docx.shared import Pt, Inches, RGBColor
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.oxml.ns import qn
+    
+    table = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    table.style = 'Table Grid'
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    
+    # Header row
+    for j, h in enumerate(headers):
+        cell = table.rows[0].cells[j]
+        cell.text = h
+        for p in cell.paragraphs:
+            p.alignment = 1  # CENTER
+            for run in p.runs:
+                run.bold = True
+                run.font.size = Pt(10)
+                run.font.color.rgb = RGBColor(255, 255, 255)
+        # Dark background
+        shading = cell._element.get_or_add_tcPr()
+        shd = shading.makeelement(qn('w:shd'), {
+            qn('w:fill'): '1a1a2e',
+            qn('w:val'): 'clear'
+        })
+        shading.append(shd)
+    
+    # Data rows
+    for i, row_data in enumerate(rows):
+        for j, val in enumerate(row_data):
+            cell = table.rows[i + 1].cells[j]
+            cell.text = str(val)
+            for p in cell.paragraphs:
+                for run in p.runs:
+                    run.font.size = Pt(9)
 
 @api_router.get("/export/cars")
-async def export_cars_excel(current_user: dict = Depends(get_current_user)):
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment
+async def export_cars_word(current_user: dict = Depends(get_current_user)):
+    from docx import Document
+    from docx.shared import Pt
     
     cars = await db.cars.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
     
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Araçlar"
+    doc = Document()
+    doc.add_heading('Araç Listesi', level=1)
+    doc.add_paragraph(f'Toplam: {len(cars)} araç | Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
     
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="1a1a2e", end_color="1a1a2e", fill_type="solid")
+    headers = ["Plaka", "Marka", "Model", "Yıl", "KM", "Yakıt", "Vites", "Durum",
+               "Alış Fiyatı", "Satış Fiyatı", "Ekspertiz", "Tramer", "Giriş Tarihi"]
     
-    headers = ["Plaka", "Marka", "Model", "Yıl", "KM", "Yakıt", "Vites", "Durum", "İl", "İlçe",
-               "Alış Fiyatı", "Satış Fiyatı", "Ekspertiz Puanı", "Tramer", "Giriş Tarihi"]
+    rows = []
+    for car in cars:
+        rows.append([
+            car.get("plate", ""),
+            car.get("brand", ""),
+            car.get("model", ""),
+            str(car.get("year", "")),
+            car.get("km", ""),
+            car.get("fuel_type", ""),
+            car.get("gear", ""),
+            car.get("status", ""),
+            f'{car.get("purchase_price", 0):,.0f} TL',
+            f'{car.get("sale_price", 0):,.0f} TL',
+            str(car.get("expertise_score", 0)),
+            f'{car.get("tramer_amount", 0):,.0f} TL',
+            car.get("entry_date", ""),
+        ])
     
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
-    
-    for i, car in enumerate(cars, 2):
-        ws.cell(row=i, column=1, value=car.get("plate", ""))
-        ws.cell(row=i, column=2, value=car.get("brand", ""))
-        ws.cell(row=i, column=3, value=car.get("model", ""))
-        ws.cell(row=i, column=4, value=car.get("year", ""))
-        ws.cell(row=i, column=5, value=car.get("km", ""))
-        ws.cell(row=i, column=6, value=car.get("fuel_type", ""))
-        ws.cell(row=i, column=7, value=car.get("gear", ""))
-        ws.cell(row=i, column=8, value=car.get("status", ""))
-        ws.cell(row=i, column=9, value=car.get("province", ""))
-        ws.cell(row=i, column=10, value=car.get("district", ""))
-        ws.cell(row=i, column=11, value=car.get("purchase_price", 0))
-        ws.cell(row=i, column=12, value=car.get("sale_price", 0))
-        ws.cell(row=i, column=13, value=car.get("expertise_score", 0))
-        ws.cell(row=i, column=14, value=car.get("tramer_amount", 0))
-        ws.cell(row=i, column=15, value=car.get("entry_date", ""))
-    
-    for col in range(1, len(headers) + 1):
-        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = 16
+    _add_table_to_doc(doc, headers, rows)
     
     buffer = io.BytesIO()
-    wb.save(buffer)
+    doc.save(buffer)
     buffer.seek(0)
     
     return StreamingResponse(
         buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=araclar.xlsx"}
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": "attachment; filename=araclar.docx"}
     )
 
 @api_router.get("/export/customers")
-async def export_customers_excel(current_user: dict = Depends(get_current_user)):
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment
+async def export_customers_word(current_user: dict = Depends(get_current_user)):
+    from docx import Document
     
     customers = await db.customers.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
     
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Müşteriler"
-    
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="1a1a2e", end_color="1a1a2e", fill_type="solid")
+    doc = Document()
+    doc.add_heading('Müşteri Listesi', level=1)
+    doc.add_paragraph(f'Toplam: {len(customers)} müşteri | Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
     
     headers = ["Ad Soyad", "Telefon", "Tür", "Notlar", "Kayıt Tarihi"]
     
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
+    rows = []
+    for c in customers:
+        rows.append([
+            c.get("name", ""),
+            c.get("phone", ""),
+            c.get("type", ""),
+            c.get("notes", ""),
+            c.get("created_at", "")[:10],
+        ])
     
-    for i, c in enumerate(customers, 2):
-        ws.cell(row=i, column=1, value=c.get("name", ""))
-        ws.cell(row=i, column=2, value=c.get("phone", ""))
-        ws.cell(row=i, column=3, value=c.get("type", ""))
-        ws.cell(row=i, column=4, value=c.get("notes", ""))
-        ws.cell(row=i, column=5, value=c.get("created_at", "")[:10])
-    
-    for col in range(1, len(headers) + 1):
-        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = 20
+    _add_table_to_doc(doc, headers, rows)
     
     buffer = io.BytesIO()
-    wb.save(buffer)
+    doc.save(buffer)
     buffer.seek(0)
     
     return StreamingResponse(
         buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=musteriler.xlsx"}
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": "attachment; filename=musteriler.docx"}
     )
 
 @api_router.get("/export/transactions")
-async def export_transactions_excel(current_user: dict = Depends(get_current_user)):
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment
+async def export_transactions_word(current_user: dict = Depends(get_current_user)):
+    from docx import Document
     
-    transactions = await db.transactions.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
+    transactions_list = await db.transactions.find({"user_id": current_user["user_id"], "deleted": False}, {"_id": 0}).to_list(5000)
     
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "İşlemler"
-    
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="1a1a2e", end_color="1a1a2e", fill_type="solid")
+    doc = Document()
+    doc.add_heading('İşlem Geçmişi', level=1)
+    doc.add_paragraph(f'Toplam: {len(transactions_list)} işlem | Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
     
     headers = ["Tarih", "Tür", "Kategori", "Açıklama", "Tutar (TL)"]
     
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center")
+    rows = []
+    for t in transactions_list:
+        rows.append([
+            t.get("date", ""),
+            "Gelir" if t.get("type") == "income" else "Gider",
+            t.get("category", ""),
+            t.get("description", ""),
+            f'{t.get("amount", 0):,.0f}',
+        ])
     
-    for i, t in enumerate(transactions, 2):
-        ws.cell(row=i, column=1, value=t.get("date", ""))
-        ws.cell(row=i, column=2, value="Gelir" if t.get("type") == "income" else "Gider")
-        ws.cell(row=i, column=3, value=t.get("category", ""))
-        ws.cell(row=i, column=4, value=t.get("description", ""))
-        ws.cell(row=i, column=5, value=t.get("amount", 0))
-    
-    for col in range(1, len(headers) + 1):
-        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = 20
+    _add_table_to_doc(doc, headers, rows)
     
     buffer = io.BytesIO()
-    wb.save(buffer)
+    doc.save(buffer)
     buffer.seek(0)
     
     return StreamingResponse(
         buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=islemler.xlsx"}
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": "attachment; filename=islemler.docx"}
     )
 
 # ==================== PDF EXPERTISE REPORT ====================
@@ -1071,6 +1178,13 @@ async def startup():
         logger.info("Object Storage initialized")
     except Exception as e:
         logger.warning(f"Storage init deferred: {e}")
+    
+    # Migrate: set role=admin for users without a role
+    await db.users.update_many(
+        {"role": {"$exists": False}},
+        {"$set": {"role": "admin"}}
+    )
+    logger.info("User role migration complete")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -89,6 +89,15 @@ export const statsAPI = {
   get: () => api.get('/stats'),
 };
 
+// ==================== USERS ====================
+export const usersAPI = {
+  getAll: () => api.get('/users'),
+  create: (data) => api.post('/users', data),
+  update: (id, data) => api.put(`/users/${id}`, data),
+  delete: (id) => api.delete(`/users/${id}`),
+  getEmployees: () => api.get('/employees'),
+};
+
 // ==================== APPOINTMENTS ====================
 export const appointmentsAPI = {
   getAll: () => api.get('/appointments'),

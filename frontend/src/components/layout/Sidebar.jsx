@@ -13,25 +13,29 @@ import {
   Moon,
   X,
   FileText,
-  Calendar
+  Calendar,
+  UserCog
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
 
-const menuItems = [
-  { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard },
-  { id: 'inventory', label: 'Stok Araçlar', icon: Car },
-  { id: 'consignment', label: 'Konsinye Araçlar', icon: Package },
-  { id: 'sold', label: 'Satılan Araçlar', icon: ShoppingCart },
-  { id: 'finance', label: 'Gelir & Gider', icon: Wallet },
-  { id: 'reports', label: 'Raporlar', icon: FileText },
-  { id: 'customers', label: 'Müşteriler', icon: Users },
-  { id: 'calendar', label: 'Randevular', icon: Calendar },
-  { id: 'trash', label: 'Çöp Kutusu', icon: Trash2 },
+const allMenuItems = [
+  { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard, roles: ['admin', 'muhasebe', 'satis'] },
+  { id: 'inventory', label: 'Stok Araçlar', icon: Car, roles: ['admin', 'satis'] },
+  { id: 'consignment', label: 'Konsinye Araçlar', icon: Package, roles: ['admin', 'satis'] },
+  { id: 'sold', label: 'Satılan Araçlar', icon: ShoppingCart, roles: ['admin', 'satis'] },
+  { id: 'finance', label: 'Gelir & Gider', icon: Wallet, roles: ['admin', 'muhasebe'] },
+  { id: 'reports', label: 'Raporlar', icon: FileText, roles: ['admin', 'muhasebe'] },
+  { id: 'customers', label: 'Müşteriler', icon: Users, roles: ['admin', 'satis', 'muhasebe'] },
+  { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis'] },
+  { id: 'users', label: 'Kullanıcılar', icon: UserCog, roles: ['admin'] },
+  { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'] },
 ];
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) => {
   const { user, logout, theme, toggleTheme } = useApp();
+  const userRole = user?.role || 'admin';
+  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
 
   const handleNavClick = (itemId) => {
     if (itemId === 'reports') {

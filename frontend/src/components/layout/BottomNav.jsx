@@ -1,15 +1,19 @@
 import React from 'react';
 import { LayoutDashboard, Car, Users, Wallet } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useApp } from '../../context/AppContext';
 
-const navItems = [
-  { id: 'dashboard', label: 'Genel', icon: LayoutDashboard },
-  { id: 'inventory', label: 'Araçlar', icon: Car },
-  { id: 'customers', label: 'Müşteri', icon: Users },
-  { id: 'finance', label: 'Finans', icon: Wallet },
+const allNavItems = [
+  { id: 'dashboard', label: 'Genel', icon: LayoutDashboard, roles: ['admin', 'muhasebe', 'satis'] },
+  { id: 'inventory', label: 'Araçlar', icon: Car, roles: ['admin', 'satis'] },
+  { id: 'customers', label: 'Müşteri', icon: Users, roles: ['admin', 'satis', 'muhasebe'] },
+  { id: 'finance', label: 'Finans', icon: Wallet, roles: ['admin', 'muhasebe'] },
 ];
 
 const BottomNav = ({ activeView, setActiveView }) => {
+  const { user } = useApp();
+  const userRole = user?.role || 'admin';
+  const navItems = allNavItems.filter(item => item.roles.includes(userRole));
   return (
     <nav 
       className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#0a0a0a] border-t border-border safe-area-bottom"
