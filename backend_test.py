@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 
 class AslanbasOtoCRMTester:
-    def __init__(self, base_url="https://promo-diagram-check.preview.emergentagent.com"):
+    def __init__(self, base_url="https://gallery-crm-pro.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_base = f"{base_url}/api"
         self.token = None
