@@ -92,13 +92,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md my-auto py-8">
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="w-20 h-20 mx-auto rounded-full gradient-gold flex items-center justify-center mb-4 shadow-lg">
-            <Car size={40} className="text-primary-foreground" />
-          </div>
-          <h1 className="font-heading font-bold text-3xl tracking-tight uppercase text-foreground">
-            Aslanbaş Oto
-          </h1>
-          <p className="text-muted-foreground mt-2">Galeri CRM Sistemi</p>
+          <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-28 w-auto object-contain mx-auto" />
         </div>
 
         {/* Verification Screen */}
@@ -164,12 +158,9 @@ const LoginPage = () => {
         {/* Login / Register Form */}
         {mode !== 'verify' && (
           <div className="bg-card border border-border rounded-2xl p-8 shadow-xl animate-slide-up">
-            <div className="flex flex-col items-center mb-6">
-              <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-16 w-auto object-contain mb-3" />
-              <h2 className="font-heading font-semibold text-xl text-center">
-                {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
-              </h2>
-            </div>
+            <h2 className="font-heading font-semibold text-xl text-center mb-6">
+              {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
+            </h2>
 
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg p-3 mb-4" data-testid="login-error">
