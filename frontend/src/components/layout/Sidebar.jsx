@@ -62,8 +62,8 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
         data-testid="sidebar"
       >
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10">
-          <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-12 w-auto object-contain" />
+        <div className="h-20 flex items-center justify-between px-4 border-b border-white/10">
+          <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-16 w-auto object-contain" />
           <button 
             onClick={onClose}
             className="md:hidden p-2 text-white/50 hover:text-white transition-colors"

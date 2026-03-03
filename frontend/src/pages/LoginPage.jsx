@@ -184,7 +184,7 @@ const LoginPage = () => {
                   </div>
                   <div>
                     <label className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground mb-2">
-                      <Phone size={14} /> Telefon Numarası
+                      <Phone size={14} /> Telefon Numarası <span className="text-destructive">*</span>
                     </label>
                     <input
                       type="tel"
@@ -192,6 +192,7 @@ const LoginPage = () => {
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full h-12 px-4 bg-background border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       placeholder="0532 XXX XX XX"
+                      required
                       data-testid="phone-input"
                     />
                   </div>

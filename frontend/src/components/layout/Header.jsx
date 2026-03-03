@@ -45,7 +45,7 @@ const Header = ({ title, onMenuClick, appointments = [] }) => {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-border bg-card/50 glass sticky top-0 z-30"
+      className="h-20 flex items-center justify-between px-4 md:px-6 border-b border-border bg-card/50 glass sticky top-0 z-30"
       data-testid="header"
     >
       {/* Left side */}
