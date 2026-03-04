@@ -488,6 +488,18 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
     
+    # Auto-populate sold_by info when status changes to "Satıldı"
+    if updates.get("status") == "Satıldı":
+        user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+        if user:
+            updates["sold_by_user_id"] = current_user["user_id"]
+            updates["sold_by_name"] = user.get("company_name", user.get("email", ""))
+    
+    # Clear sold_by info when sale is cancelled (status reverts from Satıldı)
+    if updates.get("status") and updates["status"] != "Satıldı" and existing.get("status") == "Satıldı":
+        updates["sold_by_user_id"] = ""
+        updates["sold_by_name"] = ""
+    
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": updates})
     result = await db.cars.find_one({"id": car_id}, {"_id": 0})

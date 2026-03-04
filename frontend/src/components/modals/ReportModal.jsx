@@ -34,15 +34,18 @@ const getLogoUrl = (logoPath) => {
   return fileAPI.getUrl(logoPath);
 };
 
-const buildPrintHTML = ({ title, dateRange, companyName, phone, logoDataUrl, totals, profitMargin, displayTransactions, formatCurrency, formatDate }) => {
+const buildPrintHTML = ({ title, dateRange, companyName, phone, logoDataUrl, totals, profitMargin, displayTransactions, formatCurrency, formatDate, reportType, carSoldByMap }) => {
+  const isSold = reportType === 'sold';
+  const colSpan = isSold ? 6 : 5;
   const txRows = displayTransactions.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">Bu tarih aralığında işlem bulunamadı.</td></tr>`
+    ? `<tr><td colspan="${colSpan}" style="text-align:center;padding:24px;color:#999;">Bu tarih aralığında işlem bulunamadı.</td></tr>`
     : displayTransactions.map(tx => `
       <tr>
         <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;">${formatDate(tx.date)}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;color:${tx.type === 'income' ? '#16a34a' : '#dc2626'}">${tx.type === 'income' ? 'Gelir' : 'Gider'}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;">${tx.category}</td>
         <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;color:#666;">${tx.description || '-'}</td>
+        ${isSold ? `<td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;">${(carSoldByMap && carSoldByMap[tx.car_id]) || '-'}</td>` : ''}
         <td style="padding:8px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:right;font-weight:600;color:${tx.type === 'income' ? '#16a34a' : '#dc2626'}">${tx.type === 'income' ? '+' : '-'}${formatCurrency(tx.amount)}</td>
       </tr>
     `).join('');
@@ -157,6 +160,7 @@ const buildPrintHTML = ({ title, dateRange, companyName, phone, logoDataUrl, tot
           <th>Tür</th>
           <th>Kategori</th>
           <th>Açıklama</th>
+          ${isSold ? '<th>Satış Elemanı</th>' : ''}
           <th style="text-align:right">Tutar</th>
         </tr>
       </thead>
@@ -207,6 +211,13 @@ const ReportModal = ({ isOpen, onClose }) => {
   const logoPath = user?.logo_url || '';
 
   const activeCars = useMemo(() => cars.filter(c => !c.deleted), [cars]);
+
+  // Map car_id to sold_by_name for quick lookup in sold report
+  const carSoldByMap = useMemo(() => {
+    const map = {};
+    cars.forEach(c => { if (c.sold_by_name) map[c.id] = c.sold_by_name; });
+    return map;
+  }, [cars]);
 
   const filteredCarsForDropdown = useMemo(() => {
     if (!plateSearch) return activeCars;
@@ -300,6 +311,8 @@ const ReportModal = ({ isOpen, onClose }) => {
       displayTransactions,
       formatCurrency,
       formatDate,
+      reportType,
+      carSoldByMap,
     });
     const w = window.open('', '_blank');
     w.document.write(html);
@@ -438,12 +451,13 @@ const ReportModal = ({ isOpen, onClose }) => {
                   <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
                   <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
                   <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
+                  {reportType === 'sold' && <th className="text-left p-3 text-sm font-medium text-muted-foreground">Satış Elemanı</th>}
                   <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
                 </tr>
               </thead>
               <tbody>
                 {displayTransactions.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center p-8 text-muted-foreground">Bu tarih aralığında işlem bulunamadı.</td></tr>
+                  <tr><td colSpan={reportType === 'sold' ? 6 : 5} className="text-center p-8 text-muted-foreground">Bu tarih aralığında işlem bulunamadı.</td></tr>
                 ) : (
                   displayTransactions.map((tx) => (
                     <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
@@ -451,6 +465,7 @@ const ReportModal = ({ isOpen, onClose }) => {
                       <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
                       <td className="p-3 text-sm">{tx.category}</td>
                       <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                      {reportType === 'sold' && <td className="p-3 text-sm">{carSoldByMap[tx.car_id] || '-'}</td>}
                       <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
                     </tr>
                   ))

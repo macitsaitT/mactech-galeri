@@ -215,8 +215,22 @@ const VehicleCard = ({
           )}
         </div>
 
+        {/* Sold by info */}
+        {car.status === 'Satıldı' && car.sold_by_name && (
+          <div className="mt-3 p-2.5 rounded-lg bg-success/10 border border-success/20" data-testid={`sold-by-info-${car.id}`}>
+            <p className="text-xs text-success font-medium">
+              Satan: {car.sold_by_name}
+            </p>
+            {car.sold_date && (
+              <p className="text-xs text-success/80 mt-0.5">
+                {car.sold_date}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Deposit info */}
-        {car.deposit_amount > 0 && (
+        {car.deposit_amount > 0 && car.status !== 'Satıldı' && (
           <div className="mt-3 p-2.5 rounded-lg bg-warning/10 border border-warning/20" data-testid={`deposit-info-${car.id}`}>
             <p className="text-xs text-warning font-medium">
               Kapora: {formatCurrency(car.deposit_amount)}

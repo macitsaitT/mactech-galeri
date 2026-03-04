@@ -2,7 +2,7 @@ import React from 'react';
 import { formatCurrency } from '../../utils/helpers';
 import { fileAPI } from '../../services/api';
 import {
-  Car, Calendar, Gauge, Fuel, Settings, MapPin, Shield, FileText, X
+  Car, Calendar, Gauge, Fuel, Settings, MapPin, Shield, FileText, X, User
 } from 'lucide-react';
 import {
   Dialog,
@@ -112,6 +112,7 @@ const VehicleDetailModal = ({ isOpen, onClose, car }) => {
             {car.entry_date && <InfoRow icon={<Calendar size={16} />} label="Giriş Tarihi" value={car.entry_date} />}
             {car.sold_date && <InfoRow icon={<Calendar size={16} />} label="Satış Tarihi" value={car.sold_date} />}
             {car.inspection_date && <InfoRow icon={<Shield size={16} />} label="Muayene" value={car.inspection_date} />}
+            {car.sold_by_name && <InfoRow icon={<User size={16} />} label="Satan Kişi" value={car.sold_by_name} />}
           </div>
 
           {/* Consignment Info */}

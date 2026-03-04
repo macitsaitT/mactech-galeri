@@ -313,7 +313,9 @@ const AppContent = () => {
     await patchCar(car.id, {
       status: newStatus,
       sold_date: '',
-      employee_share: 0
+      employee_share: 0,
+      sold_by_user_id: '',
+      sold_by_name: ''
     });
 
     // Soft-delete all sale-related transactions for this car
