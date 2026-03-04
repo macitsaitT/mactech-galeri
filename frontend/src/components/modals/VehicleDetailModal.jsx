@@ -98,6 +98,15 @@ const VehicleDetailModal = ({ isOpen, onClose, car }) => {
             {car.deposit_amount > 0 && <PriceCard label="Kapora" value={car.deposit_amount} warning />}
           </div>
 
+          {/* Deposit Customer Info */}
+          {car.deposit_amount > 0 && car.deposit_customer_name && (
+            <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg" data-testid="vehicle-detail-deposit-info">
+              <p className="text-xs text-muted-foreground mb-1">Kapora Bilgisi</p>
+              <p className="font-medium text-sm">{car.deposit_customer_name}</p>
+              {car.deposit_date && <p className="text-xs text-muted-foreground">Tarih: {car.deposit_date}</p>}
+            </div>
+          )}
+
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             {car.entry_date && <InfoRow icon={<Calendar size={16} />} label="Giriş Tarihi" value={car.entry_date} />}

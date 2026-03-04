@@ -217,10 +217,15 @@ const VehicleCard = ({
 
         {/* Deposit info */}
         {car.deposit_amount > 0 && (
-          <div className="mt-3 p-2 rounded-lg bg-warning/10 border border-warning/20">
+          <div className="mt-3 p-2.5 rounded-lg bg-warning/10 border border-warning/20" data-testid={`deposit-info-${car.id}`}>
             <p className="text-xs text-warning font-medium">
               Kapora: {formatCurrency(car.deposit_amount)}
             </p>
+            {car.deposit_customer_name && (
+              <p className="text-xs text-warning/80 mt-0.5">
+                {car.deposit_customer_name} {car.deposit_date ? `- ${car.deposit_date}` : ''}
+              </p>
+            )}
           </div>
         )}
       </div>

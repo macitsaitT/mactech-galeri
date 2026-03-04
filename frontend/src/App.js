@@ -241,26 +241,30 @@ const AppContent = () => {
   };
 
   // Deposit handler
-  const handleConfirmDeposit = async ({ carId, amount, existingAmount }) => {
+  const handleConfirmDeposit = async ({ carId, amount, existingAmount, customerId, customerName, depositDate }) => {
     const car = depositModal.car;
     if (!car) return;
 
     const diff = amount - existingAmount;
 
-    // Update car
+    // Update car with deposit + customer info
     await patchCar(carId, {
       status: 'Kapora Alındı',
-      deposit_amount: amount
+      deposit_amount: amount,
+      deposit_customer_id: customerId || '',
+      deposit_customer_name: customerName || '',
+      deposit_date: depositDate || new Date().toISOString().split('T')[0]
     });
 
     // Add transaction
     if (diff !== 0) {
+      const customerLabel = customerName ? ` (${customerName})` : '';
       await addTransaction({
         type: diff > 0 ? 'income' : 'expense',
         category: diff > 0 ? (existingAmount === 0 ? 'Kapora' : 'Kapora Eklemesi') : 'Kapora İadesi',
         amount: Math.abs(diff),
-        date: new Date().toISOString().split('T')[0],
-        description: `Kapora - ${car.plate?.toUpperCase()}`,
+        date: depositDate || new Date().toISOString().split('T')[0],
+        description: `Kapora${customerLabel} - ${car.plate?.toUpperCase()}`,
         car_id: carId
       });
     }
@@ -272,20 +276,24 @@ const AppContent = () => {
     const car = depositModal.car;
     if (!car) return;
 
-    // Update car
+    // Update car - clear deposit + customer info
     await patchCar(carId, {
       status: 'Stokta',
-      deposit_amount: 0
+      deposit_amount: 0,
+      deposit_customer_id: '',
+      deposit_customer_name: '',
+      deposit_date: ''
     });
 
     // Add refund transaction
     if (car.deposit_amount > 0) {
+      const customerLabel = car.deposit_customer_name ? ` (${car.deposit_customer_name})` : '';
       await addTransaction({
         type: 'expense',
         category: 'Kapora İadesi',
         amount: car.deposit_amount,
         date: new Date().toISOString().split('T')[0],
-        description: `İade - ${car.plate?.toUpperCase()}`,
+        description: `İade${customerLabel} - ${car.plate?.toUpperCase()}`,
         car_id: carId
       });
     }

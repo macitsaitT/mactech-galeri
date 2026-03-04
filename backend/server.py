@@ -166,6 +166,9 @@ class CarBase(BaseModel):
     package_info: str = ""
     engine_type: str = ""
     deposit_amount: float = 0
+    deposit_customer_id: Optional[str] = None
+    deposit_customer_name: Optional[str] = None
+    deposit_date: Optional[str] = None
     sold_date: Optional[str] = None
     customer_id: Optional[str] = None
     customer_name: Optional[str] = None
@@ -185,6 +188,8 @@ class Car(CarBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
+    org_id: Optional[str] = None
+    created_by: Optional[str] = None
     deleted: bool = False
     deleted_at: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -204,6 +209,8 @@ class Customer(CustomerBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
+    org_id: Optional[str] = None
+    created_by: Optional[str] = None
     deleted: bool = False
     deleted_at: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -224,6 +231,8 @@ class Transaction(TransactionBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
+    org_id: Optional[str] = None
+    created_by: Optional[str] = None
     deleted: bool = False
     deleted_at: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
