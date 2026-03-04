@@ -2,14 +2,20 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.2.0
+- **Version:** 4.3.0
 - **Last Updated:** 2026-02-20
-- **Status:** MVP Complete + Multi-Tenant RBAC + Salesperson Tracking
+- **Status:** MVP Complete + Multi-Tenant RBAC + Salesperson Tracking + Report Employee Filter
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.3 - Rapor Çalışan Filtresi
+- [x] Rapor modalına çalışan filtresi eklendi (admin/muhasebe için)
+- [x] Seçili çalışana göre işlemler filtreleniyor (created_by)
+- [x] Rapor başlığında seçili çalışan adı gösterimi
+- [x] Yazdırma/PDF çıktısında çalışan adı başlığa ekleniyor
 
 ### v4.2 - Satış Elemanı Takibi
 - [x] Araç satıldığında satan kişi otomatik olarak kaydedilir (sold_by_name, sold_by_user_id)
