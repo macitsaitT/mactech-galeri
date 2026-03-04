@@ -10,21 +10,9 @@ import {
 } from '../ui/dialog';
 
 const expenseCategories = [
-  'Genel Gider',
-  'Ofis Gideri',
-  'Kira',
-  'Personel Maaşı',
-  'Elektrik/Su/Doğalgaz',
-  'İnternet/Telefon',
-  'Sigorta',
-  'Vergi',
-  'Reklam/Pazarlama',
-  'Bakım/Onarım',
-  'Temizlik',
-  'Kırtasiye',
-  'Yemek/İkram',
-  'Ulaşım',
-  'Diğer'
+  'Genel Gider', 'Boya', 'Mekanik Bakım', 'Yedek Parça',
+  'Lastik', 'Sigorta', 'Muayene', 'Kaporta', 'Elektrik',
+  'Detaylı Yıkama', 'Ekspertiz', 'Taşıma/Çekici', 'Diğer'
 ];
 
 const ExpenseModal = ({ isOpen, onClose }) => {
@@ -42,7 +30,10 @@ const ExpenseModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.amount || parseNumber(formData.amount) <= 0) return;
+    if (!formData.amount || parseNumber(formData.amount) <= 0 || !formData.car_id) return;
+
+    const car = activeCars.find(c => c.id === formData.car_id);
+    const plateLabel = car ? ` - ${car.plate?.toUpperCase()}` : '';
 
     setLoading(true);
     try {
@@ -50,9 +41,9 @@ const ExpenseModal = ({ isOpen, onClose }) => {
         type: 'expense',
         category: formData.category,
         amount: parseNumber(formData.amount),
-        description: formData.description,
+        description: (formData.description || formData.category) + plateLabel,
         date: formData.date,
-        car_id: formData.car_id || null
+        car_id: formData.car_id
       });
       
       setFormData({
@@ -72,15 +63,33 @@ const ExpenseModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Receipt size={24} className="text-warning" />
-            Gider Ekle
+          <DialogTitle className="flex items-center gap-2" data-testid="expense-modal-title">
+            <Receipt size={24} className="text-destructive" />
+            Araç Gideri Ekle
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Araç Seçin *</label>
+            <select
+              value={formData.car_id}
+              onChange={(e) => setFormData({ ...formData, car_id: e.target.value })}
+              className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary"
+              required
+              data-testid="expense-car-select"
+            >
+              <option value="">Araç seçin...</option>
+              {activeCars.map(car => (
+                <option key={car.id} value={car.id}>
+                  {car.plate?.toUpperCase()} - {car.brand} {car.model}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-2">Kategori</label>
             <select
@@ -96,7 +105,7 @@ const ExpenseModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Tutar (₺)</label>
+            <label className="block text-sm font-medium mb-2">Tutar (₺) *</label>
             <input
               type="text"
               value={formData.amount}
@@ -119,23 +128,6 @@ const ExpenseModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">İlişkili Araç (Opsiyonel)</label>
-            <select
-              value={formData.car_id}
-              onChange={(e) => setFormData({ ...formData, car_id: e.target.value })}
-              className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary"
-              data-testid="expense-car-select"
-            >
-              <option value="">Araç seçilmedi</option>
-              {activeCars.map(car => (
-                <option key={car.id} value={car.id}>
-                  {car.plate?.toUpperCase()} - {car.brand} {car.model}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium mb-2">Açıklama</label>
             <textarea
               value={formData.description}
@@ -146,7 +138,7 @@ const ExpenseModal = ({ isOpen, onClose }) => {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
@@ -156,11 +148,11 @@ const ExpenseModal = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.amount}
-              className="px-6 py-3 rounded-lg bg-warning text-warning-foreground font-semibold hover:bg-warning/90 transition-all active:scale-95 disabled:opacity-50"
+              disabled={loading || !formData.amount || !formData.car_id}
+              className="px-6 py-3 rounded-lg bg-destructive text-destructive-foreground font-semibold hover:bg-destructive/90 transition-all active:scale-95 disabled:opacity-50"
               data-testid="save-expense-btn"
             >
-              {loading ? 'Kaydediliyor...' : 'Gider Ekle'}
+              {loading ? 'Kaydediliyor...' : 'Araç Gideri Ekle'}
             </button>
           </div>
         </form>

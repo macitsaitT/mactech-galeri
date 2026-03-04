@@ -101,7 +101,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
             data-testid="quick-add-expense"
           >
             <Wallet size={20} className="mb-1" />
-            <span className="text-[10px] font-medium uppercase">Gider</span>
+            <span className="text-[10px] font-medium uppercase">Araç Gideri</span>
           </button>
           <button
             onClick={() => { setActiveView('add-transaction'); onClose(); }}
@@ -109,7 +109,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
             data-testid="quick-add-transaction"
           >
             <FileText size={20} className="mb-1" />
-            <span className="text-[10px] font-medium uppercase">İşlem</span>
+            <span className="text-[10px] font-medium uppercase">Genel İşlem</span>
           </button>
         </div>
 

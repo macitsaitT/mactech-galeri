@@ -11,35 +11,37 @@ import {
 
 const transactionCategories = {
   income: [
-    'Araç Satışı',
-    'Kapora',
     'Komisyon',
     'Diğer Gelir'
   ],
   expense: [
-    'Araç Alımı',
-    'Çalışan Payı',
-    'Komisyon',
-    'Araç Masrafı',
-    'Kapora İadesi',
-    'Genel Gider',
+    'Personel Maaşı',
+    'Kira',
+    'Ofis Gideri',
+    'Elektrik/Su/Doğalgaz',
+    'İnternet/Telefon',
+    'Sigorta',
+    'Vergi',
+    'Reklam/Pazarlama',
+    'Bakım/Onarım',
+    'Temizlik',
+    'Kırtasiye',
+    'Yemek/İkram',
+    'Ulaşım',
     'Diğer Gider'
   ]
 };
 
 const TransactionModal = ({ isOpen, onClose }) => {
-  const { addTransaction, cars } = useApp();
+  const { addTransaction } = useApp();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    type: 'income',
-    category: 'Araç Satışı',
+    type: 'expense',
+    category: 'Personel Maaşı',
     amount: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
-    car_id: ''
+    date: new Date().toISOString().split('T')[0]
   });
-
-  const activeCars = cars.filter(c => !c.deleted);
 
   const handleTypeChange = (type) => {
     setFormData({
@@ -61,16 +63,15 @@ const TransactionModal = ({ isOpen, onClose }) => {
         amount: parseNumber(formData.amount),
         description: formData.description,
         date: formData.date,
-        car_id: formData.car_id || null
+        car_id: null
       });
       
       setFormData({
-        type: 'income',
-        category: 'Araç Satışı',
+        type: 'expense',
+        category: 'Personel Maaşı',
         amount: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
-        car_id: ''
+        date: new Date().toISOString().split('T')[0]
       });
       onClose();
     } catch (error) {
@@ -82,11 +83,11 @@ const TransactionModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2" data-testid="transaction-modal-title">
             <ClipboardList size={24} className="text-primary" />
-            İşlem Ekle
+            Genel İşlem Ekle
           </DialogTitle>
         </DialogHeader>
 
@@ -134,7 +135,7 @@ const TransactionModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Tutar (₺)</label>
+            <label className="block text-sm font-medium mb-2">Tutar (₺) *</label>
             <input
               type="text"
               value={formData.amount}
@@ -157,23 +158,6 @@ const TransactionModal = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">İlişkili Araç (Opsiyonel)</label>
-            <select
-              value={formData.car_id}
-              onChange={(e) => setFormData({ ...formData, car_id: e.target.value })}
-              className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary"
-              data-testid="transaction-car-select"
-            >
-              <option value="">Araç seçilmedi</option>
-              {activeCars.map(car => (
-                <option key={car.id} value={car.id}>
-                  {car.plate?.toUpperCase()} - {car.brand} {car.model}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium mb-2">Açıklama</label>
             <textarea
               value={formData.description}
@@ -184,7 +168,7 @@ const TransactionModal = ({ isOpen, onClose }) => {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
             <button
               type="button"
               onClick={onClose}
