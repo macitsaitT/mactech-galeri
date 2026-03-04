@@ -2,14 +2,22 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.1.0
-- **Last Updated:** 2026-03-04
-- **Status:** MVP Complete + Org-Based Multi-User + Deposit Customer Tracking
+- **Version:** 4.2.0
+- **Last Updated:** 2026-02-20
+- **Status:** MVP Complete + Multi-Tenant RBAC + Salesperson Tracking
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.2 - Satış Elemanı Takibi
+- [x] Araç satıldığında satan kişi otomatik olarak kaydedilir (sold_by_name, sold_by_user_id)
+- [x] Araç kartında "Satan: [isim]" bilgisi gösterimi
+- [x] Araç detay modalında "Satan Kişi" satırı
+- [x] Satış Raporu'nda "Satış Elemanı" sütunu
+- [x] Satış iptalinde satan kişi bilgileri otomatik temizleme
+- [x] Yazdırma/PDF çıktısında da Satış Elemanı sütunu
 
 ### v4.1 - Kapora Müşteri Takibi
 - [x] Kapora alırken müşteri seçimi (mevcut müşteri veya yeni müşteri ekleme)
@@ -36,7 +44,7 @@ Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek 
 
 ## DB Schema (Updated)
 - **users:** `{ id, email, password_hash, company_name, phone, role, org_id, logo_url, theme }`
-- **cars:** `{ id, brand, model, year, plate, status, deposit_amount, deposit_customer_id, deposit_customer_name, deposit_date, org_id, created_by, ... }`
+- **cars:** `{ id, brand, model, year, plate, status, deposit_amount, deposit_customer_id, deposit_customer_name, deposit_date, sold_by_user_id, sold_by_name, org_id, created_by, ... }`
 - **customers:** `{ id, name, phone, type, notes, org_id, created_by, ... }`
 - **transactions:** `{ id, type, category, amount, date, car_id, employee_name, org_id, created_by, ... }`
 
