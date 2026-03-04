@@ -1,26 +1,62 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
 import { 
-  Car, 
-  TrendingUp, 
-  TrendingDown, 
-  Wallet,
-  Package,
-  ShoppingCart,
-  CreditCard,
-  FileText,
-  Calendar,
-  BarChart3,
-  PieChart as PieIcon
+  Car, TrendingUp, Wallet, Package, ShoppingCart, CreditCard, FileText, Calendar,
+  BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell,
-  LineChart, Line, AreaChart, Area
+  PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 
-const StatCard = ({ title, value, icon: Icon, color = 'default', className = '' }) => {
+const CHART_COLORS = ['#d4a030', '#22c55e', '#ef4444', '#3b82f6', '#a855f7'];
+const PIE_COLORS = ['#d4a030', '#f59e0b', '#22c55e', '#3b82f6'];
+
+const getDateRange = (preset) => {
+  const now = new Date();
+  const end = now.toISOString().split('T')[0];
+  let start;
+  switch (preset) {
+    case 'week': {
+      const d = new Date(now); d.setDate(d.getDate() - 7);
+      start = d.toISOString().split('T')[0]; break;
+    }
+    case 'month': {
+      start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]; break;
+    }
+    case '3months': {
+      const d = new Date(now); d.setMonth(d.getMonth() - 3);
+      start = d.toISOString().split('T')[0]; break;
+    }
+    case '6months': {
+      const d = new Date(now); d.setMonth(d.getMonth() - 6);
+      start = d.toISOString().split('T')[0]; break;
+    }
+    case 'year': {
+      start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]; break;
+    }
+    case 'all': start = '2020-01-01'; break;
+    default: start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  }
+  return { start, end };
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-xs">
+      <p className="font-semibold mb-1">{label}</p>
+      {payload.map((entry, i) => (
+        <p key={i} style={{ color: entry.color }}>
+          {entry.name}: {typeof entry.value === 'number' && entry.value >= 1000 ? formatCurrency(entry.value) : entry.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle }) => {
   const colorClasses = {
     default: 'bg-card border-border',
     primary: 'bg-primary/10 border-primary/30',
@@ -35,18 +71,15 @@ const StatCard = ({ title, value, icon: Icon, color = 'default', className = '' 
     warning: 'text-warning',
     destructive: 'text-destructive',
   };
-
   return (
-    <div 
-      className={`border rounded-xl p-4 ${colorClasses[color]} ${className}`}
-      data-testid={`stat-${title.toLowerCase().replace(/\s/g, '-')}`}
-    >
+    <div className={`border rounded-xl p-4 ${colorClasses[color]}`} data-testid={`stat-${title.toLowerCase().replace(/\s+/g, '-')}`}>
       <div className="flex items-center justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1 truncate">{title}</p>
           <p className="font-heading font-bold text-lg sm:text-2xl tabular-nums truncate">{value}</p>
+          {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
-        <div className={`p-2 sm:p-3 rounded-lg bg-background/50 ${iconColors[color]}`}>
+        <div className={`p-2 sm:p-3 rounded-lg bg-background/50 flex-shrink-0 ${iconColors[color]}`}>
           <Icon size={20} className="sm:w-6 sm:h-6" />
         </div>
       </div>
@@ -54,113 +87,127 @@ const StatCard = ({ title, value, icon: Icon, color = 'default', className = '' 
   );
 };
 
-const StockStatusItem = ({ car }) => (
-  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-    <div className="flex-1 min-w-0">
-      <p className="font-medium text-sm truncate">{car.brand} {car.model} {car.vehicle_type}</p>
-      <p className="text-xs text-muted-foreground">{car.plate?.toUpperCase()} - {car.year}</p>
-    </div>
-    <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-      car.status === 'Stokta' ? 'bg-primary/20 text-primary' :
-      car.status === 'Kapora Alındı' ? 'bg-warning/20 text-warning' :
-      'bg-success/20 text-success'
-    }`}>
-      {car.status === 'Stokta' ? 'Stokta' : car.status === 'Kapora Alındı' ? 'Kapora' : 'Satıldı'}
-    </span>
-  </div>
-);
-
-const TransactionItem = ({ transaction }) => {
-  const isIncome = transaction.type === 'income';
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm">{transaction.category}</p>
-        <p className="text-xs text-muted-foreground truncate">{transaction.description}</p>
-      </div>
-      <span className={`font-heading font-bold tabular-nums ${isIncome ? 'text-success' : 'text-destructive'}`}>
-        {isIncome ? '+' : '-'}{formatCurrency(transaction.amount).replace('₺', '')}
-      </span>
-    </div>
-  );
-};
-
-const CHART_COLORS = ['#d4a030', '#22c55e', '#ef4444', '#3b82f6', '#a855f7'];
-const PIE_COLORS = ['#d4a030', '#f59e0b', '#22c55e', '#3b82f6'];
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-xs">
-      <p className="font-semibold mb-1">{label}</p>
-      {payload.map((entry, i) => (
-        <p key={i} style={{ color: entry.color }}>
-          {entry.name}: {formatCurrency(entry.value)}
-        </p>
-      ))}
-    </div>
-  );
-};
+const presets = [
+  { id: 'week', label: 'Bu Hafta' },
+  { id: 'month', label: 'Bu Ay' },
+  { id: '3months', label: '3 Ay' },
+  { id: '6months', label: '6 Ay' },
+  { id: 'year', label: 'Bu Yıl' },
+  { id: 'all', label: 'Tümü' },
+];
 
 const Dashboard = ({ onOpenReport }) => {
-  const { stats, cars, transactions, loading } = useApp();
+  const { cars, transactions, loading } = useApp();
 
-  const activeCars = cars.filter(c => !c.deleted);
-  const activeTransactions = transactions.filter(t => !t.deleted);
+  const [preset, setPreset] = useState('month');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [showCustom, setShowCustom] = useState(false);
+
+  const dateRange = useMemo(() => {
+    if (showCustom && customStart && customEnd) return { start: customStart, end: customEnd };
+    return getDateRange(preset);
+  }, [preset, showCustom, customStart, customEnd]);
+
+  const activeCars = useMemo(() => cars.filter(c => !c.deleted), [cars]);
+  const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted), [transactions]);
+
+  // Filter transactions by date range
+  const filteredTx = useMemo(() => {
+    return activeTransactions.filter(t => {
+      if (!t.date) return false;
+      return t.date >= dateRange.start && t.date <= dateRange.end;
+    });
+  }, [activeTransactions, dateRange]);
+
+  // Filter sold cars by date range
+  const filteredSoldCars = useMemo(() => {
+    return activeCars.filter(c =>
+      c.status === 'Satıldı' && c.sold_date && c.sold_date >= dateRange.start && c.sold_date <= dateRange.end
+    );
+  }, [activeCars, dateRange]);
+
+  // ---- STATS ----
+  const totalIncome = filteredTx.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
+  const totalExpense = filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
+  const netProfit = totalIncome - totalExpense;
+  const soldCount = filteredSoldCars.length;
+
+  // All-time cash
+  const allTimeIncome = activeTransactions.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
+  const allTimeExpense = activeTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
+  const kasaDurumu = allTimeIncome - allTimeExpense;
 
   const stockCars = activeCars.filter(c => c.ownership === 'stock' && c.status !== 'Satıldı');
   const consignmentCars = activeCars.filter(c => c.ownership === 'consignment' && c.status !== 'Satıldı');
   const depositCars = activeCars.filter(c => c.status === 'Kapora Alındı');
-  
-  const now = useMemo(() => new Date(), []);
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonthSales = activeCars.filter(c => 
-    c.status === 'Satıldı' && c.sold_date && new Date(c.sold_date) >= thisMonthStart
-  ).length;
 
-  const totalIncome = activeTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
-  const totalExpense = activeTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
-  const kasaDurumu = totalIncome - totalExpense;
+  // Sold cars revenue
+  const soldRevenue = useMemo(() => {
+    return filteredSoldCars.reduce((sum, c) => sum + (c.sale_price || 0), 0);
+  }, [filteredSoldCars]);
 
-  const recentTransactions = [...activeTransactions]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5);
+  // ---- CHARTS ----
 
-  const stockStatusCars = [...activeCars]
-    .filter(c => c.status !== 'Satıldı')
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5);
-
-  // Monthly income/expense chart data (last 6 months)
-  const monthlyData = useMemo(() => {
-    const months = [];
+  // Monthly/Weekly bar chart - dynamically grouped by period
+  const barChartData = useMemo(() => {
+    const startD = new Date(dateRange.start);
+    const endD = new Date(dateRange.end);
+    const diffDays = Math.ceil((endD - startD) / (1000 * 60 * 60 * 24));
     const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-    
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const monthLabel = `${monthNames[d.getMonth()]} ${d.getFullYear() !== now.getFullYear() ? d.getFullYear() : ''}`.trim();
-      
-      const monthIncome = activeTransactions
-        .filter(t => t.type === 'income' && t.date?.startsWith(monthKey))
-        .reduce((sum, t) => sum + (t.amount || 0), 0);
-      
-      const monthExpense = activeTransactions
-        .filter(t => t.type === 'expense' && t.date?.startsWith(monthKey))
-        .reduce((sum, t) => sum + (t.amount || 0), 0);
-      
-      months.push({ name: monthLabel, Gelir: monthIncome, Gider: monthExpense });
-    }
-    return months;
-  }, [activeTransactions, now]);
 
-  // Vehicle status pie chart data
+    if (diffDays <= 14) {
+      // Daily grouping
+      const data = [];
+      for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().split('T')[0];
+        const label = `${d.getDate()} ${monthNames[d.getMonth()]}`;
+        const income = filteredTx.filter(t => t.type === 'income' && t.date === key).reduce((s, t) => s + (t.amount || 0), 0);
+        const expense = filteredTx.filter(t => t.type === 'expense' && t.date === key).reduce((s, t) => s + (t.amount || 0), 0);
+        data.push({ name: label, Gelir: income, Gider: expense });
+      }
+      return data;
+    } else if (diffDays <= 90) {
+      // Weekly grouping
+      const data = [];
+      let weekStart = new Date(startD);
+      let weekNum = 1;
+      while (weekStart <= endD) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const wEnd = weekEnd > endD ? endD : weekEnd;
+        const wsKey = weekStart.toISOString().split('T')[0];
+        const weKey = wEnd.toISOString().split('T')[0];
+        const income = filteredTx.filter(t => t.type === 'income' && t.date >= wsKey && t.date <= weKey).reduce((s, t) => s + (t.amount || 0), 0);
+        const expense = filteredTx.filter(t => t.type === 'expense' && t.date >= wsKey && t.date <= weKey).reduce((s, t) => s + (t.amount || 0), 0);
+        const label = `${weekStart.getDate()} ${monthNames[weekStart.getMonth()]}`;
+        data.push({ name: label, Gelir: income, Gider: expense });
+        weekStart.setDate(weekStart.getDate() + 7);
+        weekNum++;
+      }
+      return data;
+    } else {
+      // Monthly grouping
+      const data = [];
+      let cur = new Date(startD.getFullYear(), startD.getMonth(), 1);
+      while (cur <= endD) {
+        const monthKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+        const label = `${monthNames[cur.getMonth()]}${cur.getFullYear() !== endD.getFullYear() ? ' ' + cur.getFullYear() : ''}`;
+        const income = filteredTx.filter(t => t.type === 'income' && t.date?.startsWith(monthKey)).reduce((s, t) => s + (t.amount || 0), 0);
+        const expense = filteredTx.filter(t => t.type === 'expense' && t.date?.startsWith(monthKey)).reduce((s, t) => s + (t.amount || 0), 0);
+        data.push({ name: label, Gelir: income, Gider: expense });
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      return data;
+    }
+  }, [filteredTx, dateRange]);
+
+  // Vehicle status pie chart (always all vehicles)
   const vehicleStatusData = useMemo(() => {
-    const stokta = activeCars.filter(c => c.status === 'Stokta').length;
-    const kapora = activeCars.filter(c => c.status === 'Kapora Alındı').length;
-    const satildi = activeCars.filter(c => c.status === 'Satıldı').length;
+    const stokta = activeCars.filter(c => c.status === 'Stokta' && c.ownership === 'stock').length;
     const konsinye = activeCars.filter(c => c.ownership === 'consignment' && c.status !== 'Satıldı').length;
-    
+    const satildi = activeCars.filter(c => c.status === 'Satıldı').length;
+    const kapora = activeCars.filter(c => c.status === 'Kapora Alındı').length;
     return [
       { name: 'Stokta', value: stokta },
       { name: 'Konsinye', value: konsinye },
@@ -169,44 +216,79 @@ const Dashboard = ({ onOpenReport }) => {
     ].filter(d => d.value > 0);
   }, [activeCars]);
 
-  // Sales trend (last 30 days)
+  // Sales trend area chart - filtered by date range
   const salesTrendData = useMemo(() => {
-    const data = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const daySales = activeCars.filter(c =>
-        c.status === 'Satıldı' && c.sold_date && c.sold_date.startsWith(dateStr)
-      ).length;
-      const dayLabel = `${d.getDate()}/${d.getMonth() + 1}`;
-      data.push({ name: dayLabel, Satış: daySales });
-    }
-    return data;
-  }, [activeCars]);
+    const startD = new Date(dateRange.start);
+    const endD = new Date(dateRange.end);
+    const diffDays = Math.ceil((endD - startD) / (1000 * 60 * 60 * 24));
+    const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
-  // Top brands
+    if (diffDays <= 31) {
+      // Daily
+      const data = [];
+      for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().split('T')[0];
+        const count = filteredSoldCars.filter(c => c.sold_date === key).length;
+        data.push({ name: `${d.getDate()}/${d.getMonth() + 1}`, Satış: count });
+      }
+      return data;
+    } else {
+      // Monthly
+      const data = [];
+      let cur = new Date(startD.getFullYear(), startD.getMonth(), 1);
+      while (cur <= endD) {
+        const monthKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+        const count = activeCars.filter(c =>
+          c.status === 'Satıldı' && c.sold_date?.startsWith(monthKey) && c.sold_date >= dateRange.start && c.sold_date <= dateRange.end
+        ).length;
+        data.push({ name: `${monthNames[cur.getMonth()]}`, Satış: count });
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      return data;
+    }
+  }, [activeCars, filteredSoldCars, dateRange]);
+
+  // Top selling brands in period
   const topBrandsData = useMemo(() => {
     const brandCount = {};
-    activeCars.filter(c => c.status === 'Satıldı').forEach(c => {
-      brandCount[c.brand] = (brandCount[c.brand] || 0) + 1;
-    });
-    const all = Object.entries(brandCount)
-      .map(([brand, count]) => ({ brand, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-    // If no sold cars, show stock brands
-    if (all.length === 0) {
-      activeCars.forEach(c => {
-        brandCount[c.brand] = (brandCount[c.brand] || 0) + 1;
-      });
-      return Object.entries(brandCount)
-        .map(([brand, count]) => ({ brand, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+    filteredSoldCars.forEach(c => { brandCount[c.brand] = (brandCount[c.brand] || 0) + 1; });
+    const result = Object.entries(brandCount).map(([brand, count]) => ({ brand, count })).sort((a, b) => b.count - a.count).slice(0, 5);
+    if (result.length === 0) {
+      activeCars.forEach(c => { brandCount[c.brand] = (brandCount[c.brand] || 0) + 1; });
+      return Object.entries(brandCount).map(([brand, count]) => ({ brand, count })).sort((a, b) => b.count - a.count).slice(0, 5);
     }
-    return all;
-  }, [activeCars]);
+    return result;
+  }, [filteredSoldCars, activeCars]);
+
+  // Top sellers (sold_by_name) in period
+  const topSellers = useMemo(() => {
+    const sellerCount = {};
+    filteredSoldCars.forEach(c => {
+      const name = c.sold_by_name || 'Belirtilmemiş';
+      sellerCount[name] = (sellerCount[name] || 0) + 1;
+    });
+    return Object.entries(sellerCount).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5);
+  }, [filteredSoldCars]);
+
+  // Recent transactions (in period)
+  const recentTx = useMemo(() => {
+    return [...filteredTx].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  }, [filteredTx]);
+
+  // Category breakdown for period
+  const categoryBreakdown = useMemo(() => {
+    const cats = {};
+    filteredTx.forEach(t => {
+      const key = t.category || 'Diğer';
+      if (!cats[key]) cats[key] = { income: 0, expense: 0 };
+      if (t.type === 'income') cats[key].income += t.amount || 0;
+      else cats[key].expense += t.amount || 0;
+    });
+    return Object.entries(cats)
+      .map(([cat, v]) => ({ category: cat, ...v, total: v.income + v.expense }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 6);
+  }, [filteredTx]);
 
   if (loading) {
     return (
@@ -216,171 +298,205 @@ const Dashboard = ({ onOpenReport }) => {
     );
   }
 
+  const presetLabel = presets.find(p => p.id === preset)?.label || '';
+
   return (
-    <div className="space-y-6 pb-24 md:pb-6 animate-fade-in">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard title="STOK ARAÇ SAYISI" value={stockCars.length} icon={Car} color="default" />
-        <StatCard title="KONSİNYE ARAÇ SAYISI" value={consignmentCars.length} icon={Package} color="default" />
-        <StatCard title="KAPORASI ALINAN" value={depositCars.length} icon={CreditCard} color="warning" />
-        <StatCard title="BU AY SATIŞ" value={thisMonthSales} icon={ShoppingCart} color="success" />
-        <StatCard
-          title="KASA DURUMU"
-          value={formatCurrency(kasaDurumu)}
-          icon={Wallet}
-          color={kasaDurumu >= 0 ? 'success' : 'destructive'}
-          className="col-span-2 md:col-span-1"
-        />
+    <div className="space-y-5 pb-24 md:pb-6 animate-fade-in" data-testid="dashboard">
+      {/* Date Range Filter */}
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4" data-testid="date-filter">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter size={16} className="text-primary" />
+          <span className="text-sm font-semibold">Tarih Aralığı</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {presets.map(p => (
+            <button
+              key={p.id}
+              onClick={() => { setPreset(p.id); setShowCustom(false); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                preset === p.id && !showCustom
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+              }`}
+              data-testid={`preset-${p.id}`}
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setShowCustom(true);
+              if (!customStart) setCustomStart(dateRange.start);
+              if (!customEnd) setCustomEnd(dateRange.end);
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              showCustom
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+            }`}
+            data-testid="preset-custom"
+          >
+            Özel
+          </button>
+        </div>
+        {showCustom && (
+          <div className="flex items-center gap-2 mt-2">
+            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
+              className="h-8 px-2 bg-background border border-border rounded-lg text-xs flex-1" data-testid="custom-start" />
+            <span className="text-muted-foreground text-xs">-</span>
+            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
+              className="h-8 px-2 bg-background border border-border rounded-lg text-xs flex-1" data-testid="custom-end" />
+          </div>
+        )}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Income/Expense Bar Chart */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5" data-testid="monthly-chart">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 size={18} className="text-primary" />
-            <h3 className="font-heading font-semibold">Aylık Gelir / Gider</h3>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 16%)" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 11 }} tickFormatter={(v) => v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(0 0% 16%)' }} />
-                <Bar dataKey="Gelir" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                <Bar dataKey="Gider" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex items-center gap-6 mt-3 justify-center">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />
+        <StatCard title="TOPLAM GİDER" value={formatCurrency(totalExpense)} icon={ArrowDownRight} color="destructive" />
+        <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color={netProfit >= 0 ? 'success' : 'destructive'} />
+        <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : undefined} />
+        <StatCard title="STOK / KONSİNYE" value={`${stockCars.length} / ${consignmentCars.length}`} icon={Package} color="default" subtitle={`${depositCars.length} kapora`} />
+        <StatCard title="KASA DURUMU" value={formatCurrency(kasaDurumu)} icon={Wallet} color={kasaDurumu >= 0 ? 'warning' : 'destructive'} subtitle="Tüm zamanlar" />
+      </div>
+
+      {/* Charts Row 1: Bar + Pie */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Income/Expense Bar Chart */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="monthly-chart">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm bg-green-500" />
-              <span className="text-xs text-muted-foreground">Gelir</span>
+              <BarChart3 size={18} className="text-primary" />
+              <h3 className="font-heading font-semibold text-sm sm:text-base">Gelir / Gider</h3>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm bg-red-500" />
-              <span className="text-xs text-muted-foreground">Gider</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-green-500" /><span className="text-[10px] text-muted-foreground">Gelir</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-red-500" /><span className="text-[10px] text-muted-foreground">Gider</span></div>
             </div>
+          </div>
+          <div className="h-56 sm:h-64">
+            {barChartData.some(d => d.Gelir > 0 || d.Gider > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barChartData} barGap={2}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 16%)" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 10 }} tickFormatter={v => v >= 1e6 ? `${(v/1e6).toFixed(1)}M` : v >= 1e3 ? `${(v/1e3).toFixed(0)}K` : v} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(0 0% 12%)' }} />
+                  <Bar dataKey="Gelir" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  <Bar dataKey="Gider" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Bu dönemde işlem yok</div>
+            )}
           </div>
         </div>
 
-        {/* Vehicle Status Pie Chart */}
-        <div className="bg-card border border-border rounded-xl p-5" data-testid="status-chart">
+        {/* Vehicle Status Pie */}
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="status-chart">
           <div className="flex items-center gap-2 mb-4">
             <PieIcon size={18} className="text-primary" />
-            <h3 className="font-heading font-semibold">Araç Dağılımı</h3>
+            <h3 className="font-heading font-semibold text-sm sm:text-base">Araç Dağılımı</h3>
           </div>
           {vehicleStatusData.length > 0 ? (
             <>
-              <div className="h-48 flex items-center justify-center">
+              <div className="h-44 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={vehicleStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {vehicleStatusData.map((entry, index) => (
-                        <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
+                    <Pie data={vehicleStatusData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={3} dataKey="value" stroke="none">
+                      {vehicleStatusData.map((entry, i) => (<Cell key={entry.name} fill={PIE_COLORS[i % PIE_COLORS.length]} />))}
                     </Pie>
-                    <Tooltip
-                      formatter={(value, name) => [`${value} araç`, name]}
+                    <Tooltip formatter={(v, name) => [`${v} araç`, name]}
                       contentStyle={{ background: 'hsl(0 0% 8%)', border: '1px solid hsl(0 0% 16%)', borderRadius: '8px', fontSize: '12px' }}
-                      itemStyle={{ color: 'hsl(0 0% 95%)' }}
-                    />
+                      itemStyle={{ color: 'hsl(0 0% 95%)' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-2 gap-2 mt-1">
                 {vehicleStatusData.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <span className="text-xs text-muted-foreground">{item.name}</span>
+                    <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <span className="text-xs text-muted-foreground truncate">{item.name}</span>
                     <span className="text-xs font-bold ml-auto">{item.value}</span>
                   </div>
                 ))}
               </div>
             </>
           ) : (
-            <div className="h-48 flex items-center justify-center">
-              <p className="text-sm text-muted-foreground">Henüz araç eklenmemiş</p>
-            </div>
+            <div className="h-44 flex items-center justify-center text-muted-foreground text-sm">Araç yok</div>
           )}
         </div>
       </div>
 
-      {/* Content Grid - Son İşlemler & Stok Durumu */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-xl">
-          <div className="p-4 border-b border-border">
-            <h3 className="font-heading font-semibold text-lg">Son İşlemler</h3>
+      {/* Charts Row 2: Sales Trend + Category Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Sales Trend */}
+        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="sales-trend-chart">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={18} className="text-green-500" />
+            <h3 className="font-heading font-semibold text-sm sm:text-base">Satış Trendi</h3>
+            <span className="text-[10px] text-muted-foreground ml-auto">{soldCount} araç satıldı</span>
           </div>
-          <div className="p-2">
-            {recentTransactions.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-8">Henüz işlem yok</p>
+          <div className="h-44 sm:h-48">
+            {salesTrendData.some(d => d.Satış > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={salesTrendData}>
+                  <defs>
+                    <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 16%)" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 10 }} interval="preserveStartEnd" />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="Satış" stroke="#22c55e" fill="url(#salesGrad)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
             ) : (
-              recentTransactions.map((tx) => (
-                <TransactionItem key={tx.id} transaction={tx} />
-              ))
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Bu dönemde satış yok</div>
             )}
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-xl">
-          <div className="p-4 border-b border-border">
-            <h3 className="font-heading font-semibold text-lg">Stok Durumu</h3>
+        {/* Category Breakdown */}
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="category-breakdown">
+          <div className="flex items-center gap-2 mb-4">
+            <CreditCard size={18} className="text-primary" />
+            <h3 className="font-heading font-semibold text-sm sm:text-base">Kategori Dağılımı</h3>
           </div>
-          <div className="p-2">
-            {stockStatusCars.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-8">Henüz araç eklenmemiş</p>
-            ) : (
-              stockStatusCars.map((car) => (
-                <StockStatusItem key={car.id} car={car} />
-              ))
-            )}
-          </div>
+          {categoryBreakdown.length > 0 ? (
+            <div className="space-y-2.5">
+              {categoryBreakdown.map((item, i) => (
+                <div key={item.category}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-muted-foreground truncate max-w-[60%]">{item.category}</span>
+                    <div className="flex gap-2">
+                      {item.income > 0 && <span className="text-success">+{formatCurrency(item.income)}</span>}
+                      {item.expense > 0 && <span className="text-destructive">-{formatCurrency(item.expense)}</span>}
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                    {item.income > 0 && <div className="h-full bg-green-500" style={{ width: `${(item.income / (item.income + item.expense)) * 100}%` }} />}
+                    {item.expense > 0 && <div className="h-full bg-red-500" style={{ width: `${(item.expense / (item.income + item.expense)) * 100}%` }} />}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Bu dönemde işlem yok</div>
+          )}
         </div>
       </div>
 
-      {/* Sales Trend + Top Brands */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sales Trend - Area Chart */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5" data-testid="sales-trend-chart">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={18} className="text-green-500" />
-            <h3 className="font-heading font-semibold">Son 30 Gün Satış Trendi</h3>
-          </div>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salesTrendData}>
-                <defs>
-                  <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 16%)" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 10 }} interval={4} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(0 0% 55%)', fontSize: 11 }} allowDecimals={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="Satış" stroke="#22c55e" fill="url(#salesGrad)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
+      {/* Row 3: Top Brands + Top Sellers + Recent Transactions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {/* Top Brands */}
-        <div className="bg-card border border-border rounded-xl p-5" data-testid="top-brands">
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="top-brands">
           <div className="flex items-center gap-2 mb-4">
             <Car size={18} className="text-primary" />
-            <h3 className="font-heading font-semibold">Marka Sıralaması</h3>
+            <h3 className="font-heading font-semibold text-sm sm:text-base">En Çok Satan Markalar</h3>
           </div>
           {topBrandsData.length > 0 ? (
             <div className="space-y-3">
@@ -391,24 +507,71 @@ const Dashboard = ({ onOpenReport }) => {
                   <div key={item.brand}>
                     <div className="flex items-center justify-between text-sm mb-1">
                       <span className="font-medium">{i + 1}. {item.brand}</span>
-                      <span className="text-muted-foreground">{item.count} araç</span>
+                      <span className="text-muted-foreground text-xs">{item.count} araç</span>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${pct}%`,
-                          background: CHART_COLORS[i % CHART_COLORS.length]
-                        }}
-                      />
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: CHART_COLORS[i % CHART_COLORS.length] }} />
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Henüz veri yok</p>
+            <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">Veri yok</div>
           )}
+        </div>
+
+        {/* Top Sellers */}
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="top-sellers">
+          <div className="flex items-center gap-2 mb-4">
+            <ShoppingCart size={18} className="text-success" />
+            <h3 className="font-heading font-semibold text-sm sm:text-base">Satış Elemanları</h3>
+          </div>
+          {topSellers.length > 0 ? (
+            <div className="space-y-3">
+              {topSellers.map((item, i) => {
+                const maxCount = topSellers[0]?.count || 1;
+                const pct = (item.count / maxCount) * 100;
+                return (
+                  <div key={item.name}>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="font-medium">{i + 1}. {item.name}</span>
+                      <span className="text-muted-foreground text-xs">{item.count} satış</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-success" style={{ width: `${pct}%`, opacity: 1 - (i * 0.15) }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">Bu dönemde satış yok</div>
+          )}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="bg-card border border-border rounded-xl" data-testid="recent-transactions">
+          <div className="p-4 border-b border-border">
+            <h3 className="font-heading font-semibold text-sm sm:text-base">Son İşlemler</h3>
+          </div>
+          <div className="p-2">
+            {recentTx.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-6">Bu dönemde işlem yok</p>
+            ) : (
+              recentTx.map(tx => (
+                <div key={tx.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-xs truncate">{tx.category}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{tx.description}</p>
+                  </div>
+                  <span className={`font-heading font-bold text-xs tabular-nums ml-2 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -423,8 +586,8 @@ const Dashboard = ({ onOpenReport }) => {
             <FileText size={24} className="text-primary" />
           </div>
           <div className="text-left">
-            <p className="font-semibold">Raporlar</p>
-            <p className="text-sm text-muted-foreground">Finansal raporlar ve döküm oluştur</p>
+            <p className="font-semibold text-sm">Detaylı Raporlar</p>
+            <p className="text-xs text-muted-foreground">Yazdırılabilir finansal raporlar</p>
           </div>
         </div>
         <Calendar size={20} className="text-muted-foreground" />
