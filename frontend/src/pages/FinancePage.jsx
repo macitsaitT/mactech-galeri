@@ -7,12 +7,14 @@ import {
   Wallet,
   Search,
   Trash2,
+  Edit,
   Calendar,
   Filter,
   Download,
   Users
 } from 'lucide-react';
 import { exportAPI, usersAPI } from '../services/api';
+import EditTransactionModal from '../components/modals/EditTransactionModal';
 
 const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
@@ -36,6 +38,7 @@ const FinancePage = () => {
   const [filterUser, setFilterUser] = useState('all');
   const [orgUsers, setOrgUsers] = useState([]);
   const [exporting, setExporting] = useState(false);
+  const [editModal, setEditModal] = useState({ open: false, tx: null });
 
   const userRole = user?.role || 'admin';
 
@@ -292,6 +295,14 @@ const FinancePage = () => {
                   {/* Actions */}
                   <div className="flex items-center gap-1">
                     <button
+                      onClick={() => setEditModal({ open: true, tx })}
+                      title="Düzenle"
+                      className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                      data-testid={`edit-tx-${tx.id}`}
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
                       onClick={() => handleDelete(tx)}
                       title="Kalıcı Sil"
                       className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
@@ -306,6 +317,12 @@ const FinancePage = () => {
           </div>
         )}
       </div>
+
+      <EditTransactionModal
+        isOpen={editModal.open}
+        onClose={() => setEditModal({ open: false, tx: null })}
+        transaction={editModal.tx}
+      />
     </div>
   );
 };

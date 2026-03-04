@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Receipt, TrendingDown, Plus } from 'lucide-react';
+import { Receipt, TrendingDown, Plus, Edit } from 'lucide-react';
 import { formatCurrency, formatDate, formatNumberInput, parseNumber } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import {
@@ -16,8 +16,9 @@ const expenseCategories = [
 ];
 
 const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
-  const { transactions, addTransaction } = useApp();
+  const { transactions, addTransaction, updateTransaction } = useApp();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTx, setEditingTx] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     category: 'Genel Gider',
@@ -49,21 +50,42 @@ const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
 
     setLoading(true);
     try {
-      await addTransaction({
-        type: 'expense',
-        category: formData.category,
-        amount: parseNumber(formData.amount),
-        description: `${formData.description} - ${car.plate?.toUpperCase()}`,
-        date: formData.date,
-        car_id: car.id
-      });
+      if (editingTx) {
+        await updateTransaction(editingTx.id, {
+          category: formData.category,
+          amount: parseNumber(formData.amount),
+          description: formData.description,
+          date: formData.date
+        });
+        setEditingTx(null);
+      } else {
+        await addTransaction({
+          type: 'expense',
+          category: formData.category,
+          amount: parseNumber(formData.amount),
+          description: `${formData.description} - ${car.plate?.toUpperCase()}`,
+          date: formData.date,
+          car_id: car.id
+        });
+      }
       setFormData({ category: 'Genel Gider', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
       setShowAddForm(false);
     } catch (error) {
-      console.error('Error adding expense:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const startEdit = (tx) => {
+    setEditingTx(tx);
+    setFormData({
+      category: tx.category || 'Genel Gider',
+      amount: formatNumberInput(tx.amount),
+      description: tx.description || '',
+      date: tx.date || new Date().toISOString().split('T')[0],
+    });
+    setShowAddForm(true);
   };
 
   if (!car) return null;
@@ -110,6 +132,7 @@ const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
           {/* Add Form */}
           {showAddForm && (
             <form onSubmit={handleSubmit} className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border">
+              <p className="text-sm font-medium">{editingTx ? 'İşlem Düzenle' : 'Yeni Masraf Ekle'}</p>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -150,11 +173,11 @@ const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
                   className="flex-1 py-2 bg-warning text-warning-foreground rounded-lg text-sm font-medium disabled:opacity-50"
                   data-testid="save-car-expense-btn"
                 >
-                  {loading ? 'Kaydediliyor...' : 'Ekle'}
+                  {loading ? 'Kaydediliyor...' : editingTx ? 'Güncelle' : 'Ekle'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
+                  onClick={() => { setShowAddForm(false); setEditingTx(null); }}
                   className="flex-1 py-2 border border-border rounded-lg text-sm"
                 >
                   İptal
@@ -184,11 +207,20 @@ const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
                     <p className="font-medium text-sm truncate">{tx.category}</p>
                     <p className="text-xs text-muted-foreground truncate">{tx.description || '-'}</p>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-bold text-sm tabular-nums ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
-                      {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{formatDate(tx.date)}</p>
+                  <div className="text-right flex items-center gap-2">
+                    <button
+                      onClick={() => startEdit(tx)}
+                      className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                      data-testid={`edit-car-expense-${tx.id}`}
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <div>
+                      <p className={`font-bold text-sm tabular-nums ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{formatDate(tx.date)}</p>
+                    </div>
                   </div>
                 </div>
               ))}
