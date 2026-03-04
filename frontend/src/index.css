@@ -97,6 +97,15 @@
 }
 
 @layer utilities {
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Glass morphism effect */
   .glass {
     @apply bg-background/80 backdrop-blur-md;

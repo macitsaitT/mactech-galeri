@@ -318,23 +318,23 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         </DialogHeader>
 
         {/* Tabs */}
-        <div className="flex border-b border-border mt-4 overflow-x-auto scrollbar-hide">
+        <div className="flex border-b border-border mt-4 overflow-x-auto scrollbar-hide -mx-1 px-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-1 sm:flex-initial justify-center sm:justify-start ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
                 data-testid={`tab-${tab.id}`}
               >
-                <Icon size={14} className="sm:w-4 sm:h-4" />
+                <Icon size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{
+                <span className="sm:hidden text-[11px]">{
                   tab.id === 'general' ? 'Genel' :
                   tab.id === 'expertise' ? 'Ekspertiz' :
                   tab.id === 'photos' ? 'Foto' :

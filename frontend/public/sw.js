@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aslanbasoto-v2';
+const CACHE_NAME = 'aslanbasoto-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -27,19 +27,18 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch - Network first, fallback to cache
+// Fetch handler
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  
+
   // Skip non-GET requests
   if (request.method !== 'GET') return;
-  
+
   // API calls - network only with offline fallback
   if (request.url.includes('/api/')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache API GET responses
           if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -52,7 +51,7 @@ self.addEventListener('fetch', (event) => {
           return caches.match(request).then((cached) => {
             if (cached) return cached;
             return new Response(
-              JSON.stringify({ error: 'Offline', message: 'Çevrimdışısınız. İnternet bağlantınızı kontrol edin.' }),
+              JSON.stringify({ error: 'Offline', message: 'Cevrimdisisiniz. Internet baglantinizi kontrol edin.' }),
               { headers: { 'Content-Type': 'application/json' }, status: 503 }
             );
           });
@@ -60,27 +59,34 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-  
-  // Static assets - cache first, then network
+
+  // SPA navigation requests - always serve index.html (network first)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Static assets - network first, fallback to cache
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request).then((response) => {
+    fetch(request)
+      .then((response) => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      }).catch(() => cached);
-      
-      return cached || fetchPromise;
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });
 
 // Push notification handler
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Aslanbaş Oto';
+  const title = data.title || 'Aslanba\u015F Oto';
   const options = {
     body: data.body || 'Yeni bildirim',
     icon: '/manifest-icon-192.png',
@@ -89,7 +95,7 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'default',
     data: data.url || '/',
   };
-  
+
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
