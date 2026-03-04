@@ -2,14 +2,22 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.3.0
-- **Last Updated:** 2026-02-20
-- **Status:** MVP Complete + Multi-Tenant RBAC + Salesperson Tracking + Report Employee Filter
+- **Version:** 4.4.0
+- **Last Updated:** 2026-03-04
+- **Status:** MVP Complete + Multi-Tenant RBAC + Dashboard with Date Filtering
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.4 - Dashboard Yeniden Tasarım
+- [x] Tarih aralığı filtresi (Bu Hafta, Bu Ay, 3 Ay, 6 Ay, Bu Yıl, Tümü, Özel)
+- [x] Tüm istatistikler ve grafikler seçilen tarihe göre filtreleniyor
+- [x] Dinamik bar chart gruplaması (günlük/haftalık/aylık otomatik)
+- [x] Kategori dağılımı grafiği
+- [x] Satış elemanı performans sıralaması
+- [x] Kasa Durumu her zaman tüm zamanları gösteriyor
 
 ### v4.3 - Rapor Çalışan Filtresi
 - [x] Rapor modalına çalışan filtresi eklendi (admin/muhasebe için)
