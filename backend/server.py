@@ -673,6 +673,16 @@ async def delete_transaction(transaction_id: str, permanent: bool = False, curre
     
     return {"success": True}
 
+@api_router.post("/transactions/{transaction_id}/restore")
+async def restore_transaction(transaction_id: str, current_user: dict = Depends(get_current_user)):
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.transactions.find_one({"id": transaction_id, "org_id": org_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    await db.transactions.update_one({"id": transaction_id}, {"$set": {"deleted": False, "deleted_at": None}})
+    result = await db.transactions.find_one({"id": transaction_id}, {"_id": 0})
+    return result
+
 # ==================== DASHBOARD STATS ====================
 
 @api_router.get("/stats")
@@ -1257,7 +1267,6 @@ class AppointmentBase(BaseModel):
 @api_router.get("/appointments")
 async def get_appointments(current_user: dict = Depends(get_current_user)):
     query = build_data_filter(current_user)
-    query.pop("deleted", None)  # appointments don't have soft delete
     appointments = await db.appointments.find(query, {"_id": 0}).sort("date", 1).to_list(1000)
     return appointments
 
@@ -1269,6 +1278,7 @@ async def create_appointment(appointment: AppointmentBase, current_user: dict = 
     doc["org_id"] = current_user.get("org_id", current_user["user_id"])
     doc["created_by"] = current_user["user_id"]
     doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    doc["deleted"] = False
     await db.appointments.insert_one(doc)
     doc.pop("_id", None)
     return doc
@@ -1287,10 +1297,29 @@ async def update_appointment(appointment_id: str, data: dict, current_user: dict
     return updated
 
 @api_router.delete("/appointments/{appointment_id}")
-async def delete_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_appointment(appointment_id: str, permanent: bool = False, current_user: dict = Depends(get_current_user)):
     org_id = current_user.get("org_id", current_user["user_id"])
-    await db.appointments.delete_one({"id": appointment_id, "org_id": org_id})
+    existing = await db.appointments.find_one({"id": appointment_id, "org_id": org_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    if permanent:
+        await db.appointments.delete_one({"id": appointment_id})
+    else:
+        await db.appointments.update_one({"id": appointment_id}, {"$set": {
+            "deleted": True,
+            "deleted_at": datetime.now(timezone.utc).isoformat()
+        }})
     return {"success": True}
+
+@api_router.post("/appointments/{appointment_id}/restore")
+async def restore_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+    org_id = current_user.get("org_id", current_user["user_id"])
+    existing = await db.appointments.find_one({"id": appointment_id, "org_id": org_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    await db.appointments.update_one({"id": appointment_id}, {"$set": {"deleted": False, "deleted_at": None}})
+    result = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    return result
 
 # Include router
 app.include_router(api_router)

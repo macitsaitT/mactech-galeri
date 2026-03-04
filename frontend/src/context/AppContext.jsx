@@ -230,8 +230,14 @@ export const AppProvider = ({ children }) => {
     if (permanent) {
       setTransactions(prev => prev.filter(t => t.id !== id));
     } else {
-      setTransactions(prev => prev.map(t => t.id === id ? { ...t, deleted: true } : t));
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, deleted: true, deleted_at: new Date().toISOString() } : t));
     }
+    await refreshStats();
+  };
+
+  const restoreTransaction = async (id) => {
+    const response = await transactionsAPI.restore(id);
+    setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...response.data, deleted: false, deleted_at: null } : t));
     await refreshStats();
   };
 
@@ -263,9 +269,18 @@ export const AppProvider = ({ children }) => {
     return response.data;
   };
 
-  const deleteAppointment = async (id) => {
-    await appointmentsAPI.delete(id);
-    setAppointments(prev => prev.filter(a => a.id !== id));
+  const deleteAppointment = async (id, permanent = false) => {
+    await appointmentsAPI.delete(id, permanent);
+    if (permanent) {
+      setAppointments(prev => prev.filter(a => a.id !== id));
+    } else {
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, deleted: true, deleted_at: new Date().toISOString() } : a));
+    }
+  };
+
+  const restoreAppointment = async (id) => {
+    const response = await appointmentsAPI.restore(id);
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...response.data, deleted: false, deleted_at: null } : a));
   };
 
   const value = {
@@ -305,11 +320,13 @@ export const AppProvider = ({ children }) => {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    restoreTransaction,
 
     // Appointments
     addAppointment,
     updateAppointment,
     deleteAppointment,
+    restoreAppointment,
 
     // Theme
     theme,

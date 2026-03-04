@@ -82,6 +82,7 @@ export const transactionsAPI = {
   create: (data) => api.post('/transactions', data),
   update: (id, data) => api.put(`/transactions/${id}`, data),
   delete: (id, permanent = false) => api.delete(`/transactions/${id}?permanent=${permanent}`),
+  restore: (id) => api.post(`/transactions/${id}/restore`),
 };
 
 // ==================== STATS ====================
@@ -103,7 +104,8 @@ export const appointmentsAPI = {
   getAll: () => api.get('/appointments'),
   create: (data) => api.post('/appointments', data),
   update: (id, data) => api.put(`/appointments/${id}`, data),
-  delete: (id) => api.delete(`/appointments/${id}`),
+  delete: (id, permanent = false) => api.delete(`/appointments/${id}?permanent=${permanent}`),
+  restore: (id) => api.post(`/appointments/${id}/restore`),
 };
 
 export default api;
