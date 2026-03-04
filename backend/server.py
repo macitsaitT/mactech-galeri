@@ -862,28 +862,29 @@ async def download_file(file_path: str, auth: str = Query(None), authorization: 
 
 def _add_table_to_doc(doc, headers, rows):
     """Helper to add a styled table to a Word document."""
-    from docx.shared import Pt, Inches, RGBColor
+    from docx.shared import Pt, Cm, RGBColor
     from docx.enum.table import WD_TABLE_ALIGNMENT
     from docx.oxml.ns import qn
     
     table = doc.add_table(rows=1 + len(rows), cols=len(headers))
     table.style = 'Table Grid'
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = True
     
     # Header row
     for j, h in enumerate(headers):
         cell = table.rows[0].cells[j]
-        cell.text = h
-        for p in cell.paragraphs:
-            p.alignment = 1  # CENTER
-            for run in p.runs:
-                run.bold = True
-                run.font.size = Pt(10)
-                run.font.color.rgb = RGBColor(255, 255, 255)
+        cell.text = ''
+        p = cell.paragraphs[0]
+        p.alignment = 1  # CENTER
+        run = p.add_run(h)
+        run.bold = True
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor(255, 255, 255)
         # Dark background
         shading = cell._element.get_or_add_tcPr()
         shd = shading.makeelement(qn('w:shd'), {
-            qn('w:fill'): '1a1a2e',
+            qn('w:fill'): '2d2d3f',
             qn('w:val'): 'clear'
         })
         shading.append(shd)
@@ -892,40 +893,57 @@ def _add_table_to_doc(doc, headers, rows):
     for i, row_data in enumerate(rows):
         for j, val in enumerate(row_data):
             cell = table.rows[i + 1].cells[j]
-            cell.text = str(val)
-            for p in cell.paragraphs:
-                for run in p.runs:
-                    run.font.size = Pt(9)
+            cell.text = ''
+            p = cell.paragraphs[0]
+            run = p.add_run(str(val))
+            run.font.size = Pt(8)
+        # Alternate row shading
+        if i % 2 == 1:
+            for j in range(len(headers)):
+                shading = table.rows[i + 1].cells[j]._element.get_or_add_tcPr()
+                shd = shading.makeelement(qn('w:shd'), {
+                    qn('w:fill'): 'f0f0f5',
+                    qn('w:val'): 'clear'
+                })
+                shading.append(shd)
 
 @api_router.get("/export/cars")
 async def export_cars_word(current_user: dict = Depends(get_current_user)):
     from docx import Document
-    from docx.shared import Pt
+    from docx.shared import Pt, Cm
+    from docx.enum.section import WD_ORIENT
     
     cars = await db.cars.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     doc = Document()
-    doc.add_heading('Araç Listesi', level=1)
-    doc.add_paragraph(f'Toplam: {len(cars)} araç | Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
     
-    headers = ["Plaka", "Marka", "Model", "Yıl", "KM", "Yakıt", "Vites", "Durum",
-               "Alış Fiyatı", "Satış Fiyatı", "Ekspertiz", "Tramer", "Giriş Tarihi"]
+    # Set landscape orientation for wider table
+    section = doc.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    new_width, new_height = section.page_height, section.page_width
+    section.page_width = new_width
+    section.page_height = new_height
+    section.left_margin = Cm(1.5)
+    section.right_margin = Cm(1.5)
+    
+    heading = doc.add_heading('Araç Listesi', level=1)
+    doc.add_paragraph(f'Toplam: {len(cars)} araç  |  Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
+    
+    headers = ["Plaka", "Marka", "Model", "Yıl", "KM", "Yakıt", "Vites", "Durum", "Alış (TL)", "Satış (TL)", "Giriş Tarihi"]
     
     rows = []
     for car in cars:
         rows.append([
-            car.get("plate", ""),
+            car.get("plate", "").upper(),
             car.get("brand", ""),
             car.get("model", ""),
             str(car.get("year", "")),
-            car.get("km", ""),
+            f'{int(car.get("km", "0") or 0):,}'.replace(",", "."),
             car.get("fuel_type", ""),
             car.get("gear", ""),
             car.get("status", ""),
-            f'{car.get("purchase_price", 0):,.0f} TL',
-            f'{car.get("sale_price", 0):,.0f} TL',
-            str(car.get("expertise_score", 0)),
-            f'{car.get("tramer_amount", 0):,.0f} TL',
+            f'{car.get("purchase_price", 0):,.0f}'.replace(",", "."),
+            f'{car.get("sale_price", 0):,.0f}'.replace(",", "."),
             car.get("entry_date", ""),
         ])
     
@@ -944,12 +962,17 @@ async def export_cars_word(current_user: dict = Depends(get_current_user)):
 @api_router.get("/export/customers")
 async def export_customers_word(current_user: dict = Depends(get_current_user)):
     from docx import Document
+    from docx.shared import Cm
     
     customers = await db.customers.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     doc = Document()
+    section = doc.sections[0]
+    section.left_margin = Cm(2)
+    section.right_margin = Cm(2)
+    
     doc.add_heading('Müşteri Listesi', level=1)
-    doc.add_paragraph(f'Toplam: {len(customers)} müşteri | Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
+    doc.add_paragraph(f'Toplam: {len(customers)} müşteri  |  Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
     
     headers = ["Ad Soyad", "Telefon", "Tür", "Notlar", "Kayıt Tarihi"]
     
@@ -959,7 +982,7 @@ async def export_customers_word(current_user: dict = Depends(get_current_user)):
             c.get("name", ""),
             c.get("phone", ""),
             c.get("type", ""),
-            c.get("notes", ""),
+            c.get("notes", "")[:50],
             c.get("created_at", "")[:10],
         ])
     
@@ -978,12 +1001,30 @@ async def export_customers_word(current_user: dict = Depends(get_current_user)):
 @api_router.get("/export/transactions")
 async def export_transactions_word(current_user: dict = Depends(get_current_user)):
     from docx import Document
+    from docx.shared import Cm
+    from docx.enum.section import WD_ORIENT
     
     transactions_list = await db.transactions.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
     
     doc = Document()
+    section = doc.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    new_width, new_height = section.page_height, section.page_width
+    section.page_width = new_width
+    section.page_height = new_height
+    section.left_margin = Cm(1.5)
+    section.right_margin = Cm(1.5)
+    
     doc.add_heading('İşlem Geçmişi', level=1)
-    doc.add_paragraph(f'Toplam: {len(transactions_list)} işlem | Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}')
+    
+    total_income = sum(t.get("amount", 0) for t in transactions_list if t.get("type") == "income")
+    total_expense = sum(t.get("amount", 0) for t in transactions_list if t.get("type") == "expense")
+    doc.add_paragraph(
+        f'Toplam: {len(transactions_list)} işlem  |  '
+        f'Gelir: {total_income:,.0f} TL  |  Gider: {total_expense:,.0f} TL  |  '
+        f'Net: {total_income - total_expense:,.0f} TL  |  '
+        f'Tarih: {datetime.now(timezone.utc).strftime("%d.%m.%Y")}'
+    )
     
     headers = ["Tarih", "Tür", "Kategori", "Açıklama", "Tutar (TL)"]
     
@@ -993,8 +1034,8 @@ async def export_transactions_word(current_user: dict = Depends(get_current_user
             t.get("date", ""),
             "Gelir" if t.get("type") == "income" else "Gider",
             t.get("category", ""),
-            t.get("description", ""),
-            f'{t.get("amount", 0):,.0f}',
+            t.get("description", "")[:60],
+            f'{t.get("amount", 0):,.0f}'.replace(",", "."),
         ])
     
     _add_table_to_doc(doc, headers, rows)

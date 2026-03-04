@@ -318,23 +318,23 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         </DialogHeader>
 
         {/* Tabs */}
-        <div className="flex border-b border-border mt-4 overflow-x-auto">
+        <div className="flex border-b border-border mt-4 overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
                 data-testid={`tab-${tab.id}`}
               >
-                <Icon size={16} />
-                <span className="tab-label-full">{tab.label}</span>
-                <span className="tab-label-short">{
+                <Icon size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{
                   tab.id === 'general' ? 'Genel' :
                   tab.id === 'expertise' ? 'Ekspertiz' :
                   tab.id === 'photos' ? 'Foto' :
@@ -350,7 +350,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
           {activeTab === 'general' && (
             <div className="space-y-4 py-4">
               {/* Basic Info Row 1 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-2">Plaka</label>
                   <input
@@ -415,7 +415,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
               </div>
 
               {/* Basic Info Row 2 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-2">KM</label>
                   <input
