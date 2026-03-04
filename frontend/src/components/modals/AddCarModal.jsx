@@ -309,32 +309,32 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="pb-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
           <DialogTitle className="flex items-center gap-2">
             <Car size={24} className="text-primary" />
             {editingCar ? 'Araç Düzenle' : 'Yeni Araç Girişi'}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Tabs */}
-        <div className="flex border-b border-border mt-4 overflow-x-auto scrollbar-hide -mx-1 px-1">
+        {/* Tabs - highly visible on mobile */}
+        <div className="grid grid-cols-4 gap-1 px-4 sm:px-6 mt-3 mb-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-1 sm:flex-initial justify-center sm:justify-start ${
+                className={`flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted/60 text-muted-foreground hover:bg-muted'
                 }`}
                 data-testid={`tab-${tab.id}`}
               >
-                <Icon size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
+                <Icon size={14} className="flex-shrink-0" />
                 <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden text-[11px]">{
+                <span className="sm:hidden text-[11px] leading-tight">{
                   tab.id === 'general' ? 'Genel' :
                   tab.id === 'expertise' ? 'Ekspertiz' :
                   tab.id === 'photos' ? 'Foto' :
@@ -345,7 +345,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
           })}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-1">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-6 pb-4 sm:pb-6">
           {/* General Tab */}
           {activeTab === 'general' && (
             <div className="space-y-4 py-4">
@@ -799,7 +799,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         </form>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t border-border mt-4">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t border-border px-4 sm:px-6 pb-4 sm:pb-6">
           <button
             type="button"
             onClick={onClose}
