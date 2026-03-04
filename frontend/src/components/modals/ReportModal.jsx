@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDate } from '../../utils/helpers';
-import { fileAPI } from '../../services/api';
+import { fileAPI, usersAPI } from '../../services/api';
 import {
   Dialog,
   DialogContent,
@@ -205,6 +205,16 @@ const ReportModal = ({ isOpen, onClose }) => {
   const [reportType, setReportType] = useState('general');
   const [plateSearch, setPlateSearch] = useState('');
   const [selectedCarId, setSelectedCarId] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState('all');
+  const [employees, setEmployees] = useState([]);
+
+  const userRole = user?.role || 'admin';
+
+  useEffect(() => {
+    if (isOpen && (userRole === 'admin' || userRole === 'muhasebe')) {
+      usersAPI.getEmployees().then(res => setEmployees(res.data || [])).catch(() => {});
+    }
+  }, [isOpen, userRole]);
 
   const companyName = user?.company_name || 'ASLANBAŞ OTO A.Ş.';
   const companyPhone = user?.phone || '05401250404';
@@ -239,6 +249,12 @@ const ReportModal = ({ isOpen, onClose }) => {
 
   const displayTransactions = useMemo(() => {
     let filtered = [...filteredTransactions];
+
+    // Employee filter
+    if (selectedEmployee !== 'all') {
+      filtered = filtered.filter(t => t.created_by === selectedEmployee);
+    }
+
     switch (reportType) {
       case 'stock':
         filtered = filtered.filter(t => t.category?.includes('Alımı') || t.category?.includes('Alış'));
@@ -265,7 +281,7 @@ const ReportModal = ({ isOpen, onClose }) => {
         break;
     }
     return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [filteredTransactions, reportType, selectedCarId]);
+  }, [filteredTransactions, reportType, selectedCarId, selectedEmployee]);
 
   const totals = useMemo(() => {
     let income = 0;
@@ -300,8 +316,10 @@ const ReportModal = ({ isOpen, onClose }) => {
   const doPrint = async () => {
     const logoDataUrl = await fetchLogoAsDataUrl();
     const dateRange = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+    const empName = selectedEmployee !== 'all' ? employees.find(e => e.id === selectedEmployee)?.name : null;
+    const title = empName ? `${reportTitles[reportType]} - ${empName}` : reportTitles[reportType];
     const html = buildPrintHTML({
-      title: reportTitles[reportType],
+      title,
       dateRange,
       companyName,
       phone: companyPhone,
@@ -360,6 +378,24 @@ const ReportModal = ({ isOpen, onClose }) => {
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9 px-2 sm:px-3 bg-background border border-border rounded-lg text-sm flex-1 min-w-0" data-testid="report-end-date" />
               </div>
             </div>
+            {(userRole === 'admin' || userRole === 'muhasebe') && employees.length > 1 && (
+              <div>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Çalışan</span>
+                <select
+                  value={selectedEmployee}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                  className="h-9 px-3 bg-background border border-border rounded-lg text-sm min-w-[180px]"
+                  data-testid="report-employee-filter"
+                >
+                  <option value="all">Tüm Çalışanlar</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name} ({emp.role === 'admin' ? 'Admin' : emp.role === 'muhasebe' ? 'Muhasebe' : 'Satış'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Rapor Kapsamı</span>
               <div className="flex flex-wrap gap-1">
@@ -410,7 +446,12 @@ const ReportModal = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto p-4" ref={reportRef}>
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-xl font-bold">{reportTitles[reportType]}</h2>
+              <h2 className="text-xl font-bold">
+                {reportTitles[reportType]}
+                {selectedEmployee !== 'all' && employees.find(e => e.id === selectedEmployee) && (
+                  <span className="text-primary"> - {employees.find(e => e.id === selectedEmployee).name}</span>
+                )}
+              </h2>
               <p className="text-sm text-muted-foreground">{formatDate(startDate)} - {formatDate(endDate)}</p>
             </div>
             <div className="flex items-center gap-3">
