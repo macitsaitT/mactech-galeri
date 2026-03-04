@@ -24,6 +24,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [employees, setEmployees] = useState([]);
+  const [showEmployeeList, setShowEmployeeList] = useState(false);
 
   React.useEffect(() => {
     if (car && isOpen) {
@@ -34,6 +35,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         customer_id: '',
         sale_date: new Date().toISOString().split('T')[0]
       });
+      setShowEmployeeList(false);
       // Fetch employees
       usersAPI.getEmployees().then(res => setEmployees(res.data || [])).catch(() => {});
     }
@@ -158,19 +160,42 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Çalışan Seçimi</label>
-              <select
-                value={formData.employee_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, employee_name: e.target.value }))}
-                className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors"
-                data-testid="employee-select"
+              <button
+                type="button"
+                onClick={() => setShowEmployeeList(!showEmployeeList)}
+                className="w-full h-12 px-4 bg-background border border-border rounded-lg text-left flex items-center justify-between text-sm"
+                data-testid="employee-select-btn"
               >
-                <option value="">Çalışan seçilmedi</option>
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.name}>
-                    {emp.name} ({emp.role === 'admin' ? 'Admin' : emp.role === 'muhasebe' ? 'Muhasebe' : 'Satış'})
-                  </option>
-                ))}
-              </select>
+                <span className={formData.employee_name ? 'text-foreground' : 'text-muted-foreground'}>
+                  {formData.employee_name || 'Çalışan seçilmedi'}
+                </span>
+                <svg className={`w-4 h-4 text-muted-foreground transition-transform ${showEmployeeList ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {showEmployeeList && (
+                <div className="mt-1 bg-card border border-border rounded-lg overflow-hidden shadow-lg" data-testid="employee-list">
+                  <button
+                    type="button"
+                    onClick={() => { setFormData(prev => ({ ...prev, employee_name: '' })); setShowEmployeeList(false); }}
+                    className={`w-full px-4 py-3 text-left text-sm hover:bg-muted/60 transition-colors border-b border-border ${!formData.employee_name ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground'}`}
+                  >
+                    Çalışan seçilmedi
+                  </button>
+                  {employees.map(emp => (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() => { setFormData(prev => ({ ...prev, employee_name: emp.name })); setShowEmployeeList(false); }}
+                      className={`w-full px-4 py-3 text-left text-sm hover:bg-muted/60 transition-colors border-b border-border last:border-0 ${formData.employee_name === emp.name ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'}`}
+                      data-testid={`employee-option-${emp.id}`}
+                    >
+                      {emp.name}
+                      <span className="text-muted-foreground ml-1 text-xs">
+                        ({emp.role === 'admin' ? 'Admin' : emp.role === 'muhasebe' ? 'Muhasebe' : 'Satış'})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
