@@ -2,14 +2,21 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.4.0
+- **Version:** 4.5.0
 - **Last Updated:** 2026-03-04
-- **Status:** MVP Complete + Multi-Tenant RBAC + Dashboard with Date Filtering
+- **Status:** MVP Complete + Full Trash Support
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.5 - Tam Çöp Kutusu Desteği
+- [x] İşlemler (transactions) soft-delete ve restore desteği
+- [x] Randevular (appointments) soft-delete ve restore desteği
+- [x] Çöp sayfası: Tümü, Araçlar, İşlemler, Müşteriler, Randevular tab'ları
+- [x] Her öğe tipi için geri yükleme ve kalıcı silme butonları
+- [x] Tab'larda silinen öğe sayısı gösterimi
 
 ### v4.4 - Dashboard Yeniden Tasarım
 - [x] Tarih aralığı filtresi (Bu Hafta, Bu Ay, 3 Ay, 6 Ay, Bu Yıl, Tümü, Özel)
