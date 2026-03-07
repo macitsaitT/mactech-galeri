@@ -2,14 +2,22 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.5.0
-- **Last Updated:** 2026-03-04
-- **Status:** MVP Complete + Full Trash Support
+- **Version:** 4.6.0
+- **Last Updated:** 2026-03-07
+- **Status:** MVP Complete + Stock Days + Profit/Loss Report
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.6 - Stok Gün Sayısı + Kâr/Zarar Raporu
+- [x] Araç kartında "Stokta X gün" gösterimi (entry_date'e göre hesaplama)
+- [x] Araç detayında Giriş Tarihi, Eklenme Tarihi, Stokta kaç gün bilgisi
+- [x] Satılan araçlarda "Stokta Kaldı X gün" gösterimi
+- [x] Raporlara "Stok Araç Kâr/Zarar Raporu" tipi eklendi
+- [x] Araç bazlı kâr/zarar tablosu (Alış, Giderler, Maliyet, Satış, Kâr/Zarar, Gün, Satan)
+- [x] Toplam özet kartları (Toplam Alış, Satış, Giderler, Net Kâr/Zarar)
 
 ### v4.5 - Tam Çöp Kutusu Desteği
 - [x] İşlemler (transactions) soft-delete ve restore desteği
