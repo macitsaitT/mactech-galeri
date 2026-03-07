@@ -14,28 +14,35 @@ import {
   X,
   FileText,
   Calendar,
-  UserCog
+  UserCog,
+  Shield
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
 
 const allMenuItems = [
-  { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard, roles: ['admin', 'muhasebe', 'satis'] },
-  { id: 'inventory', label: 'Stok Araçlar', icon: Car, roles: ['admin', 'satis'] },
-  { id: 'consignment', label: 'Konsinye Araçlar', icon: Package, roles: ['admin', 'satis'] },
-  { id: 'sold', label: 'Satılan Araçlar', icon: ShoppingCart, roles: ['admin', 'satis'] },
-  { id: 'finance', label: 'Gelir & Gider', icon: Wallet, roles: ['admin', 'muhasebe'] },
-  { id: 'reports', label: 'Raporlar', icon: FileText, roles: ['admin', 'muhasebe'] },
-  { id: 'customers', label: 'Müşteriler', icon: Users, roles: ['admin', 'satis', 'muhasebe'] },
-  { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis'] },
+  { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard, roles: ['admin', 'muhasebe', 'satis'], perm: 'dashboard_view' },
+  { id: 'inventory', label: 'Stok Araçlar', icon: Car, roles: ['admin', 'satis'], perm: 'vehicles_view' },
+  { id: 'consignment', label: 'Konsinye Araçlar', icon: Package, roles: ['admin', 'satis'], perm: 'vehicles_view' },
+  { id: 'sold', label: 'Satılan Araçlar', icon: ShoppingCart, roles: ['admin', 'satis'], perm: 'vehicles_view' },
+  { id: 'finance', label: 'Gelir & Gider', icon: Wallet, roles: ['admin', 'muhasebe'], perm: 'transactions_view' },
+  { id: 'reports', label: 'Raporlar', icon: FileText, roles: ['admin', 'muhasebe'], perm: 'reports_view' },
+  { id: 'customers', label: 'Müşteriler', icon: Users, roles: ['admin', 'satis', 'muhasebe'], perm: 'customers_view' },
+  { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis'], perm: 'appointments_view' },
+  { id: 'permissions', label: 'Yetki Yönetimi', icon: Shield, roles: ['admin'] },
   { id: 'users', label: 'Kullanıcılar', icon: UserCog, roles: ['admin'] },
-  { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'] },
+  { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'], perm: 'trash_view' },
 ];
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) => {
-  const { user, logout, theme, toggleTheme } = useApp();
+  const { user, logout, theme, toggleTheme, hasPermission } = useApp();
   const userRole = user?.role || 'admin';
-  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+  const menuItems = allMenuItems.filter(item => {
+    if (userRole === 'admin') return item.roles.includes('admin');
+    if (!item.roles.includes(userRole)) return false;
+    if (item.perm) return hasPermission(item.perm);
+    return true;
+  });
 
   const handleNavClick = (itemId) => {
     if (itemId === 'reports') {

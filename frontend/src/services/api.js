@@ -108,4 +108,9 @@ export const appointmentsAPI = {
   restore: (id) => api.post(`/appointments/${id}/restore`),
 };
 
+export const permissionsAPI = {
+  get: () => api.get('/permissions'),
+  update: (permissions) => api.put('/permissions', { permissions }),
+};
+
 export default api;

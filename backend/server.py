@@ -410,6 +410,60 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     
     return {"success": True, "message": "Account and all data deleted"}
 
+
+# ==================== PERMISSIONS SYSTEM ====================
+
+PERMISSION_KEYS = [
+    "vehicles_view", "vehicles_add", "vehicles_edit", "vehicles_delete", "vehicles_sell", "vehicles_price_view",
+    "customers_view", "customers_add", "customers_edit", "customers_delete",
+    "transactions_view", "transactions_add", "transactions_edit", "transactions_delete",
+    "reports_view",
+    "appointments_view", "appointments_add", "appointments_edit", "appointments_delete",
+    "dashboard_view", "trash_view",
+]
+
+DEFAULT_PERMISSIONS = {
+    "muhasebe": {
+        "vehicles_view": True, "vehicles_add": False, "vehicles_edit": False, "vehicles_delete": False,
+        "vehicles_sell": False, "vehicles_price_view": True,
+        "customers_view": True, "customers_add": False, "customers_edit": False, "customers_delete": False,
+        "transactions_view": True, "transactions_add": True, "transactions_edit": True, "transactions_delete": False,
+        "reports_view": True,
+        "appointments_view": True, "appointments_add": False, "appointments_edit": False, "appointments_delete": False,
+        "dashboard_view": True, "trash_view": False,
+    },
+    "satis": {
+        "vehicles_view": True, "vehicles_add": True, "vehicles_edit": True, "vehicles_delete": False,
+        "vehicles_sell": True, "vehicles_price_view": False,
+        "customers_view": True, "customers_add": True, "customers_edit": True, "customers_delete": False,
+        "transactions_view": False, "transactions_add": True, "transactions_edit": False, "transactions_delete": False,
+        "reports_view": False,
+        "appointments_view": True, "appointments_add": True, "appointments_edit": True, "appointments_delete": True,
+        "dashboard_view": True, "trash_view": False,
+    }
+}
+
+@api_router.get("/permissions")
+async def get_permissions(current_user: dict = Depends(get_current_user)):
+    org_id = current_user.get("org_id", current_user["user_id"])
+    doc = await db.permissions.find_one({"org_id": org_id}, {"_id": 0})
+    if not doc:
+        return {"org_id": org_id, "permissions": DEFAULT_PERMISSIONS}
+    return {"org_id": org_id, "permissions": doc.get("permissions", DEFAULT_PERMISSIONS)}
+
+@api_router.put("/permissions")
+async def update_permissions(body: dict, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can update permissions")
+    org_id = current_user.get("org_id", current_user["user_id"])
+    perms = body.get("permissions", {})
+    await db.permissions.update_one(
+        {"org_id": org_id},
+        {"$set": {"permissions": perms, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"success": True, "permissions": perms}
+
 # ==================== DATA QUERY HELPERS ====================
 
 def build_data_filter(current_user: dict, extra_filter: dict = None, include_deleted: bool = True) -> dict:
@@ -1363,6 +1417,22 @@ async def startup():
             )
     
     logger.info("Data migration complete (org_id, created_by, role)")
+
+    # Initialize default permissions for orgs that don't have them
+    orgs_with_perms = set()
+    async for p in db.permissions.find({}, {"_id": 0, "org_id": 1}):
+        orgs_with_perms.add(p["org_id"])
+    
+    admin_users = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1, "org_id": 1}).to_list(10000)
+    for u in admin_users:
+        oid = u.get("org_id", u["id"])
+        if oid not in orgs_with_perms:
+            await db.permissions.insert_one({
+                "org_id": oid,
+                "permissions": DEFAULT_PERMISSIONS,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+    logger.info("Permissions migration complete")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

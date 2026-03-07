@@ -18,6 +18,7 @@ import TrashPage from './pages/TrashPage';
 import SettingsPage from './pages/SettingsPage';
 import CalendarPage from './pages/CalendarPage';
 import UsersPage from './pages/UsersPage';
+import PermissionsPage from './pages/PermissionsPage';
 
 // Modals
 import AddCarModal from './components/modals/AddCarModal';
@@ -398,6 +399,7 @@ const AppContent = () => {
           {activeView === 'calendar' && <CalendarPage />}
           
           {activeView === 'users' && <UsersPage />}
+          {activeView === 'permissions' && <PermissionsPage />}
         </main>
       </div>
 

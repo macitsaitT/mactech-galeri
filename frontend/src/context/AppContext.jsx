@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI } from '../services/api';
+import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI, permissionsAPI } from '../services/api';
 
 const AppContext = createContext(null);
 
@@ -25,6 +25,7 @@ export const AppProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [permissions, setPermissions] = useState(null);
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -45,12 +46,13 @@ export const AppProvider = ({ children }) => {
     
     setLoading(true);
     try {
-      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes] = await Promise.all([
+      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes] = await Promise.all([
         carsAPI.getAll(),
         customersAPI.getAll(),
         transactionsAPI.getAll(),
         statsAPI.get(),
         appointmentsAPI.getAll(),
+        permissionsAPI.get().catch(() => ({ data: null })),
       ]);
 
       setCars(carsRes.data || []);
@@ -58,6 +60,7 @@ export const AppProvider = ({ children }) => {
       setTransactions(transactionsRes.data || []);
       setStats(statsRes.data || null);
       setAppointments(appointmentsRes.data || []);
+      if (permRes.data) setPermissions(permRes.data.permissions || null);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -327,6 +330,16 @@ export const AppProvider = ({ children }) => {
     updateAppointment,
     deleteAppointment,
     restoreAppointment,
+
+    // Permissions
+    permissions,
+    setPermissions,
+    hasPermission: (key) => {
+      const role = user?.role;
+      if (role === 'admin') return true;
+      if (!permissions || !permissions[role]) return false;
+      return permissions[role][key] === true;
+    },
 
     // Theme
     theme,
