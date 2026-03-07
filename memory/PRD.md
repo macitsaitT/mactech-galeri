@@ -2,14 +2,21 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.8.0
+- **Version:** 4.9.0
 - **Last Updated:** 2026-03-07
-- **Status:** MVP Complete + Phone Formatting + Customer Cleanup
+- **Status:** MVP Complete + Report Separation
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.9.0 - Rapor Ayrıştırma
+- [x] İşletme raporu artık car_id bazlı filtreleme yapıyor (araç işlemleri karışmıyor)
+- [x] Genel rapor iki ayrı bölüm gösteriyor: "Araç İşlemleri" ve "İşletme İşlemleri"
+- [x] Satış raporu Çalışan Payı ve Araç Sahibine Ödeme kategorilerini de içeriyor
+- [x] Her bölümün kendi gelir/gider/net toplamları gösteriliyor
+- [x] Test: Tüm rapor tipleri doğrulandı
 
 ### v4.8.0 - Telefon Formatı + Müşteri Temizleme
 - [x] Tüm telefon girişleri 0XXX XXX XX XX formatında (11 hane, boşluklu)
