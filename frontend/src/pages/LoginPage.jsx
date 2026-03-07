@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { formatPhoneInput } from '../utils/helpers';
 import { Car, Eye, EyeOff, Loader2, Mail, Phone, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 const LoginPage = () => {
@@ -189,9 +190,10 @@ const LoginPage = () => {
                     <input
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, phone: formatPhoneInput(e.target.value) })}
                       className="w-full h-12 px-4 bg-background border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       placeholder="0532 XXX XX XX"
+                      maxLength={14}
                       required
                       data-testid="phone-input"
                     />

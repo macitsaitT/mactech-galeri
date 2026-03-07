@@ -136,10 +136,26 @@ export const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+// Format phone input as 0XXX XXX XX XX (11 digits)
+export const formatPhoneInput = (value) => {
+  if (!value) return '';
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9)}`;
+};
+
+// Parse phone - strip formatting for storage
+export const parsePhone = (value) => {
+  if (!value) return '';
+  return value.replace(/\D/g, '');
+};
+
 // Validate phone number
 export const isValidPhone = (phone) => {
   const cleaned = phone.replace(/\D/g, '');
-  return cleaned.length >= 10 && cleaned.length <= 12;
+  return cleaned.length === 11;
 };
 
 // Validate plate number

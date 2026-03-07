@@ -62,7 +62,8 @@ const AppContent = () => {
     addTransaction,
     deleteTransaction,
     transactions,
-    appointments
+    appointments,
+    cars
   } = useApp();
 
   const [activeView, setActiveView] = useState('dashboard');
@@ -153,6 +154,10 @@ const AppContent = () => {
 
   const handleDeleteCar = async (car) => {
     if (window.confirm(`${car.brand} ${car.model} aracını silmek istediğinize emin misiniz?`)) {
+      // Soft-delete linked customer if exists
+      if (car.customer_id) {
+        await deleteCustomer(car.customer_id, false);
+      }
       await deleteCar(car.id, false);
     }
   };
@@ -302,7 +307,7 @@ const AppContent = () => {
     setDepositModal({ open: false, car: null });
   };
 
-  // Cancel sale handler - revert car status and soft-delete sale transactions
+  // Cancel sale handler - revert car status and soft-delete sale transactions + linked customer
   const handleCancelSale = async (car) => {
     if (!car || car.status !== 'Satıldı') return;
     if (!window.confirm(`${car.brand} ${car.model} satışını iptal etmek istediğinize emin misiniz? Araç tekrar stoğa alınacaktır.`)) return;
@@ -316,7 +321,8 @@ const AppContent = () => {
       sold_date: '',
       employee_share: 0,
       sold_by_user_id: '',
-      sold_by_name: ''
+      sold_by_name: '',
+      customer_id: ''
     });
 
     // Soft-delete all sale-related transactions for this car
@@ -326,6 +332,11 @@ const AppContent = () => {
     );
     for (const tx of relatedTxs) {
       await deleteTransaction(tx.id, false);
+    }
+
+    // Soft-delete linked customer if exists
+    if (car.customer_id) {
+      await deleteCustomer(car.customer_id, false);
     }
   };
 

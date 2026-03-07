@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { formatPhoneInput } from '../utils/helpers';
 import { fileAPI } from '../services/api';
 import {
   Settings,
@@ -255,9 +256,10 @@ const SettingsPage = () => {
           <input
             type="tel"
             value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
+            onChange={(e) => handleChange('phone', formatPhoneInput(e.target.value))}
             className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors"
             placeholder="0532 XXX XX XX"
+            maxLength={14}
             data-testid="settings-phone-input"
           />
         </div>

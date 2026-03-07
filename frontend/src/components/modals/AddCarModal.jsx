@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2 } from 'lucide-react';
-import { formatNumberInput, parseNumber } from '../../utils/helpers';
+import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/helpers';
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
@@ -761,9 +761,10 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                       <input
                         type="tel"
                         value={formData.owner_phone}
-                        onChange={(e) => handleChange('owner_phone', e.target.value)}
+                        onChange={(e) => handleChange('owner_phone', formatPhoneInput(e.target.value))}
                         className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
                         placeholder="0532 XXX XX XX"
+                        maxLength={14}
                         data-testid="car-owner-phone-input"
                       />
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { formatPhoneInput } from '../utils/helpers';
 import { Calendar, Plus, Clock, Phone, Car, Trash2, Check, X, ChevronLeft, ChevronRight, MessageCircle, BellRing } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -311,9 +312,10 @@ const CalendarPage = () => {
                   <input
                     type="tel"
                     value={formData.customer_phone}
-                    onChange={(e) => setFormData(p => ({ ...p, customer_phone: e.target.value }))}
+                    onChange={(e) => setFormData(p => ({ ...p, customer_phone: formatPhoneInput(e.target.value) }))}
                     className="w-full h-11 px-3 bg-background border border-border rounded-lg text-sm outline-none focus:border-primary"
                     placeholder="0532 XXX XX XX"
+                    maxLength={14}
                     data-testid="appointment-phone-input"
                   />
                 </div>

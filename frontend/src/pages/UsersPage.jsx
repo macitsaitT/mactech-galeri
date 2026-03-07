@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usersAPI } from '../services/api';
+import { formatPhoneInput } from '../utils/helpers';
 import { UserPlus, Edit, Trash2, Shield, Calculator, ShoppingCart, X, Check } from 'lucide-react';
 import {
   Dialog,
@@ -214,8 +215,10 @@ const UsersPage = () => {
               <input
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, phone: formatPhoneInput(e.target.value) })}
                 className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors"
+                placeholder="0532 XXX XX XX"
+                maxLength={14}
                 data-testid="user-phone-input"
               />
             </div>

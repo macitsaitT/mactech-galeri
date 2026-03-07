@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, UserPlus } from 'lucide-react';
-import { formatNumberInput, parseNumber, formatCurrency } from '../../utils/helpers';
+import { formatNumberInput, parseNumber, formatCurrency, formatPhoneInput } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import {
   Dialog,
@@ -172,9 +172,10 @@ const DepositModal = ({ isOpen, onClose, car, onConfirmDeposit, onCancelDeposit 
                   <input
                     type="tel"
                     value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
+                    onChange={(e) => setNewPhone(formatPhoneInput(e.target.value))}
                     className="w-full h-10 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
-                    placeholder="Telefon"
+                    placeholder="0532 XXX XX XX"
+                    maxLength={14}
                     data-testid="deposit-new-phone"
                   />
                   <button

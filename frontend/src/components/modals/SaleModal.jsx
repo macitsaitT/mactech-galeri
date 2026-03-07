@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
-import { formatNumberInput, parseNumber, formatCurrency } from '../../utils/helpers';
+import { formatNumberInput, parseNumber, formatCurrency, formatPhoneInput } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import { usersAPI } from '../../services/api';
 import {
@@ -233,11 +233,12 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
                     data-testid="new-customer-name-input"
                   />
                   <input
-                    type="tel"
+                      type="tel"
                     value={newCustomerPhone}
-                    onChange={(e) => setNewCustomerPhone(e.target.value)}
+                    onChange={(e) => setNewCustomerPhone(formatPhoneInput(e.target.value))}
                     className="w-full h-10 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
-                    placeholder="Telefon"
+                    placeholder="0532 XXX XX XX"
+                    maxLength={14}
                     data-testid="new-customer-phone-input"
                   />
                   <div className="flex gap-2">
