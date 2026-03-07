@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users } from 'lucide-react';
+import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { fileAPI, usersAPI } from '../../services/api';
@@ -15,6 +15,7 @@ const reportTypes = [
   { id: 'business', label: 'İşletme', icon: Building2 },
   { id: 'stock', label: 'Stok', icon: Package },
   { id: 'sold', label: 'Satılan', icon: Tag },
+  { id: 'profitloss', label: 'Kâr/Zarar', icon: TrendingUp },
   { id: 'deposit', label: 'Kapora', icon: Key },
   { id: 'car', label: 'Araç', icon: Car },
 ];
@@ -24,6 +25,7 @@ const reportTitles = {
   business: 'İşletme Raporu',
   stock: 'Stok Raporu',
   sold: 'Satış Raporu',
+  profitloss: 'Stok Araç Kâr/Zarar Raporu',
   deposit: 'Kapora Raporu',
   car: 'Araç Raporu',
 };
@@ -295,6 +297,52 @@ const ReportModal = ({ isOpen, onClose }) => {
 
   const profitMargin = totals.income > 0 ? ((totals.net / totals.income) * 100).toFixed(0) : 0;
 
+  const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted), [transactions]);
+
+  // Profit/Loss report data: sold cars with their expenses
+  const profitLossData = useMemo(() => {
+    if (reportType !== 'profitloss') return [];
+    const soldCars = activeCars.filter(c => 
+      c.status === 'Satıldı' && c.sold_date && c.sold_date >= startDate && c.sold_date <= endDate
+    );
+    return soldCars.map(car => {
+      const carExpenses = activeTransactions.filter(t => 
+        t.car_id === car.id && t.type === 'expense'
+      ).reduce((s, t) => s + (t.amount || 0), 0);
+      const purchasePrice = car.purchase_price || 0;
+      const salePrice = car.sale_price || 0;
+      const totalCost = purchasePrice + carExpenses;
+      const profit = salePrice - totalCost;
+      const stockDays = car.entry_date && car.sold_date
+        ? Math.max(0, Math.floor((new Date(car.sold_date) - new Date(car.entry_date)) / (1000*60*60*24)))
+        : 0;
+      return {
+        id: car.id,
+        brand: car.brand,
+        model: car.model,
+        plate: car.plate,
+        purchasePrice,
+        salePrice,
+        carExpenses,
+        totalCost,
+        profit,
+        stockDays,
+        sold_date: car.sold_date,
+        sold_by_name: car.sold_by_name || '-',
+      };
+    }).sort((a, b) => new Date(b.sold_date) - new Date(a.sold_date));
+  }, [reportType, activeCars, activeTransactions, startDate, endDate]);
+
+  const profitLossTotals = useMemo(() => {
+    if (profitLossData.length === 0) return { totalPurchase: 0, totalSale: 0, totalExpenses: 0, totalProfit: 0 };
+    return profitLossData.reduce((acc, c) => ({
+      totalPurchase: acc.totalPurchase + c.purchasePrice,
+      totalSale: acc.totalSale + c.salePrice,
+      totalExpenses: acc.totalExpenses + c.carExpenses,
+      totalProfit: acc.totalProfit + c.profit,
+    }), { totalPurchase: 0, totalSale: 0, totalExpenses: 0, totalProfit: 0 });
+  }, [profitLossData]);
+
   const fetchLogoAsDataUrl = () => {
     return new Promise((resolve) => {
       const url = getLogoUrl(logoPath);
@@ -466,6 +514,91 @@ const ReportModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* Profit/Loss Summary (shown when profitloss type) */}
+          {reportType === 'profitloss' ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <div className="p-4 border border-border rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Alış</p>
+                  <p className="text-xl font-bold">{formatCurrency(profitLossTotals.totalPurchase)}</p>
+                </div>
+                <div className="p-4 border border-border rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Satış</p>
+                  <p className="text-xl font-bold text-success">{formatCurrency(profitLossTotals.totalSale)}</p>
+                </div>
+                <div className="p-4 border border-border rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground uppercase mb-1">Araç Giderleri</p>
+                  <p className="text-xl font-bold text-destructive">{formatCurrency(profitLossTotals.totalExpenses)}</p>
+                </div>
+                <div className="p-4 border border-border rounded-lg text-center" data-testid="profitloss-total">
+                  <p className="text-xs text-muted-foreground uppercase mb-1">Net Kâr/Zarar</p>
+                  <p className={`text-xl font-bold ${profitLossTotals.totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {formatCurrency(profitLossTotals.totalProfit)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-semibold mb-3 border-b border-border pb-2">
+                  Araç Bazlı Kâr/Zarar ({profitLossData.length} araç)
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[700px]" data-testid="profitloss-table">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Araç</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Plaka</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Alış</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Giderler</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Maliyet</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Satış</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Kâr/Zarar</th>
+                        <th className="text-center p-3 text-sm font-medium text-muted-foreground">Gün</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Satan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {profitLossData.length === 0 ? (
+                        <tr><td colSpan={9} className="text-center p-8 text-muted-foreground">Bu tarih aralığında satılan araç bulunamadı.</td></tr>
+                      ) : (
+                        profitLossData.map(car => (
+                          <tr key={car.id} className="border-b border-border hover:bg-muted/30">
+                            <td className="p-3 text-sm font-medium">{car.brand} {car.model}</td>
+                            <td className="p-3 text-sm text-muted-foreground">{car.plate?.toUpperCase()}</td>
+                            <td className="p-3 text-sm text-right tabular-nums">{formatCurrency(car.purchasePrice)}</td>
+                            <td className="p-3 text-sm text-right tabular-nums text-destructive">{car.carExpenses > 0 ? formatCurrency(car.carExpenses) : '-'}</td>
+                            <td className="p-3 text-sm text-right tabular-nums font-medium">{formatCurrency(car.totalCost)}</td>
+                            <td className="p-3 text-sm text-right tabular-nums text-success font-medium">{formatCurrency(car.salePrice)}</td>
+                            <td className={`p-3 text-sm text-right tabular-nums font-bold ${car.profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              {car.profit >= 0 ? '+' : ''}{formatCurrency(car.profit)}
+                            </td>
+                            <td className="p-3 text-sm text-center tabular-nums">{car.stockDays}</td>
+                            <td className="p-3 text-sm">{car.sold_by_name}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                    {profitLossData.length > 0 && (
+                      <tfoot>
+                        <tr className="border-t-2 border-border bg-muted/30 font-bold">
+                          <td className="p-3 text-sm" colSpan={2}>TOPLAM</td>
+                          <td className="p-3 text-sm text-right tabular-nums">{formatCurrency(profitLossTotals.totalPurchase)}</td>
+                          <td className="p-3 text-sm text-right tabular-nums text-destructive">{formatCurrency(profitLossTotals.totalExpenses)}</td>
+                          <td className="p-3 text-sm text-right tabular-nums">{formatCurrency(profitLossTotals.totalPurchase + profitLossTotals.totalExpenses)}</td>
+                          <td className="p-3 text-sm text-right tabular-nums text-success">{formatCurrency(profitLossTotals.totalSale)}</td>
+                          <td className={`p-3 text-sm text-right tabular-nums ${profitLossTotals.totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {profitLossTotals.totalProfit >= 0 ? '+' : ''}{formatCurrency(profitLossTotals.totalProfit)}
+                          </td>
+                          <td colSpan={2}></td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <div className="p-4 border border-border rounded-lg text-center" data-testid="report-total-income">
               <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Gelir</p>
@@ -534,6 +667,8 @@ const ReportModal = ({ isOpen, onClose }) => {
               <div className="w-48 border-t border-foreground pt-2"><p className="text-sm text-muted-foreground">İmza</p></div>
             </div>
           </div>
+          </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

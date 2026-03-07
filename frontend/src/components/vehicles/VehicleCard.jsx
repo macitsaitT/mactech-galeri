@@ -197,7 +197,7 @@ const VehicleCard = ({
           </span>
         </div>
 
-        {/* Price */}
+        {/* Price & Stock Days */}
         <div className="flex items-end justify-between pt-3 border-t border-border">
           <div>
             <p className="text-xs text-muted-foreground">Satış Fiyatı</p>
@@ -205,6 +205,14 @@ const VehicleCard = ({
               {formatCurrency(car.sale_price)}
             </p>
           </div>
+          {car.status !== 'Satıldı' && car.entry_date && (
+            <div className="text-right" data-testid={`stock-days-${car.id}`}>
+              <p className="text-[10px] text-muted-foreground">Stokta</p>
+              <p className="font-heading font-bold text-sm tabular-nums">
+                {Math.max(0, Math.floor((new Date() - new Date(car.entry_date)) / (1000 * 60 * 60 * 24)))} gün
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Sold by info */}

@@ -107,12 +107,19 @@ const VehicleDetailModal = ({ isOpen, onClose, car }) => {
             </div>
           )}
 
-          {/* Dates */}
+          {/* Dates & Stock Days */}
           <div className="grid grid-cols-2 gap-3">
             {car.entry_date && <InfoRow icon={<Calendar size={16} />} label="Giriş Tarihi" value={car.entry_date} />}
             {car.sold_date && <InfoRow icon={<Calendar size={16} />} label="Satış Tarihi" value={car.sold_date} />}
+            {car.created_at && <InfoRow icon={<Calendar size={16} />} label="Eklenme Tarihi" value={car.created_at?.split('T')[0]} />}
             {car.inspection_date && <InfoRow icon={<Shield size={16} />} label="Muayene" value={car.inspection_date} />}
             {car.sold_by_name && <InfoRow icon={<User size={16} />} label="Satan Kişi" value={car.sold_by_name} />}
+            {car.entry_date && car.status !== 'Satıldı' && (
+              <InfoRow icon={<Calendar size={16} />} label="Stokta" value={`${Math.max(0, Math.floor((new Date() - new Date(car.entry_date)) / (1000 * 60 * 60 * 24)))} gün`} />
+            )}
+            {car.entry_date && car.sold_date && car.status === 'Satıldı' && (
+              <InfoRow icon={<Calendar size={16} />} label="Stokta Kaldı" value={`${Math.max(0, Math.floor((new Date(car.sold_date) - new Date(car.entry_date)) / (1000 * 60 * 60 * 24)))} gün`} />
+            )}
           </div>
 
           {/* Consignment Info */}
