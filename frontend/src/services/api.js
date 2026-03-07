@@ -110,7 +110,7 @@ export const appointmentsAPI = {
 
 export const permissionsAPI = {
   get: () => api.get('/permissions'),
-  update: (permissions) => api.put('/permissions', { permissions }),
+  update: (data) => api.put('/permissions', data),
 };
 
 export default api;

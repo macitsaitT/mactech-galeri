@@ -65,7 +65,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!car) return;
     if (car.status === 'Satıldı') {
       alert('Bu araç zaten satılmış!');
@@ -302,7 +302,8 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
                 İptal
               </button>
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 disabled={loading}
                 className="px-4 sm:px-6 py-3 rounded-lg bg-success text-success-foreground font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 text-sm"
                 data-testid="confirm-sale-btn"

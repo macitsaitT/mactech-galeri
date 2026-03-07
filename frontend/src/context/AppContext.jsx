@@ -60,7 +60,12 @@ export const AppProvider = ({ children }) => {
       setTransactions(transactionsRes.data || []);
       setStats(statsRes.data || null);
       setAppointments(appointmentsRes.data || []);
-      if (permRes.data) setPermissions(permRes.data.permissions || null);
+      if (permRes.data) {
+        setPermissions({
+          role_defaults: permRes.data.role_defaults || permRes.data.permissions || null,
+          user_overrides: permRes.data.user_overrides || {}
+        });
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -337,8 +342,15 @@ export const AppProvider = ({ children }) => {
     hasPermission: (key) => {
       const role = user?.role;
       if (role === 'admin') return true;
-      if (!permissions || !permissions[role]) return false;
-      return permissions[role][key] === true;
+      if (!permissions) return false;
+      // Check user-specific override first
+      const userId = user?.id;
+      const userOverride = permissions.user_overrides?.[userId];
+      if (userOverride && key in userOverride) return userOverride[key] === true;
+      // Fall back to role defaults
+      const roleDefaults = permissions.role_defaults || permissions;
+      if (!roleDefaults?.[role]) return false;
+      return roleDefaults[role][key] === true;
     },
 
     // Theme

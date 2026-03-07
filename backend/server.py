@@ -448,37 +448,42 @@ async def get_permissions(current_user: dict = Depends(get_current_user)):
     org_id = current_user.get("org_id", current_user["user_id"])
     doc = await db.permissions.find_one({"org_id": org_id}, {"_id": 0})
     if not doc:
-        return {"org_id": org_id, "permissions": DEFAULT_PERMISSIONS}
-    return {"org_id": org_id, "permissions": doc.get("permissions", DEFAULT_PERMISSIONS)}
+        return {"org_id": org_id, "role_defaults": DEFAULT_PERMISSIONS, "user_overrides": {}}
+    return {
+        "org_id": org_id,
+        "role_defaults": doc.get("role_defaults", doc.get("permissions", DEFAULT_PERMISSIONS)),
+        "user_overrides": doc.get("user_overrides", {})
+    }
 
 @api_router.put("/permissions")
 async def update_permissions(body: dict, current_user: dict = Depends(get_current_user)):
     if current_user.get("role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Only admin can update permissions")
     org_id = current_user.get("org_id", current_user["user_id"])
-    perms = body.get("permissions", {})
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if "role_defaults" in body:
+        update_data["role_defaults"] = body["role_defaults"]
+    if "user_overrides" in body:
+        update_data["user_overrides"] = body["user_overrides"]
+    # Migrate old format
+    if "permissions" in body and "role_defaults" not in body:
+        update_data["role_defaults"] = body["permissions"]
     await db.permissions.update_one(
         {"org_id": org_id},
-        {"$set": {"permissions": perms, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        {"$set": update_data},
         upsert=True
     )
-    return {"success": True, "permissions": perms}
+    return {"success": True}
 
 # ==================== DATA QUERY HELPERS ====================
 
 def build_data_filter(current_user: dict, extra_filter: dict = None, include_deleted: bool = True) -> dict:
     """Build MongoDB filter based on user role and org.
-    - Admin: sees all org data
-    - Muhasebe: sees all org data
-    - Satis: sees only their own data
+    All users in the same org see the same data (filtered by org_id).
+    Permissions control what actions they can take, not what they see.
     """
-    role = current_user.get("role", "admin")
     org_id = current_user.get("org_id", current_user["user_id"])
-    
-    if role == "satis":
-        query = {"org_id": org_id, "created_by": current_user["user_id"]}
-    else:
-        query = {"org_id": org_id}
+    query = {"org_id": org_id}
     
     if not include_deleted:
         query["deleted"] = False
