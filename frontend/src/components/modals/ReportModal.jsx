@@ -262,17 +262,16 @@ const ReportModal = ({ isOpen, onClose }) => {
         filtered = filtered.filter(t => t.category?.includes('Alımı') || t.category?.includes('Alış'));
         break;
       case 'sold':
-        filtered = filtered.filter(t => t.category?.includes('Satış'));
+        filtered = filtered.filter(t =>
+          t.category?.includes('Satış') ||
+          (t.car_id && (t.category === 'Çalışan Payı' || t.category === 'Araç Sahibine Ödeme'))
+        );
         break;
       case 'deposit':
         filtered = filtered.filter(t => t.category?.includes('Kapora'));
         break;
       case 'business':
-        filtered = filtered.filter(t =>
-          !t.category?.includes('Araç') &&
-          !t.category?.includes('Satış') &&
-          !t.category?.includes('Kapora')
-        );
+        filtered = filtered.filter(t => !t.car_id);
         break;
       case 'car':
         if (selectedCarId) {
@@ -296,6 +295,24 @@ const ReportModal = ({ isOpen, onClose }) => {
   }, [displayTransactions]);
 
   const profitMargin = totals.income > 0 ? ((totals.net / totals.income) * 100).toFixed(0) : 0;
+
+  // Split transactions for general report
+  const vehicleTransactions = useMemo(() =>
+    displayTransactions.filter(t => t.car_id), [displayTransactions]);
+  const businessTransactions = useMemo(() =>
+    displayTransactions.filter(t => !t.car_id), [displayTransactions]);
+
+  const vehicleTotals = useMemo(() => {
+    let income = 0, expense = 0;
+    vehicleTransactions.forEach(tx => { if (tx.type === 'income') income += tx.amount || 0; else expense += tx.amount || 0; });
+    return { income, expense, net: income - expense };
+  }, [vehicleTransactions]);
+
+  const businessTotals = useMemo(() => {
+    let income = 0, expense = 0;
+    businessTransactions.forEach(tx => { if (tx.type === 'income') income += tx.amount || 0; else expense += tx.amount || 0; });
+    return { income, expense, net: income - expense };
+  }, [businessTransactions]);
 
   const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted), [transactions]);
 
@@ -616,43 +633,133 @@ const ReportModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="mb-6">
-            <h3 className="font-semibold mb-3 border-b border-border pb-2">İşlem Dökümü</h3>
-            <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-[500px]">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
-                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
-                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
-                  <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
-                  {reportType === 'sold' && <th className="text-left p-3 text-sm font-medium text-muted-foreground">Satış Elemanı</th>}
-                  <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayTransactions.length === 0 ? (
-                  <tr><td colSpan={reportType === 'sold' ? 6 : 5} className="text-center p-8 text-muted-foreground">Bu tarih aralığında işlem bulunamadı.</td></tr>
-                ) : (
-                  displayTransactions.map((tx) => (
-                    <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
-                      <td className="p-3 text-sm">{formatDate(tx.date)}</td>
-                      <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
-                      <td className="p-3 text-sm">{tx.category}</td>
-                      <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
-                      {reportType === 'sold' && <td className="p-3 text-sm">{carSoldByMap[tx.car_id] || '-'}</td>}
-                      <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+            {reportType === 'general' ? (
+              <>
+                {/* Araç İşlemleri Bölümü */}
+                <h3 className="font-semibold mb-3 border-b-2 border-primary/30 pb-2 flex items-center gap-2" data-testid="vehicle-transactions-header">
+                  <Car size={16} className="text-primary" />
+                  Araç İşlemleri
+                  <span className="text-xs text-muted-foreground font-normal ml-auto">
+                    Gelir: <span className="text-success font-medium">{formatCurrency(vehicleTotals.income)}</span> | Gider: <span className="text-destructive font-medium">{formatCurrency(vehicleTotals.expense)}</span> | Net: <span className="font-medium">{formatCurrency(vehicleTotals.net)}</span>
+                  </span>
+                </h3>
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full border-collapse min-w-[500px]">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vehicleTransactions.length === 0 ? (
+                        <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">Bu tarih aralığında araç işlemi bulunamadı.</td></tr>
+                      ) : vehicleTransactions.map((tx) => (
+                        <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
+                          <td className="p-3 text-sm">{formatDate(tx.date)}</td>
+                          <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
+                          <td className="p-3 text-sm">{tx.category}</td>
+                          <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                          <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* İşletme İşlemleri Bölümü */}
+                <h3 className="font-semibold mb-3 border-b-2 border-amber-500/30 pb-2 flex items-center gap-2" data-testid="business-transactions-header">
+                  <Building2 size={16} className="text-amber-500" />
+                  İşletme İşlemleri
+                  <span className="text-xs text-muted-foreground font-normal ml-auto">
+                    Gelir: <span className="text-success font-medium">{formatCurrency(businessTotals.income)}</span> | Gider: <span className="text-destructive font-medium">{formatCurrency(businessTotals.expense)}</span> | Net: <span className="font-medium">{formatCurrency(businessTotals.net)}</span>
+                  </span>
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[500px]">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
+                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
+                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {businessTransactions.length === 0 ? (
+                        <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">Bu tarih aralığında işletme işlemi bulunamadı.</td></tr>
+                      ) : businessTransactions.map((tx) => (
+                        <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
+                          <td className="p-3 text-sm">{formatDate(tx.date)}</td>
+                          <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
+                          <td className="p-3 text-sm">{tx.category}</td>
+                          <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                          <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="font-semibold mb-3 border-b border-border pb-2">İşlem Dökümü</h3>
+                <div className="overflow-x-auto">
+                <table className="w-full border-collapse min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
+                      {reportType === 'sold' && <th className="text-left p-3 text-sm font-medium text-muted-foreground">Satış Elemanı</th>}
+                      <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {displayTransactions.length === 0 ? (
+                      <tr><td colSpan={reportType === 'sold' ? 6 : 5} className="text-center p-8 text-muted-foreground">Bu tarih aralığında işlem bulunamadı.</td></tr>
+                    ) : (
+                      displayTransactions.map((tx) => (
+                        <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
+                          <td className="p-3 text-sm">{formatDate(tx.date)}</td>
+                          <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
+                          <td className="p-3 text-sm">{tx.category}</td>
+                          <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                          {reportType === 'sold' && <td className="p-3 text-sm">{carSoldByMap[tx.car_id] || '-'}</td>}
+                          <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex justify-end mb-8">
-            <div className="w-72">
-              <div className="flex justify-between py-2 border-b border-border"><span className="text-muted-foreground">Toplam Gelir:</span><span className="text-success font-medium">{formatCurrency(totals.income)}</span></div>
-              <div className="flex justify-between py-2 border-b border-border"><span className="text-muted-foreground">Toplam Gider:</span><span className="text-destructive font-medium">-{formatCurrency(totals.expense)}</span></div>
+            <div className="w-80">
+              {reportType === 'general' && (
+                <>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Araç İşlemleri</p>
+                  <div className="flex justify-between py-1.5 text-sm"><span className="text-muted-foreground">Gelir:</span><span className="text-success font-medium">{formatCurrency(vehicleTotals.income)}</span></div>
+                  <div className="flex justify-between py-1.5 text-sm border-b border-border"><span className="text-muted-foreground">Gider:</span><span className="text-destructive font-medium">-{formatCurrency(vehicleTotals.expense)}</span></div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1 mt-3">İşletme İşlemleri</p>
+                  <div className="flex justify-between py-1.5 text-sm"><span className="text-muted-foreground">Gelir:</span><span className="text-success font-medium">{formatCurrency(businessTotals.income)}</span></div>
+                  <div className="flex justify-between py-1.5 text-sm border-b border-border"><span className="text-muted-foreground">Gider:</span><span className="text-destructive font-medium">-{formatCurrency(businessTotals.expense)}</span></div>
+                </>
+              )}
+              {reportType !== 'general' && (
+                <>
+                  <div className="flex justify-between py-2 border-b border-border"><span className="text-muted-foreground">Toplam Gelir:</span><span className="text-success font-medium">{formatCurrency(totals.income)}</span></div>
+                  <div className="flex justify-between py-2 border-b border-border"><span className="text-muted-foreground">Toplam Gider:</span><span className="text-destructive font-medium">-{formatCurrency(totals.expense)}</span></div>
+                </>
+              )}
               <div className="flex justify-between py-3 font-bold"><span>NET SONUÇ:</span><span>{formatCurrency(totals.net)} (%{profitMargin})</span></div>
             </div>
           </div>

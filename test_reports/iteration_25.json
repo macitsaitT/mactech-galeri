@@ -1,0 +1,92 @@
+{
+  "summary": "Tested Report Separation feature - GENERAL report shows two separate sections (Araç İşlemleri and İşletme İşlemleri), BUSINESS report shows ONLY non-vehicle transactions, SOLD report shows sale transactions. All features working correctly.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard Charts", "issues": ["Console warnings about chart dimensions (width/height -1), cosmetic only"]},
+      {"screen": "ReportModal", "issues": ["React hydration warnings about <span> inside <tbody>/<tr>/<td> - caused by dev tooling, cosmetic only"]}
+    ]
+  },
+
+  "passed_tests": [
+    "GENERAL REPORT - Two section headers verified: 'Araç İşlemleri' (data-testid=vehicle-transactions-header) and 'İşletme İşlemleri' (data-testid=business-transactions-header)",
+    "GENERAL REPORT - Vehicle section shows Araç Satışı ₺950,000 (Mercedes E200)",
+    "GENERAL REPORT - Business section shows Personel Maaşı ₺25,000 and Kira ₺15,000",
+    "BUSINESS REPORT - Shows ONLY business transactions: Personel Maaşı, Kira (NO vehicle transactions)",
+    "BUSINESS REPORT - Filter correctly uses car_id to separate (only shows transactions without car_id)",
+    "SOLD REPORT - Shows Araç Satışı transaction with 'Satış Elemanı' column",
+    "SOLD REPORT - Filter includes Araç Satışı category (Çalışan Payı and Araç Sahibine Ödeme also included in code but no test data)"
+  ],
+
+  "test_report_links": [
+    "/app/test_reports/iteration_25.json"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Line 260-284 (ReportModal.jsx): displayTransactions filter correctly implemented - 'business' filter uses !t.car_id, 'sold' filter includes Araç Satışı + Çalışan Payı + Araç Sahibine Ödeme with car_id",
+    "Line 300-315 (ReportModal.jsx): Separate vehicleTransactions (has car_id) and businessTransactions (no car_id) arrays correctly computed",
+    "Line 635-706 (ReportModal.jsx): General report correctly renders two separate sections with headers 'Araç İşlemleri' and 'İşletme İşlemleri'"
+  ],
+
+  "updated_files": [],
+
+  "success_rate": {
+    "backend": "N/A (frontend-only testing)",
+    "frontend": "100%"
+  },
+
+  "test_credentials": {
+    "email": "test-sale@emergent.com",
+    "password": "password"
+  },
+
+  "seed_data_verified": {
+    "vehicle_transactions": [
+      {"category": "Araç Satışı", "amount": 950000, "car_id": "present", "date": "07.03.2026"}
+    ],
+    "business_transactions": [
+      {"category": "Personel Maaşı", "amount": 25000, "car_id": "null", "date": "20.01.2025"},
+      {"category": "Kira", "amount": 15000, "car_id": "null", "date": "15.01.2025"}
+    ]
+  },
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Report separation feature verified: General report shows two sections (Araç İşlemleri with car_id, İşletme İşlemleri without car_id). Business report filters to only show transactions without car_id. Sold report includes Araç Satışı, Çalışan Payı, and Araç Sahibine Ödeme categories. Test data: 1 vehicle sale (Mercedes E200), 2 business expenses (Personel Maaşı, Kira). Date range 2025-01-01 to 2026-12-31 needed to see all transactions.",
+
+  "mocked_apis": {
+    "Email verification": "MOCKED - verification code displayed on screen"
+  },
+
+  "feature_verification": {
+    "general_report_two_sections": {
+      "status": "PASS",
+      "vehicle_section_header": "Araç İşlemleri (data-testid=vehicle-transactions-header)",
+      "business_section_header": "İşletme İşlemleri (data-testid=business-transactions-header)",
+      "vehicle_transactions_count": 1,
+      "business_transactions_count": 2
+    },
+    "business_report_filter": {
+      "status": "PASS",
+      "filter_logic": "!t.car_id (only transactions without car_id)",
+      "transactions_shown": ["Personel Maaşı", "Kira"],
+      "no_vehicle_transactions": true
+    },
+    "sold_report_filter": {
+      "status": "PASS",
+      "filter_logic": "category includes Satış OR (has car_id AND category is Çalışan Payı or Araç Sahibine Ödeme)",
+      "transactions_shown": ["Araç Satışı"],
+      "has_sales_employee_column": true
+    }
+  }
+}
