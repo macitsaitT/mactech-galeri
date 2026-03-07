@@ -205,14 +205,6 @@ const VehicleCard = ({
               {formatCurrency(car.sale_price)}
             </p>
           </div>
-          {car.ownership === 'stock' && car.purchase_price > 0 && (
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Alış</p>
-              <p className="font-medium text-sm tabular-nums">
-                {formatCurrency(car.purchase_price)}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Sold by info */}
