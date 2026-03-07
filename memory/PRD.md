@@ -2,14 +2,23 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.9.0
+- **Version:** 4.9.1
 - **Last Updated:** 2026-03-07
-- **Status:** MVP Complete + Report Separation
+- **Status:** MVP Complete + Report Mobile Optimization
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.9.1 - Rapor Mobil Optimizasyonu
+- [x] Mobilde kart düzeni (tablolar yerine) - tüm rapor tipleri için
+- [x] Kompakt filtre alanı ve rapor butonları
+- [x] Bölüm başlıkları dikey yerleşim (Araç / İşletme)
+- [x] Kâr/Zarar raporu mobil kart düzeni
+- [x] İmza bölümü responsive (taşma düzeltildi)
+- [x] Toplam kartları 3 sütun kompakt yerleşim
+- [x] Görsel test: Genel, İşletme, scroll alt bölümler onaylandı
 
 ### v4.9.0 - Rapor Ayrıştırma
 - [x] İşletme raporu artık car_id bazlı filtreleme yapıyor (araç işlemleri karışmıyor)

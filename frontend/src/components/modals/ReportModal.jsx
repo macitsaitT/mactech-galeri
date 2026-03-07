@@ -405,42 +405,42 @@ const ReportModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-5xl max-h-[92vh] overflow-hidden flex flex-col" data-testid="report-modal">
+      <DialogContent className="w-[calc(100vw-0.5rem)] sm:w-[calc(100vw-1.5rem)] sm:max-w-5xl max-h-[95vh] sm:max-h-[92vh] overflow-hidden flex flex-col p-3 sm:p-6" data-testid="report-modal">
         {/* Header */}
-        <DialogHeader className="flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-2 pr-10">
-          <DialogTitle className="flex items-center gap-2">
-            <FileText size={22} className="text-primary" />
+        <DialogHeader className="flex-row items-center justify-between pb-1 sm:pb-2 pr-8">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <FileText size={18} className="text-primary" />
             Rapor Oluşturucu
           </DialogTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={doPrint}
-              className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-destructive/90 transition-colors"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-destructive text-destructive-foreground rounded-lg flex items-center gap-1.5 text-xs sm:text-sm font-semibold hover:bg-destructive/90 transition-colors"
               data-testid="download-pdf-btn"
             >
-              <Download size={16} />
+              <Download size={14} />
               PDF
             </button>
             <button
               onClick={doPrint}
-              className="px-4 py-2 bg-amber-500 text-white rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-amber-600 transition-colors"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 bg-amber-500 text-white rounded-lg flex items-center gap-1.5 text-xs sm:text-sm font-semibold hover:bg-amber-600 transition-colors"
               data-testid="print-btn"
             >
-              <Printer size={16} />
+              <Printer size={14} />
               Yazdır
             </button>
           </div>
         </DialogHeader>
 
         {/* Filters */}
-        <div className="space-y-3 py-3 border-b border-border">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+        <div className="space-y-2 sm:space-y-3 py-2 sm:py-3 border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-2 sm:gap-3">
             <div>
-              <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Tarih Aralığı</span>
-              <div className="flex items-center gap-2">
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-9 px-2 sm:px-3 bg-background border border-border rounded-lg text-sm flex-1 min-w-0" data-testid="report-start-date" />
-                <span className="text-muted-foreground text-sm">-</span>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-9 px-2 sm:px-3 bg-background border border-border rounded-lg text-sm flex-1 min-w-0" data-testid="report-end-date" />
+              <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-0.5 sm:mb-1">Tarih Aralığı</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-8 sm:h-9 px-1.5 sm:px-3 bg-background border border-border rounded-lg text-xs sm:text-sm flex-1 min-w-0" data-testid="report-start-date" />
+                <span className="text-muted-foreground text-xs">-</span>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-8 sm:h-9 px-1.5 sm:px-3 bg-background border border-border rounded-lg text-xs sm:text-sm flex-1 min-w-0" data-testid="report-end-date" />
               </div>
             </div>
             {(userRole === 'admin' || userRole === 'muhasebe') && employees.length > 1 && (
@@ -462,7 +462,7 @@ const ReportModal = ({ isOpen, onClose }) => {
               </div>
             )}
             <div>
-              <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Rapor Kapsamı</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-0.5 sm:mb-1">Rapor Kapsamı</span>
               <div className="flex flex-wrap gap-1">
                 {reportTypes.map((type) => {
                   const Icon = type.icon;
@@ -470,14 +470,14 @@ const ReportModal = ({ isOpen, onClose }) => {
                     <button
                       key={type.id}
                       onClick={() => { setReportType(type.id); if (type.id !== 'car') { setSelectedCarId(''); setPlateSearch(''); } }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                      className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors flex items-center gap-1 sm:gap-1.5 ${
                         reportType === type.id
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-card border border-border hover:bg-muted text-foreground'
                       }`}
                       data-testid={`report-type-${type.id}`}
                     >
-                      <Icon size={14} />
+                      <Icon size={12} className="sm:w-3.5 sm:h-3.5" />
                       {type.label}
                     </button>
                   );
@@ -508,22 +508,22 @@ const ReportModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Report Preview */}
-        <div className="flex-1 overflow-y-auto p-4" ref={reportRef}>
-          <div className="flex justify-between items-start mb-6">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4" ref={reportRef}>
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
             <div>
-              <h2 className="text-xl font-bold">
+              <h2 className="text-base sm:text-xl font-bold">
                 {reportTitles[reportType]}
                 {selectedEmployee !== 'all' && employees.find(e => e.id === selectedEmployee) && (
                   <span className="text-primary"> - {employees.find(e => e.id === selectedEmployee).name}</span>
                 )}
               </h2>
-              <p className="text-sm text-muted-foreground">{formatDate(startDate)} - {formatDate(endDate)}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">{formatDate(startDate)} - {formatDate(endDate)}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               {logoPath ? (
-                <img src={getLogoUrl(logoPath)} alt="Logo" className="h-14 w-auto object-contain rounded" crossOrigin="anonymous" />
+                <img src={getLogoUrl(logoPath)} alt="Logo" className="h-8 sm:h-14 w-auto object-contain rounded" crossOrigin="anonymous" />
               ) : (
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <h3 className="text-xl font-bold">{companyName}</h3>
                   <p className="text-sm text-muted-foreground">{companyPhone}</p>
                 </div>
@@ -534,32 +534,57 @@ const ReportModal = ({ isOpen, onClose }) => {
           {/* Profit/Loss Summary (shown when profitloss type) */}
           {reportType === 'profitloss' ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                <div className="p-4 border border-border rounded-lg text-center">
-                  <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Alış</p>
-                  <p className="text-xl font-bold">{formatCurrency(profitLossTotals.totalPurchase)}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Toplam Alış</p>
+                  <p className="text-sm sm:text-xl font-bold">{formatCurrency(profitLossTotals.totalPurchase)}</p>
                 </div>
-                <div className="p-4 border border-border rounded-lg text-center">
-                  <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Satış</p>
-                  <p className="text-xl font-bold text-success">{formatCurrency(profitLossTotals.totalSale)}</p>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Toplam Satış</p>
+                  <p className="text-sm sm:text-xl font-bold text-success">{formatCurrency(profitLossTotals.totalSale)}</p>
                 </div>
-                <div className="p-4 border border-border rounded-lg text-center">
-                  <p className="text-xs text-muted-foreground uppercase mb-1">Araç Giderleri</p>
-                  <p className="text-xl font-bold text-destructive">{formatCurrency(profitLossTotals.totalExpenses)}</p>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Araç Giderleri</p>
+                  <p className="text-sm sm:text-xl font-bold text-destructive">{formatCurrency(profitLossTotals.totalExpenses)}</p>
                 </div>
-                <div className="p-4 border border-border rounded-lg text-center" data-testid="profitloss-total">
-                  <p className="text-xs text-muted-foreground uppercase mb-1">Net Kâr/Zarar</p>
-                  <p className={`text-xl font-bold ${profitLossTotals.totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center" data-testid="profitloss-total">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Net Kâr/Zarar</p>
+                  <p className={`text-sm sm:text-xl font-bold ${profitLossTotals.totalProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {formatCurrency(profitLossTotals.totalProfit)}
                   </p>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <h3 className="font-semibold mb-3 border-b border-border pb-2">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-semibold mb-2 sm:mb-3 border-b border-border pb-2 text-sm sm:text-base">
                   Araç Bazlı Kâr/Zarar ({profitLossData.length} araç)
                 </h3>
-                <div className="overflow-x-auto">
+                {/* Mobile cards for profitloss */}
+                <div className="sm:hidden space-y-2">
+                  {profitLossData.length === 0 ? (
+                    <p className="text-center py-4 text-muted-foreground text-sm">Satılan araç bulunamadı.</p>
+                  ) : profitLossData.map(car => (
+                    <div key={car.id} className="p-3 border border-border rounded-lg">
+                      <div className="flex justify-between items-start mb-1.5">
+                        <div>
+                          <p className="text-xs font-semibold">{car.brand} {car.model}</p>
+                          <p className="text-[10px] text-muted-foreground">{car.plate?.toUpperCase()} - {car.stockDays} gün</p>
+                        </div>
+                        <p className={`text-sm font-bold ${car.profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          {car.profit >= 0 ? '+' : ''}{formatCurrency(car.profit)}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 text-[10px]">
+                        <div><span className="text-muted-foreground">Alış:</span> <span className="font-medium">{formatCurrency(car.purchasePrice)}</span></div>
+                        <div><span className="text-muted-foreground">Satış:</span> <span className="text-success font-medium">{formatCurrency(car.salePrice)}</span></div>
+                        <div><span className="text-muted-foreground">Gider:</span> <span className="text-destructive font-medium">{car.carExpenses > 0 ? formatCurrency(car.carExpenses) : '-'}</span></div>
+                      </div>
+                      {car.sold_by_name && <p className="text-[10px] text-muted-foreground mt-1">Satan: {car.sold_by_name}</p>}
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <table className="w-full border-collapse min-w-[700px]" data-testid="profitloss-table">
                     <thead>
                       <tr className="border-b border-border">
@@ -616,99 +641,170 @@ const ReportModal = ({ isOpen, onClose }) => {
             </>
           ) : (
           <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-            <div className="p-4 border border-border rounded-lg text-center" data-testid="report-total-income">
-              <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Gelir</p>
-              <p className="text-2xl font-bold text-success">{formatCurrency(totals.income)}</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <div className="p-2 sm:p-4 border border-border rounded-lg text-center" data-testid="report-total-income">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Toplam Gelir</p>
+              <p className="text-sm sm:text-2xl font-bold text-success">{formatCurrency(totals.income)}</p>
             </div>
-            <div className="p-4 border border-border rounded-lg text-center" data-testid="report-total-expense">
-              <p className="text-xs text-muted-foreground uppercase mb-1">Toplam Gider</p>
-              <p className="text-2xl font-bold text-destructive">{formatCurrency(totals.expense)}</p>
+            <div className="p-2 sm:p-4 border border-border rounded-lg text-center" data-testid="report-total-expense">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Toplam Gider</p>
+              <p className="text-sm sm:text-2xl font-bold text-destructive">{formatCurrency(totals.expense)}</p>
             </div>
-            <div className="p-4 border border-border rounded-lg text-center" data-testid="report-net-profit">
-              <p className="text-xs text-muted-foreground uppercase mb-1">Net Kâr</p>
-              <p className="text-2xl font-bold">{formatCurrency(totals.net)}</p>
-              <p className={`text-sm ${totals.net >= 0 ? 'text-success' : 'text-destructive'}`}>%{profitMargin}</p>
+            <div className="p-2 sm:p-4 border border-border rounded-lg text-center" data-testid="report-net-profit">
+              <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Net Kâr</p>
+              <p className="text-sm sm:text-2xl font-bold">{formatCurrency(totals.net)}</p>
+              <p className={`text-[10px] sm:text-sm ${totals.net >= 0 ? 'text-success' : 'text-destructive'}`}>%{profitMargin}</p>
             </div>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             {reportType === 'general' ? (
               <>
                 {/* Araç İşlemleri Bölümü */}
-                <h3 className="font-semibold mb-3 border-b-2 border-primary/30 pb-2 flex items-center gap-2" data-testid="vehicle-transactions-header">
-                  <Car size={16} className="text-primary" />
-                  Araç İşlemleri
-                  <span className="text-xs text-muted-foreground font-normal ml-auto">
-                    Gelir: <span className="text-success font-medium">{formatCurrency(vehicleTotals.income)}</span> | Gider: <span className="text-destructive font-medium">{formatCurrency(vehicleTotals.expense)}</span> | Net: <span className="font-medium">{formatCurrency(vehicleTotals.net)}</span>
-                  </span>
-                </h3>
-                <div className="overflow-x-auto mb-6">
-                  <table className="w-full border-collapse min-w-[500px]">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
-                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {vehicleTransactions.length === 0 ? (
-                        <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">Bu tarih aralığında araç işlemi bulunamadı.</td></tr>
-                      ) : vehicleTransactions.map((tx) => (
-                        <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
-                          <td className="p-3 text-sm">{formatDate(tx.date)}</td>
-                          <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
-                          <td className="p-3 text-sm">{tx.category}</td>
-                          <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
-                          <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-semibold mb-2 sm:mb-3 border-b-2 border-primary/30 pb-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2" data-testid="vehicle-transactions-header">
+                    <span className="flex items-center gap-1.5">
+                      <Car size={16} className="text-primary" />
+                      Araç İşlemleri
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-normal sm:ml-auto flex gap-2 sm:gap-0">
+                      <span>Gelir: <span className="text-success font-medium">{formatCurrency(vehicleTotals.income)}</span></span>
+                      <span className="hidden sm:inline"> | </span>
+                      <span>Gider: <span className="text-destructive font-medium">{formatCurrency(vehicleTotals.expense)}</span></span>
+                    </span>
+                  </h3>
+                  {/* Mobile cards */}
+                  <div className="sm:hidden space-y-2">
+                    {vehicleTransactions.length === 0 ? (
+                      <p className="text-center py-4 text-muted-foreground text-sm">Araç işlemi bulunamadı.</p>
+                    ) : vehicleTransactions.map((tx) => (
+                      <div key={tx.id} className="p-3 border border-border rounded-lg flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium truncate">{tx.category}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{tx.description || '-'}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatDate(tx.date)}</p>
+                        </div>
+                        <p className={`text-sm font-semibold shrink-0 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                          {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full border-collapse min-w-[500px]">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
+                          <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {vehicleTransactions.length === 0 ? (
+                          <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">Bu tarih aralığında araç işlemi bulunamadı.</td></tr>
+                        ) : vehicleTransactions.map((tx) => (
+                          <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
+                            <td className="p-3 text-sm">{formatDate(tx.date)}</td>
+                            <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
+                            <td className="p-3 text-sm">{tx.category}</td>
+                            <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                            <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* İşletme İşlemleri Bölümü */}
-                <h3 className="font-semibold mb-3 border-b-2 border-amber-500/30 pb-2 flex items-center gap-2" data-testid="business-transactions-header">
-                  <Building2 size={16} className="text-amber-500" />
-                  İşletme İşlemleri
-                  <span className="text-xs text-muted-foreground font-normal ml-auto">
-                    Gelir: <span className="text-success font-medium">{formatCurrency(businessTotals.income)}</span> | Gider: <span className="text-destructive font-medium">{formatCurrency(businessTotals.expense)}</span> | Net: <span className="font-medium">{formatCurrency(businessTotals.net)}</span>
-                  </span>
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse min-w-[500px]">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
-                        <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {businessTransactions.length === 0 ? (
-                        <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">Bu tarih aralığında işletme işlemi bulunamadı.</td></tr>
-                      ) : businessTransactions.map((tx) => (
-                        <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
-                          <td className="p-3 text-sm">{formatDate(tx.date)}</td>
-                          <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
-                          <td className="p-3 text-sm">{tx.category}</td>
-                          <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
-                          <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                <div>
+                  <h3 className="font-semibold mb-2 sm:mb-3 border-b-2 border-amber-500/30 pb-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2" data-testid="business-transactions-header">
+                    <span className="flex items-center gap-1.5">
+                      <Building2 size={16} className="text-amber-500" />
+                      İşletme İşlemleri
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-normal sm:ml-auto flex gap-2 sm:gap-0">
+                      <span>Gelir: <span className="text-success font-medium">{formatCurrency(businessTotals.income)}</span></span>
+                      <span className="hidden sm:inline"> | </span>
+                      <span>Gider: <span className="text-destructive font-medium">{formatCurrency(businessTotals.expense)}</span></span>
+                    </span>
+                  </h3>
+                  {/* Mobile cards */}
+                  <div className="sm:hidden space-y-2">
+                    {businessTransactions.length === 0 ? (
+                      <p className="text-center py-4 text-muted-foreground text-sm">İşletme işlemi bulunamadı.</p>
+                    ) : businessTransactions.map((tx) => (
+                      <div key={tx.id} className="p-3 border border-border rounded-lg flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium truncate">{tx.category}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{tx.description || '-'}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatDate(tx.date)}</p>
+                        </div>
+                        <p className={`text-sm font-semibold shrink-0 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                          {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full border-collapse min-w-[500px]">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tarih</th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Tür</th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
+                          <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {businessTransactions.length === 0 ? (
+                          <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">İşletme işlemi bulunamadı.</td></tr>
+                        ) : businessTransactions.map((tx) => (
+                          <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
+                            <td className="p-3 text-sm">{formatDate(tx.date)}</td>
+                            <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
+                            <td className="p-3 text-sm">{tx.category}</td>
+                            <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                            <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </>
             ) : (
               <>
-                <h3 className="font-semibold mb-3 border-b border-border pb-2">İşlem Dökümü</h3>
-                <div className="overflow-x-auto">
+                <h3 className="font-semibold mb-2 sm:mb-3 border-b border-border pb-2 text-sm sm:text-base">İşlem Dökümü</h3>
+                {/* Mobile cards */}
+                <div className="sm:hidden space-y-2">
+                  {displayTransactions.length === 0 ? (
+                    <p className="text-center py-6 text-muted-foreground text-sm">Bu tarih aralığında işlem bulunamadı.</p>
+                  ) : displayTransactions.map((tx) => (
+                    <div key={tx.id} className="p-3 border border-border rounded-lg flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium truncate">{tx.category}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{tx.description || '-'}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-[10px] text-muted-foreground">{formatDate(tx.date)}</p>
+                          {reportType === 'sold' && carSoldByMap[tx.car_id] && (
+                            <p className="text-[10px] text-primary">{carSoldByMap[tx.car_id]}</p>
+                          )}
+                        </div>
+                      </div>
+                      <p className={`text-sm font-semibold shrink-0 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full border-collapse min-w-[500px]">
                   <thead>
                     <tr className="border-b border-border">
@@ -742,36 +838,36 @@ const ReportModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          <div className="flex justify-end mb-8">
-            <div className="w-80">
+          <div className="flex justify-end mb-6 sm:mb-8">
+            <div className="w-full sm:w-80">
               {reportType === 'general' && (
                 <>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Araç İşlemleri</p>
-                  <div className="flex justify-between py-1.5 text-sm"><span className="text-muted-foreground">Gelir:</span><span className="text-success font-medium">{formatCurrency(vehicleTotals.income)}</span></div>
-                  <div className="flex justify-between py-1.5 text-sm border-b border-border"><span className="text-muted-foreground">Gider:</span><span className="text-destructive font-medium">-{formatCurrency(vehicleTotals.expense)}</span></div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1 mt-3">İşletme İşlemleri</p>
-                  <div className="flex justify-between py-1.5 text-sm"><span className="text-muted-foreground">Gelir:</span><span className="text-success font-medium">{formatCurrency(businessTotals.income)}</span></div>
-                  <div className="flex justify-between py-1.5 text-sm border-b border-border"><span className="text-muted-foreground">Gider:</span><span className="text-destructive font-medium">-{formatCurrency(businessTotals.expense)}</span></div>
+                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase mb-1">Araç İşlemleri</p>
+                  <div className="flex justify-between py-1 sm:py-1.5 text-xs sm:text-sm"><span className="text-muted-foreground">Gelir:</span><span className="text-success font-medium">{formatCurrency(vehicleTotals.income)}</span></div>
+                  <div className="flex justify-between py-1 sm:py-1.5 text-xs sm:text-sm border-b border-border"><span className="text-muted-foreground">Gider:</span><span className="text-destructive font-medium">-{formatCurrency(vehicleTotals.expense)}</span></div>
+                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase mb-1 mt-2 sm:mt-3">İşletme İşlemleri</p>
+                  <div className="flex justify-between py-1 sm:py-1.5 text-xs sm:text-sm"><span className="text-muted-foreground">Gelir:</span><span className="text-success font-medium">{formatCurrency(businessTotals.income)}</span></div>
+                  <div className="flex justify-between py-1 sm:py-1.5 text-xs sm:text-sm border-b border-border"><span className="text-muted-foreground">Gider:</span><span className="text-destructive font-medium">-{formatCurrency(businessTotals.expense)}</span></div>
                 </>
               )}
               {reportType !== 'general' && (
                 <>
-                  <div className="flex justify-between py-2 border-b border-border"><span className="text-muted-foreground">Toplam Gelir:</span><span className="text-success font-medium">{formatCurrency(totals.income)}</span></div>
-                  <div className="flex justify-between py-2 border-b border-border"><span className="text-muted-foreground">Toplam Gider:</span><span className="text-destructive font-medium">-{formatCurrency(totals.expense)}</span></div>
+                  <div className="flex justify-between py-1.5 sm:py-2 border-b border-border text-xs sm:text-sm"><span className="text-muted-foreground">Toplam Gelir:</span><span className="text-success font-medium">{formatCurrency(totals.income)}</span></div>
+                  <div className="flex justify-between py-1.5 sm:py-2 border-b border-border text-xs sm:text-sm"><span className="text-muted-foreground">Toplam Gider:</span><span className="text-destructive font-medium">-{formatCurrency(totals.expense)}</span></div>
                 </>
               )}
-              <div className="flex justify-between py-3 font-bold"><span>NET SONUÇ:</span><span>{formatCurrency(totals.net)} (%{profitMargin})</span></div>
+              <div className="flex justify-between py-2 sm:py-3 font-bold text-sm sm:text-base"><span>NET SONUÇ:</span><span>{formatCurrency(totals.net)} (%{profitMargin})</span></div>
             </div>
           </div>
 
-          <div className="flex justify-between pt-8 border-t border-border mt-8">
-            <div className="text-center">
-              <p className="font-medium mb-8">Muhasebe / Onay</p>
-              <div className="w-48 border-t border-foreground pt-2"><p className="text-sm text-muted-foreground">İmza / Kaşe</p></div>
+          <div className="flex justify-between pt-4 sm:pt-8 border-t border-border mt-4 sm:mt-8 gap-4">
+            <div className="text-center flex-1">
+              <p className="font-medium text-xs sm:text-base mb-4 sm:mb-8">Muhasebe / Onay</p>
+              <div className="w-full max-w-[180px] mx-auto border-t border-foreground pt-2"><p className="text-[10px] sm:text-sm text-muted-foreground">İmza / Kaşe</p></div>
             </div>
-            <div className="text-center">
-              <p className="font-medium mb-8">{companyName} Yetkilisi</p>
-              <div className="w-48 border-t border-foreground pt-2"><p className="text-sm text-muted-foreground">İmza</p></div>
+            <div className="text-center flex-1">
+              <p className="font-medium text-xs sm:text-base mb-4 sm:mb-8 truncate">{companyName} Yetkilisi</p>
+              <div className="w-full max-w-[180px] mx-auto border-t border-foreground pt-2"><p className="text-[10px] sm:text-sm text-muted-foreground">İmza</p></div>
             </div>
           </div>
           </>
