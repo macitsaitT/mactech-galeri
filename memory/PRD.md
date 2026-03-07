@@ -2,14 +2,21 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.7.1
+- **Version:** 4.8.0
 - **Last Updated:** 2026-03-07
-- **Status:** MVP Complete + Permission Management System + Sale Bug Fixed
+- **Status:** MVP Complete + Phone Formatting + Customer Cleanup
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.8.0 - Telefon Formatı + Müşteri Temizleme
+- [x] Tüm telefon girişleri 0XXX XXX XX XX formatında (11 hane, boşluklu)
+- [x] formatPhoneInput fonksiyonu helpers.js'e eklendi (8 farklı bileşende uygulandı)
+- [x] Satış iptali (handleCancelSale) sırasında bağlı müşteri de soft-delete edilir
+- [x] Araç silme (handleDeleteCar) sırasında bağlı müşteri de soft-delete edilir
+- [x] Test: Telefon formatı 4/4, müşteri temizleme kodu doğrulandı
 
 ### v4.7.1 - Satış Onay Butonu Düzeltmesi
 - [x] SaleModal "Satışı Onayla" butonunun çalışmama hatası düzeltildi
