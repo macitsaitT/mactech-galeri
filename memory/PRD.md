@@ -2,14 +2,22 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.6.0
+- **Version:** 4.7.0
 - **Last Updated:** 2026-03-07
-- **Status:** MVP Complete + Stock Days + Profit/Loss Report
+- **Status:** MVP Complete + Permission Management System
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.7 - Yetki Yönetimi Paneli
+- [x] Admin için Yetki Yönetimi sayfası (21 farklı yetki)
+- [x] Muhasebe ve Satış Danışmanı rolleri için toggle bazlı izin yönetimi
+- [x] 5 yetki grubu: Araçlar, Müşteriler, Finansal İşlemler, Raporlar & Diğer, Randevular
+- [x] Sidebar menü yetkilere göre dinamik filtreleme
+- [x] Backend: permissions koleksiyonu, GET/PUT endpoint'leri
+- [x] Varsayılana sıfırlama özelliği
 
 ### v4.6 - Stok Gün Sayısı + Kâr/Zarar Raporu
 - [x] Araç kartında "Stokta X gün" gösterimi (entry_date'e göre hesaplama)
