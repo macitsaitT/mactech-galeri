@@ -2,14 +2,19 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.7.0
+- **Version:** 4.7.1
 - **Last Updated:** 2026-03-07
-- **Status:** MVP Complete + Permission Management System
+- **Status:** MVP Complete + Permission Management System + Sale Bug Fixed
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.7.1 - Satış Onay Butonu Düzeltmesi
+- [x] SaleModal "Satışı Onayla" butonunun çalışmama hatası düzeltildi
+- [x] Radix UI Dialog içinde form submit çakışması giderildi (type=submit -> type=button + onClick)
+- [x] Test: 12/12 test başarılı, satış akışı tam çalışıyor
 
 ### v4.7 - Yetki Yönetimi Paneli
 - [x] Admin için Yetki Yönetimi sayfası (21 farklı yetki)
