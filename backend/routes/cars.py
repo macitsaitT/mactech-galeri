@@ -51,12 +51,12 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
     existing = await db.cars.find_one({"id": car_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
-    if updates.get("status") == "Satildi":
+    if updates.get("status") == "Satıldı":
         user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
         if user:
             updates["sold_by_user_id"] = current_user["user_id"]
             updates["sold_by_name"] = user.get("company_name", user.get("email", ""))
-    if updates.get("status") and updates["status"] != "Satildi" and existing.get("status") == "Satildi":
+    if updates.get("status") and updates["status"] != "Satıldı" and existing.get("status") == "Satıldı":
         updates["sold_by_user_id"] = ""
         updates["sold_by_name"] = ""
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
