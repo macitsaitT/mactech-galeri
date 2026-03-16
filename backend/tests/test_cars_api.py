@@ -7,7 +7,7 @@ import requests
 import os
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://gallery-crm-pro-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crm-modular-build.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "demo@aslanbasoto.com"

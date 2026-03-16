@@ -4,175 +4,171 @@ The user wants to professionalize a personal gallery CRM application. The goal i
 **PRODUCT REQUIREMENTS:**
 1.  Migrate from React/Firebase to React/FastAPI/MongoDB.
 2.  **Multi-Tenancy:** Implement a multi-tenant architecture where each new registered user (an Admin) creates their own isolated organization. All data (vehicles, customers, transactions) must be scoped to the user's organization ().
-3.  **Role-Based Access Control (RBAC):** Implement three user roles:
-    *   **Admin:** Can manage users (add/edit/delete) within their organization and has full access to all data and features.
-    *   **Accountant (Muhasebe):** Can view all financial data within the organization and filter reports by employee. Cannot manage users.
-    *   **Salesperson (Satış Elemanı):** Has a restricted view, primarily seeing their own activities.
+3.  **Role-Based Access Control (RBAC) & Granular Permissions:** Implement three user roles (Admin, Accountant, Salesperson). The Admin should be able to define specific permissions for each role and even override them for individual users.
 4.  **Feature Enhancements:**
-    *   Export reports to formatted Word documents instead of Excel.
-    *   Track which customer made a deposit on a vehicle and the date of the deposit.
-    *   Track which salesperson sold a vehicle.
-    *   Allow editing of income and expense transactions.
-    *   Differentiate transaction entry between Vehicle Expenses and General Transactions.
+    *   Export reports to formatted Word documents.
+    *   Track salesperson for each sale.
+    *   Allow editing of transactions.
+    *   Differentiate transaction entry types.
+    *   Implement a dynamic, filterable dashboard.
+    *   Create a universal Trash Can for all soft-deleted items with a restore capability.
+    *   Display days in stock for vehicles and add a profit/loss report.
 5.  **UI/UX Improvements:**
-    *   Fix mobile responsiveness issues, especially in forms where elements overlap.
-    *   Remove the Made with Emergent badge from the application.
-    *   Remove the Undo Transaction button to prevent accidental data loss.
+    *   Fix mobile responsiveness issues.
+    *   Remove the Made with Emergent badge.
+    *   Remove the Undo Transaction button.
+    *   Hide sensitive information like vehicle purchase price from the main view.
 6.  Ensure the application is a deployable and functional Progressive Web App (PWA).
+7.  Ensure the application is secure against common vulnerabilities.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-A full-stack Gallery CRM application (React/FastAPI/MongoDB) with a complete multi-tenant architecture and role-based access control (RBAC). Each new user who registers becomes an Admin of their own isolated organization. Admins can create other users (Accountant, Salesperson) within their organization. Data access is strictly controlled by organization () and user role. The application features formatted Word exports, transaction editing, and improved mobile UI. The Made with Emergent badge has been successfully removed.
+A full-stack, multi-tenant Gallery CRM application (React/FastAPI/MongoDB). The system supports full data isolation per organization (). It features a sophisticated, two-tiered permission system allowing Admins to set role-based default permissions and then override them for individual users. Key features include a dynamic dashboard, a unified trash can, detailed financial reporting, and a highly optimized mobile UI/UX. The backend code structure has just been prepared for a major refactoring from a monolith to a modular design.
 
 **Last working item**:
-*   **Last item agent was working:** The user requested the ability for Admins and Accountants to see which salesperson sold a specific vehicle. The agent analyzed the request and proposed a plan to implement this feature, which is now pending user approval.
-*   **Status:** NOT STARTED
+*   **Last item agent was working:** The agent was in the middle of a major refactoring of the backend, as requested by the user. The monolithic  file (1452 lines) was being broken down into a modular structure to improve maintainability. The agent created the new directory structure (, ) and placeholder files (, , , etc.) but has not yet moved the code logic into them.
+*   **Status:** IN PROGRESS
 *   **Agent Testing Done:** N
-*   **Which testing method agent to use?** both
+*   **Which testing method agent to use?** backend testing agent
 *   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1:** Track and display the salesperson responsible for a vehicle sale. (Priority: P0)
+*   **Issue 1:** Complete the backend refactoring. (Priority: P0)
+*   **Issue 2:** User requested a comprehensive security audit and hardening for the application. (Priority: P1)
 
 **Issues Detail:**
 *   **Issue 1:**
-    *   **Description:** When a vehicle is sold, the system does not record which user completed the sale. The Admin and Accountant roles need visibility into which salesperson sold which car.
-    *   **Attempted fixes:** None. The agent has just proposed a plan via .
+    *   **Description:** The refactoring of the monolithic  into a modular architecture is currently in an unfinished state. The new directory and file structure has been created, but the actual code (models, routes, helpers) has not been migrated from  to the new files. The backend is currently non-functional.
+    *   **Attempted fixes:** The agent has created the target directory structure and empty Python files.
     *   **Next debug checklist:**
-        1.  Wait for the user to approve the proposed plan.
-        2.  **Backend:** Modify the  collection to include a  field.
-        3.  **Backend:** Update the  endpoint to populate this new field with the name of the user making the sale.
-        4.  **Frontend:** Update the  and  components to display the Sold By information if the vehicle's status is Satıldı (Sold).
-        5.  **Frontend:** Add a Salesperson column to the sales report.
-    *   **Why fix this issue and what will be achieved with the fix?** This will provide crucial sales performance data for business management, allowing admins to track individual salesperson performance.
+        1.  Systematically move code blocks from  into the new dedicated files:
+            *   Pydantic models -> .
+            *   Database connection & helpers -> .
+            *   Authentication & security logic -> .
+            *   Encryption functions -> .
+        2.  Break down API endpoints into  instances within the  directory (e.g., , , ).
+        3.  Update the main  to be a lightweight application entry point that imports and includes the new routers.
+        4.  After refactoring is complete, run a full regression test with the  to ensure no functionality has been broken.
+    *   **Why fix this issue and what will be achieved with the fix?** Completing the refactor will make the backend code scalable, maintainable, and easier to debug, which is essential for the long-term health of the project. It's a blocker for any further backend development.
+    *   **Status:** IN PROGRESS
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** Backend
+    *   **Blocked on other issue:** None
+*   **Issue 2:**
+    *   **Description:** The user has requested a full security audit and hardening of the application.
+    *   **Next debug checklist:** Once the backend refactoring is complete and tested, propose a detailed security review plan to the user.
     *   **Status:** NOT STARTED
     *   **Should Test frontend/backend/both after fix?** Both
-    *   **Is recurring issue?** N
 
 **In progress Task List**:
-*   None.
+*   **Task 1:** Backend Code Refactoring (Priority: P0)
+    *   **Where to resume:** Start populating the newly created files (, , , etc.) with the corresponding logic from the monolithic .
+    *   **What will be achieved with this?** A clean, modular, and maintainable backend architecture.
+    *   **Status:** IN PROGRESS
+    *   **Should Test frontend/backend/both after fix?** Backend
+    *   **Blocked on something:** This task is the primary blocker.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P0) Implement tracking for which salesperson sold a vehicle (see Last working item).
+    *   (P1) **Security Hardening:** Conduct a comprehensive security review and implement necessary hardening measures (on hold until refactoring is complete).
 *   **Future Tasks:**
-    *   (P1) **Full Email Integration:** Replace the mocked email service with a real provider like Resend or SendGrid to enable functional email verification and appointment reminders.
-    *   (P1) **Google Social Login:** Implement Google Authentication as an alternative login method.
+    *   (P2) **Full Email Integration:** Replace mocked email service with a real provider (e.g., Resend, SendGrid).
+    *   (P2) **Google Social Login:** Implement Google Authentication.
 
 **Completed work in this session**
-- **Multi-Tenancy Architecture:** Successfully implemented a full data isolation model using . New users create their own organization, and all subsequent data is scoped to that organization. A startup migration script was created to assign s to all existing data.
-- **Role-Based Access Control (RBAC):**
-    - Implemented Admin, Muhasebe (Accountant), and Satış Elemanı (Salesperson) roles with distinct permissions.
-    - Created a User Management page for Admins.
-    - UI elements (like sidebar menus) and API endpoints are now conditionally rendered/protected based on user role.
-- **Financial & Reporting Features:**
-    - **Transaction Editing:** Added the ability for users to edit existing income and expense records.
-    - **Word Export:** Replaced all Excel exports with cleanly formatted Word document exports ().
-    - **Accountant Filtering:** Implemented a dropdown filter on the Finance and Reports pages for Accountants to view transactions by a specific employee.
-    - **Transaction Flow:** Separated transaction entry into Araç Giderleri (Vehicle Expenses, requires a vehicle) and Genel İşlemler (General Transactions, vehicle is optional).
-    - **Removed Undo:** The Undo Transaction button was removed from the UI to prevent accidental data deletion.
-- **Vehicle Management:**
-    - **Deposit Tracking:** Added fields to store the customer name and date for a vehicle deposit (). This information is now displayed on the main vehicle card.
-- **UI/UX and Deployment:**
-    - **Made with Emergent Badge Removal:** Located and removed the badge from  and added a global CSS rule () to prevent it from being re-injected by the preview environment.
-    - **Mobile Responsiveness:** Fixed form layouts on mobile devices to prevent fields and labels from overlapping.
-    - **Deployment Debugging:** Guided the user to resolve a Vercel commit author access error and diagnosed a blank screen issue caused by the Railway backend not being redeployed with the latest code.
-
-**Earlier issues found/mentioned but not fixed**
-*   None.
-
-**Known issue recurrence from previous fork**
-*   N/A
+- **Bug Fix:** Repaired the Confirm Sale button, which was a critical blocker for the core sales workflow.
+- **Feature (Phone Formatting):** Enforced a mandatory  format for all phone number inputs across the application.
+- **Feature (Data Integrity):** Implemented logic to automatically delete a customer record if the associated sale is canceled or the vehicle is deleted.
+- **Feature (Reporting):** Separated Vehicle and Business expenses in the reports modal for clear financial tracking.
+- **UI/UX (Mobile Reports):** Completely overhauled the reports modal for mobile devices, using a responsive card layout instead of a broken table view.
+- **Feature (Promo Card):** The vehicle promotion card now correctly displays the gallery owner's (admin's) name and title, regardless of the logged-in user's role.
+- **Deployment Support:** Provided extensive guidance for deploying the app to Vercel and Railway, including debugging environment variable issues, build failures ( package), and Vercel's hobby-plan deployment restrictions.
+- **Refactoring (Initiated):** Began the user-requested refactoring of the backend by creating a new modular file structure.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Backend:** FastAPI, Python, MongoDB ().
-*   **Frontend:** React.js, Tailwind CSS, Shadcn/UI.
-*   **Database:** MongoDB Atlas.
-*   **Architecture:** Multi-tenant SaaS architecture based on an  field. Role-Based Access Control (RBAC) enforced at both API and UI levels.
-*   **Authentication:** JWTs now contain , , and  payloads, which are used for all subsequent API requests.
-*   **Data Migration:** The backend runs a one-time migration script on startup to update existing database records with the new  schema.
+*   **Backend:** FastAPI, Python, MongoDB. Currently undergoing refactoring from a monolithic to a modular architecture.
+*   **Frontend:** React.js, Tailwind CSS, Shadcn/UI, Recharts.
+*   **Architecture:** Multi-tenant SaaS with a two-tiered, granular permission system.
 
 **key DB schema**
 *   **users:** 
 *   **vehicles:** 
 *   **transactions:** 
 *   **customers:** 
-*   **appointments:** 
+*   **permissions:** 
 
 **changes in tech stack**
-*   The application architecture was fundamentally changed to support multi-tenancy and RBAC.
-*    was replaced with  for document exporting.
+*   No new technologies were added. The  package was removed from dependencies as it was unused and causing build failures.
 
 **All files of reference**
-*   : Contains all backend logic, including auth, multi-tenancy, RBAC, and all API endpoints.
-*   : Manages global state, modals, and routing.
-*   : Handles all frontend-to-backend API communication and state propagation.
-*   : UI for displaying and editing transactions, now includes employee filter.
-*   : New UI for Admins to manage users.
-*   : Modified to remove the Made with Emergent badge.
-*   : Includes a CSS override to hide the badge.
+*   : The monolithic file currently being refactored.
+*    & : The new directories for the modular backend structure.
+*   : Heavily modified for mobile responsiveness and report logic.
+*   : File where the critical sales button bug was fixed.
+*   : Updated with logic to fetch the organization owner.
+*   : Updated to use the organization owner's details.
+*   : New utility file for phone number formatting.
 
 **Areas that need refactoring**:
-*   The  file is now extremely large and complex. It urgently needs to be broken down into a more maintainable structure using FastAPI's  for different modules (e.g., , , , ).
-*   The frontend dependency resolution workarounds () are still in place and could cause issues in the future.
+*   The backend refactoring from a monolithic  to a modular structure is **IN PROGRESS** and must be completed.
+*   Several large frontend components (, , ) could still be broken down into smaller sub-components for better maintainability in the future.
 
 **key api endpoints**
-*   : Creates a new user and a new organization, assigning the user as 'admin'.
-*   : Returns a JWT containing , , and .
-*   : (Admin only) GET to list users in the org, POST to create a new user in the org.
-*   All data-related endpoints (e.g., , ) are now implicitly filtered by the  from the bearer token.
+*   ****: New endpoint to retrieve the details of the organization's admin/owner.
 
 **Critical Info for New Agent**
-*   **Multi-Tenancy is paramount:** All database queries on the backend MUST be filtered by the  extracted from the user's JWT. Failure to do so will cause critical data leaks between different user organizations.
-*   **RBAC is key:** All sensitive actions (e.g., user management) and data visibility (e.g., financial reports) must be checked against the user's  from the JWT.
-*   The user deploys the application themselves to Vercel and Railway. Be prepared to provide clear, step-by-step guidance for deployment and debugging environment variable issues. A common user error is forgetting to redeploy the backend service on Railway after pushing code changes.
+*   **Your immediate and only priority is to complete the backend refactoring.** The backend is currently in a broken, half-finished state. You must move all logic from  into the newly created modular structure.
+*   After the refactoring is complete, a full backend regression test using the  is mandatory to ensure no features were broken during the process.
+*   The user is actively deploying to Vercel/Railway. Be aware of common issues they've faced:
+    *   Vercel Hobby Plan blocks deployments from non-owner commits. The user must trigger a redeploy manually or by making a small commit.
+    *   Railway  environment variable must include all Vercel frontend URLs.
+    *   Railway builds can fail due to unnecessary packages in .
 
 **documents and test reports created in this job**
 *    (updated)
-*   The agent successfully used the  multiple times to validate major feature implementations like RBAC and multi-tenancy.
+*   Multiple test reports in  confirming fixes and new features.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requested to see which salesperson sold which car. (IN PROGRESS - Plan proposed, pending confirmation)
-2.  **User:** Requested the ability to edit vehicle expenses and other income/expense transactions. (COMPLETED)
-3.  **User:** Requested to rename the expense buttons to Araç Giderleri (Vehicle Expenses) and Genel İşlemler (General Transactions) and adjust their logic. (COMPLETED)
-4.  **User:** Reported login/registration failures on the live Vercel site. (COMPLETED - Agent diagnosed that the Railway backend was not redeployed with the new code).
-5.  **User:** Reported a blank screen on Vercel after deployment. (COMPLETED - Agent confirmed it was the dark theme background and the app was working).
-6.  **User:** Reported a Vercel deployment error: commit author does not have contributing access. (COMPLETED - Agent provided multiple solutions).
-7.  **User:** Requested to improve the mobile view and the formatting of Word exports. (COMPLETED)
-8.  **User:** Requested to remove the Undo Transaction button. (COMPLETED)
-9.  **User:** Requested to see which customer made a deposit and on what date. (COMPLETED)
-10. **User:** Confirmed the plan for implementing multi-tenancy and RBAC, adding that new admins' data should not mix with others. (COMPLETED)
+1.  **User:** raporların mobil görünümü içime sinmiyor... (Improve mobile view of reports) - **COMPLETED**
+2.  **User:** PREVİEEW İ MOBİL GÖRÜNÜM OLARAK GÖRMEK İSTİYORUM (Show me the mobile preview) - **COMPLETED**
+3.  **User:** bunu uygulama yapcam vercelde yeni proje... (I will deploy this as an app on Vercel) - **SUPPORT PROVIDED**
+4.  **User:**  (Give me all the environment variables for this Railway backend) - **SUPPORT PROVIDED**
+5.  **User:** deploy ettim ama...yetkiniz yok diyor (I deployed, but it says permission denied) - **RESOLVED** (Identified old backend code was running on Railway and advised user to redeploy).
+6.  **User:**  (Save to GitHub has an 'X' mark) - **RESOLVED** (Explained Vercel's Hobby plan limitations).
+7.  **User:**  (Is it a problem to deploy multiple Vercel frontends to one Railway backend?) - **ANSWERED** (No, just update CORS).
+8.  **User:**  (Make print output match preview and always show the gallery owner's name) - **COMPLETED**
+9.  **User:**  (Check if refactoring is needed, but do it without changing features) - **IN PROGRESS**
+10. **User:**  (That's not it, if you just remove the emergent files wouldn't that solve it?) - **RESOLVED** (Cleaned  to fix build error).
 
 **Project Health Check:**
-*   **Working:** The application is fully functional with a multi-tenant, role-based architecture.
-*   **Broken:** Nothing is currently broken.
+*   **Working:** The frontend application is stable and all user-facing features are functional.
+*   **Broken:** The **backend is non-functional** due to the in-progress code refactoring. This is the top priority to fix.
 *   **Mocked:**
-    *   Email sending (for verification and reminders).
-    *   Google Authentication.
+    *   Email sending.
+    *   Google Social Login.
 
 **3rd Party Integrations**
 *   **Vercel:** Frontend hosting.
 *   **Railway:** Backend hosting.
 *   **MongoDB Atlas:** Cloud database.
 *   **python-docx:** Library for creating Word documents.
+*   **Recharts:** Library for charts on the dashboard.
 
 **Testing status**
-*   **Testing agent used after significant changes:** YES. Used successfully to test the multi-tenancy, RBAC, and transaction editing features.
+*   **Testing agent used after significant changes:** YES. The agent used the testing agent to verify all bug fixes and feature implementations before the refactoring began.
 *   **Troubleshoot agent used after agent stuck in loop:** NO.
 *   **Test files created:** None.
-*   **Known regressions:** None.
+*   **Known regressions:** None. The previous regression (sales button) was fixed.
 
 **Credentials to test flow:**
-*   You must register a new user to create a new, isolated organization. The first user will be an 'admin'.
-*   Example credentials used during development:
-    *   **Admin Email:** 
-    *   **Salesperson Email:** 
-    *   **Accountant Email:** 
-    *   **Password (for all):** 
+*   Register a new user to create a new, isolated organization. The first user is an 'admin'.
+*   **Admin Email:** 
+*   **Password (for all):** 
+*   Create other users (salesperson, accountant) from the Users page to test roles and permissions.
 
 **What agent forgot to execute**
-*   Nothing. The agent is waiting for user confirmation before proceeding with the latest feature request.</analysis>
+The agent has not forgotten any tasks. It is currently executing the last user request to refactor the backend codebase.</analysis>

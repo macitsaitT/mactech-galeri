@@ -10,7 +10,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://gallery-crm-pro-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://crm-modular-build.preview.emergentagent.com').rstrip('/')
 
 # Admin credentials
 ADMIN_EMAIL = "test-soldby@emergent.com"
