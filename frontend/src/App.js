@@ -19,6 +19,7 @@ import SettingsPage from './pages/SettingsPage';
 import CalendarPage from './pages/CalendarPage';
 import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
+import YearEndTransferPage from './pages/YearEndTransferPage';
 
 // Modals
 import AddCarModal from './components/modals/AddCarModal';
@@ -44,6 +45,7 @@ const getViewTitle = (view) => {
     case 'settings': return 'Ayarlar';
     case 'calendar': return 'Randevular';
     case 'users': return 'Kullanıcı Yönetimi';
+    case 'year-end': return 'Yıl Sonu Devri';
     default: return 'Dashboard';
   }
 };
@@ -411,6 +413,7 @@ const AppContent = () => {
           
           {activeView === 'users' && <UsersPage />}
           {activeView === 'permissions' && <PermissionsPage />}
+          {activeView === 'year-end' && <YearEndTransferPage />}
         </main>
       </div>
 

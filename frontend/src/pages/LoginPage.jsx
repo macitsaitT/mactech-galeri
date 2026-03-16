@@ -39,8 +39,8 @@ const LoginPage = () => {
       setError('E-posta ve şifre zorunludur.');
       return;
     }
-    if (formData.password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır.');
+    if (formData.password.length < 8) {
+      setError('Şifre en az 8 karakter olmalıdır.');
       return;
     }
 
@@ -238,7 +238,7 @@ const LoginPage = () => {
                   </button>
                 </div>
                 {mode === 'register' && (
-                  <p className="text-xs text-muted-foreground mt-1">En az 6 karakter</p>
+                  <p className="text-xs text-muted-foreground mt-1">En az 8 karakter</p>
                 )}
               </div>
 

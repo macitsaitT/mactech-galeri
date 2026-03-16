@@ -113,4 +113,9 @@ export const permissionsAPI = {
   update: (data) => api.put('/permissions', data),
 };
 
+export const yearEndAPI = {
+  getTransfers: () => api.get('/year-end-transfers'),
+  createTransfer: (year) => api.post('/year-end-transfer', { year }),
+};
+
 export default api;

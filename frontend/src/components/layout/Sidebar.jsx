@@ -15,7 +15,8 @@ import {
   FileText,
   Calendar,
   UserCog,
-  Shield
+  Shield,
+  CalendarClock
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
@@ -32,6 +33,7 @@ const allMenuItems = [
   { id: 'permissions', label: 'Yetki Yönetimi', icon: Shield, roles: ['admin'] },
   { id: 'users', label: 'Kullanıcılar', icon: UserCog, roles: ['admin'] },
   { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'], perm: 'trash_view' },
+  { id: 'year-end', label: 'Yıl Sonu Devri', icon: CalendarClock, roles: ['admin'] },
 ];
 
 const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) => {
