@@ -2,78 +2,54 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 5.1.0
+- **Version:** 5.2.0
 - **Last Updated:** 2026-02-20
-- **Status:** MVP Complete + Backend Modular + Security Hardening
+- **Status:** MVP Complete + Modular Backend + Security Hardening + Year-End Transfer
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
 
+### v5.2.0 - Yıl Sonu Devri (Year-End Carryover)
+- [x] Backend: POST /api/year-end-transfer (admin only, duplicate prevention)
+- [x] Backend: GET /api/year-end-transfers (transfer history)
+- [x] Frontend: YearEndTransferPage with year selector, financial summary, confirmation dialog, transfer history
+- [x] Sidebar menu item (admin only): CalendarClock icon
+- [x] "Devir Bakiye" transaction created as income/expense dated Jan 1 of next year
+- [x] Previous carryover amounts included in calculation
+- [x] Password hint updated to "En az 8 karakter" on login page
+- [x] 22/22 tests passed (14 backend + 8 frontend)
+
 ### v5.1.0 - Security Hardening
-- [x] Rate Limiting: Login (10/dk), Register (5/dk) - slowapi
-- [x] Input Validation: Email format/normalizasyon, şifre politikası (min 8 karakter)
-- [x] MongoDB Injection Koruması: $ operatör engelleme, input sanitization
-- [x] File Upload Güvenliği: Magic bytes doğrulama (extension + içerik eşleşmesi)
-- [x] Security Headers: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
-- [x] Hassas Veri Koruması: password_hash, verification_code API response'lardan çıkarıldı
-- [x] 26/26 güvenlik + regresyon testi başarılı
+- [x] Rate Limiting, Input Validation, MongoDB Injection Prevention
+- [x] File Upload Magic Bytes, Security Headers, Sensitive Data Protection
+- [x] 26/26 tests passed
 
 ### v5.0.0 - Backend Modular Refactoring
-- [x] Monolitik server.py (1453 satır) -> modüler yapıya geçirildi (113 satır entry point)
-- [x] Route modülleri: auth_routes, cars, customers, transactions, appointments, users, stats, uploads, exports, encryption_routes
-- [x] Helper modülleri: db.py, auth.py, models.py, helpers.py, encryption.py, storage.py, security.py
-- [x] 51/51 backend testi başarılı
+- [x] Monolithic server.py -> modular structure (113 lines entry point)
+- [x] 51/51 tests passed
 
-### v4.10.0 - Tanıtım Kartı Düzeltmesi + Deploy Desteği
-- [x] Tanıtım kartında her zaman galeri sahibi (admin) adı gösteriliyor
-- [x] /api/org/owner endpoint eklendi
-- [x] requirements.txt temizlendi (Railway deploy düzeltmesi)
+### v4.0-4.10 - Core Features
+- [x] Multi-tenant architecture, RBAC, Dashboard, CRUD
+- [x] Word/PDF export, Tanıtım Kartı, Ekspertiz diagram, PWA
+- [x] Phone formatting, Customer cleanup, Report mobile optimization
 
-### v4.9.x - Rapor Optimizasyonları
-- [x] Mobilde kart düzeni, kompakt filtre, bölüm ayrıştırma
-- [x] İşletme/Araç rapor ayrımı, kâr/zarar raporu
-
-### v4.8.0 - Telefon Formatı + Müşteri Temizleme
-- [x] 0XXX XXX XX XX formatı, satış iptali/silme müşteri temizleme
-
-### v4.7.x - Yetki Yönetimi + Satış Butonu Fix
-- [x] 21 farklı yetki, rol bazlı toggle yönetimi
-- [x] SaleModal buton düzeltmesi
-
-### v4.0-4.6 - Temel Özellikler
-- [x] Multi-tenant architecture, RBAC, dashboard, stok gün sayısı
-- [x] Çöp kutusu, satış elemanı takibi, kapora müşteri takibi
-
-### Tamamlanan Diğer Özellikler
-- [x] Araç/Müşteri/İşlem CRUD, JWT auth, ekspertiz diagram, PWA
-- [x] Word/PDF export, logo watermark, tanıtım kartı
-
-## Code Architecture (v5.1)
+## Code Architecture (v5.2)
 ```
 /app/backend/
-├── server.py          # Entry point (rate limiter, security middleware, CORS, startup)
-├── db.py              # MongoDB connection
-├── auth.py            # JWT auth (hash, verify, create_token, get_current_user)
-├── models.py          # Pydantic models
-├── helpers.py         # build_data_filter (org_id isolation)
-├── encryption.py      # Fernet encryption
-├── storage.py         # Emergent Object Storage
-├── security.py        # NEW: validation, sanitization, magic bytes, security headers
+├── server.py              # Entry point
+├── db.py, auth.py, models.py, helpers.py, encryption.py, storage.py, security.py
 └── routes/
-    ├── auth_routes.py       # register(rate limited), login(rate limited), verify, profile
-    ├── cars.py, customers.py, transactions.py, appointments.py
-    ├── users.py             # User management + permissions
-    ├── stats.py, uploads.py, exports.py, encryption_routes.py
+    ├── auth_routes.py, cars.py, customers.py, transactions.py
+    ├── appointments.py, users.py, stats.py, uploads.py
+    ├── exports.py, encryption_routes.py
+    └── year_end.py        # NEW: Year-end carryover
 ```
 
 ## DB Schema
-- **users:** `{ id, email, password_hash, company_name, phone, role, org_id, logo_url, theme }`
-- **cars:** `{ id, brand, model, year, plate, status, org_id, created_by, deleted, ... }`
-- **customers:** `{ id, name, phone, type, notes, org_id, created_by, deleted, ... }`
-- **transactions:** `{ id, type, category, amount, date, car_id, org_id, created_by, deleted, ... }`
-- **permissions:** `{ org_id, role_defaults, user_overrides }`
+- **users, cars, customers, transactions, permissions** (unchanged)
+- **year_end_transfers:** `{ id, org_id, year, total_income, total_expense, previous_carryover, net_balance, transfer_type, transfer_amount, transaction_id, created_by, created_at }`
 
 ## Prioritized Backlog
 ### P1
