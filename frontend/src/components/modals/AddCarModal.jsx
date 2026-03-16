@@ -16,7 +16,10 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
     try {
       const newPhotos = [...(formData.photos || [])];
       for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) continue;
+        if (file.size > 10 * 1024 * 1024) {
+          alert('Dosya çok büyük (max 10MB)');
+          continue;
+        }
         const fd = new FormData();
         fd.append('file', file);
         const res = await fileAPI.upload(fd);
@@ -25,6 +28,7 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
       handleChange('photos', newPhotos);
     } catch (err) {
       console.error('Upload failed:', err);
+      alert('Fotoğraf yüklenemedi: ' + (err.response?.data?.detail || err.message));
     } finally {
       setUploading(false);
     }

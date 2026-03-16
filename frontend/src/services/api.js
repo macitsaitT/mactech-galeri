@@ -43,7 +43,7 @@ export const authAPI = {
 };
 
 export const fileAPI = {
-  upload: (formData) => api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  upload: (formData) => api.post('/upload', formData, { headers: { 'Content-Type': undefined } }),
   getUrl: (path) => {
     const token = localStorage.getItem('crm_token');
     return `${API_URL}/files/${path}?auth=${token}`;
