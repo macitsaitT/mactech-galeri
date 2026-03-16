@@ -1,19 +1,27 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from datetime import datetime, timezone
 from typing import List
 import uuid
 import secrets
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from db import db
 from auth import hash_password, verify_password, create_token, get_current_user
 from models import UserCreate, UserLogin, ProfileUpdate
+from security import validate_email, validate_password, sanitize_string
 
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
 
 
 @router.post("/auth/register")
-async def register(user: UserCreate):
-    existing = await db.users.find_one({"email": user.email})
+@limiter.limit("5/minute")
+async def register(request: Request, user: UserCreate):
+    clean_email = validate_email(user.email)
+    validate_password(user.password)
+
+    existing = await db.users.find_one({"email": clean_email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -21,7 +29,7 @@ async def register(user: UserCreate):
     user_id = str(uuid.uuid4())
     org_id = user_id
     user_doc = {
-        "id": user_id, "email": user.email,
+        "id": user_id, "email": clean_email,
         "password_hash": hash_password(user.password),
         "company_name": user.company_name, "phone": user.phone,
         "address": "", "logo_url": "", "theme": "dark",
@@ -30,10 +38,10 @@ async def register(user: UserCreate):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
-    token = create_token(user_id, user.email, org_id, "admin")
+    token = create_token(user_id, clean_email, org_id, "admin")
     return {
         "token": token,
-        "user": {"id": user_id, "email": user.email, "company_name": user.company_name,
+        "user": {"id": user_id, "email": clean_email, "company_name": user.company_name,
                  "phone": user.phone, "logo_url": "", "address": "", "role": "admin", "org_id": org_id},
         "verification_code": verification_code, "requires_verification": True
     }
@@ -41,8 +49,8 @@ async def register(user: UserCreate):
 
 @router.post("/auth/verify-email")
 async def verify_email(data: dict):
-    code = data.get("code", "")
-    email = data.get("email", "")
+    code = sanitize_string(data.get("code", ""))
+    email = validate_email(data.get("email", ""))
     user = await db.users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -68,8 +76,10 @@ async def resend_verification(data: dict):
 
 
 @router.post("/auth/login")
-async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email})
+@limiter.limit("10/minute")
+async def login(request: Request, credentials: UserLogin):
+    clean_email = validate_email(credentials.email)
+    user = await db.users.find_one({"email": clean_email})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not verify_password(credentials.password, user.get("password_hash", "")):
@@ -90,7 +100,7 @@ async def login(credentials: UserLogin):
 
 @router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
-    user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0})
+    user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0, "verification_code": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -110,11 +120,12 @@ async def get_org_owner(current_user: dict = Depends(get_current_user)):
 async def update_profile(profile: ProfileUpdate, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in profile.model_dump().items() if v is not None}
     if "password" in update_data:
+        validate_password(update_data["password"])
         update_data["password_hash"] = hash_password(update_data.pop("password"))
     if update_data:
         update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
         await db.users.update_one({"id": current_user["user_id"]}, {"$set": update_data})
-    user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0})
+    user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0, "verification_code": 0})
     return user
 
 

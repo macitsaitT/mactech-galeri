@@ -5,6 +5,7 @@ import uuid
 from db import db
 from auth import get_current_user, hash_password
 from models import UserCreate
+from security import validate_email, validate_password
 
 PERMISSION_KEYS = [
     "vehicles_view", "vehicles_add", "vehicles_edit", "vehicles_delete", "vehicles_sell", "vehicles_price_view",
@@ -82,20 +83,22 @@ async def get_users(current_user: dict = Depends(get_current_user)):
 async def create_user(user: UserCreate, current_user: dict = Depends(get_current_user)):
     if current_user.get("role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Sadece admin kullanici ekleyebilir")
-    existing = await db.users.find_one({"email": user.email})
+    clean_email = validate_email(user.email)
+    validate_password(user.password)
+    existing = await db.users.find_one({"email": clean_email})
     if existing:
         raise HTTPException(status_code=400, detail="Bu email zaten kayitli")
     org_id = current_user.get("org_id", current_user["user_id"])
     user_id = str(uuid.uuid4())
     user_doc = {
-        "id": user_id, "email": user.email, "password_hash": hash_password(user.password),
+        "id": user_id, "email": clean_email, "password_hash": hash_password(user.password),
         "company_name": user.company_name, "phone": user.phone,
         "address": "", "logo_url": "", "theme": "dark",
         "role": user.role, "org_id": org_id, "email_verified": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
-    return {"id": user_id, "email": user.email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
+    return {"id": user_id, "email": clean_email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
 
 
 @router.put("/users/{user_id}")
@@ -108,7 +111,10 @@ async def update_user(user_id: str, updates: dict, current_user: dict = Depends(
         raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
     allowed = {"role", "company_name", "phone", "email"}
     safe_updates = {k: v for k, v in updates.items() if k in allowed and v is not None}
+    if "email" in safe_updates:
+        safe_updates["email"] = validate_email(safe_updates["email"])
     if "password" in updates and updates["password"]:
+        validate_password(updates["password"])
         safe_updates["password_hash"] = hash_password(updates["password"])
     if safe_updates:
         safe_updates["updated_at"] = datetime.now(timezone.utc).isoformat()

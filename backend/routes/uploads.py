@@ -7,6 +7,7 @@ import jwt
 from db import db
 from auth import get_current_user, JWT_SECRET, JWT_ALGORITHM
 from storage import put_object, get_object, APP_NAME
+from security import validate_file_magic
 
 router = APIRouter()
 
@@ -21,6 +22,9 @@ async def upload_file(file: UploadFile = File(...), current_user: dict = Depends
     data = await file.read()
     if len(data) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+
+    if not validate_file_magic(data, ext):
+        raise HTTPException(status_code=400, detail="Dosya içeriği uzantıyla eşleşmiyor")
 
     path = f"{APP_NAME}/uploads/{current_user['user_id']}/{uuid.uuid4()}.{ext}"
 

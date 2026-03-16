@@ -1,6 +1,11 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from starlette.responses import JSONResponse
 import os
 import logging
 from pathlib import Path
@@ -11,6 +16,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 from db import db, client
 from storage import init_storage
+from security import SecurityHeadersMiddleware
 from routes.users import DEFAULT_PERMISSIONS
 
 from routes.auth_routes import router as auth_router
@@ -27,8 +33,17 @@ from routes.encryption_routes import router as encryption_router
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
 app = FastAPI(title="Aslanbaş Oto CRM API")
+app.state.limiter = limiter
 api_router = APIRouter(prefix="/api")
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(status_code=429, content={"detail": "Çok fazla istek. Lütfen biraz bekleyin."})
 
 # Include all route modules
 api_router.include_router(auth_router)
@@ -55,6 +70,9 @@ async def health():
 
 app.include_router(api_router)
 
+# Middleware (order matters: last added = first executed)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
