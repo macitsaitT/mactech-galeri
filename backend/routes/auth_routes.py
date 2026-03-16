@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import List
 import uuid
 import secrets
+import requests as http_requests
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -104,6 +105,88 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.post("/auth/google")
+async def google_auth(body: dict):
+    session_id = body.get("session_id", "")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id gerekli")
+
+    # Exchange session_id with Emergent Auth
+    try:
+        resp = http_requests.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={"X-Session-ID": session_id},
+            timeout=10
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Google doğrulama başarısız")
+        google_data = resp.json()
+    except http_requests.RequestException:
+        raise HTTPException(status_code=502, detail="Google auth servisi ulaşılamıyor")
+
+    google_email = google_data.get("email", "").strip().lower()
+    google_name = google_data.get("name", "")
+    google_picture = google_data.get("picture", "")
+
+    if not google_email:
+        raise HTTPException(status_code=400, detail="Google hesabından email alınamadı")
+
+    # Check if user exists
+    existing = await db.users.find_one({"email": google_email})
+
+    if existing:
+        # Returning user - update picture if changed
+        if google_picture and existing.get("google_picture") != google_picture:
+            await db.users.update_one({"email": google_email}, {"$set": {"google_picture": google_picture}})
+        org_id = existing.get("org_id", existing["id"])
+        role = existing.get("role", "admin")
+        token = create_token(existing["id"], google_email, org_id, role)
+        return {
+            "token": token,
+            "user": {
+                "id": existing["id"], "email": google_email,
+                "company_name": existing.get("company_name", google_name),
+                "phone": existing.get("phone", ""), "address": existing.get("address", ""),
+                "logo_url": existing.get("logo_url", ""), "google_picture": google_picture,
+                "theme": existing.get("theme", "dark"), "role": role, "org_id": org_id
+            },
+            "is_new": False
+        }
+    else:
+        # New user - create admin with own org
+        user_id = str(uuid.uuid4())
+        org_id = user_id
+        user_doc = {
+            "id": user_id, "email": google_email,
+            "password_hash": "", "company_name": google_name,
+            "phone": "", "address": "", "logo_url": "", "google_picture": google_picture,
+            "theme": "dark", "role": "admin", "org_id": org_id,
+            "auth_provider": "google", "email_verified": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(user_doc)
+
+        # Create default permissions for new org
+        from routes.users import DEFAULT_PERMISSIONS
+        await db.permissions.insert_one({
+            "org_id": org_id,
+            "permissions": DEFAULT_PERMISSIONS,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+
+        token = create_token(user_id, google_email, org_id, "admin")
+        return {
+            "token": token,
+            "user": {
+                "id": user_id, "email": google_email,
+                "company_name": google_name, "phone": "", "address": "",
+                "logo_url": "", "google_picture": google_picture,
+                "theme": "dark", "role": "admin", "org_id": org_id
+            },
+            "is_new": True
+        }
 
 
 @router.get("/org/owner")

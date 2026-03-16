@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI, permissionsAPI } from '../services/api';
 import api from '../services/api';
+import { notifyEvent } from '../utils/notifications';
 
 const AppContext = createContext(null);
 
@@ -168,6 +169,8 @@ export const AppProvider = ({ children }) => {
     const response = await carsAPI.patch(id, updates);
     setCars(prev => prev.map(c => c.id === id ? response.data : c));
     await refreshStats();
+    if (updates.status === 'Satıldı') notifyEvent('car_sold', response.data);
+    if (updates.status === 'Kapora Alındı') notifyEvent('deposit_received', response.data);
     return response.data;
   };
 
@@ -196,6 +199,7 @@ export const AppProvider = ({ children }) => {
     const response = await customersAPI.create(customerData);
     setCustomers(prev => [...prev, response.data]);
     await refreshStats();
+    notifyEvent('new_customer', response.data);
     return response.data;
   };
 
@@ -272,6 +276,7 @@ export const AppProvider = ({ children }) => {
   const addAppointment = async (data) => {
     const response = await appointmentsAPI.create(data);
     setAppointments(prev => [...prev, response.data]);
+    notifyEvent('new_appointment', response.data);
     return response.data;
   };
 

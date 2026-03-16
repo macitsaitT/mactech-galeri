@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import './index.css';
-import { requestNotificationPermission, checkUpcomingAppointments } from './utils/notifications';
+import { requestNotificationPermission, startNotificationService, stopNotificationService } from './utils/notifications';
 
 // Layout Components
 import Sidebar from './components/layout/Sidebar';
@@ -75,15 +75,9 @@ const AppContent = () => {
   useEffect(() => {
     if (isAuthenticated) {
       requestNotificationPermission();
+      startNotificationService(() => appointments);
     }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !appointments?.length) return;
-    const interval = setInterval(() => {
-      checkUpcomingAppointments(appointments);
-    }, 60000); // Check every minute
-    return () => clearInterval(interval);
+    return () => stopNotificationService();
   }, [isAuthenticated, appointments]);
 
   // Modal states
