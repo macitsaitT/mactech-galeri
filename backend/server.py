@@ -384,6 +384,14 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@api_router.get("/org/owner")
+async def get_org_owner(current_user: dict = Depends(get_current_user)):
+    org_id = current_user.get("org_id", current_user["user_id"])
+    owner = await db.users.find_one({"id": org_id}, {"_id": 0, "password_hash": 0})
+    if not owner:
+        raise HTTPException(status_code=404, detail="Organization owner not found")
+    return {"company_name": owner.get("company_name", ""), "phone": owner.get("phone", ""), "logo_url": owner.get("logo_url", ""), "address": owner.get("address", "")}
+
 @api_router.put("/auth/profile")
 async def update_profile(profile: ProfileUpdate, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in profile.model_dump().items() if v is not None}

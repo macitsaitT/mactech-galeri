@@ -105,14 +105,15 @@ const TopDownDiagram = ({ expertise }) => {
 };
 
 const PromoCardModal = ({ isOpen, onClose }) => {
-  const { user, cars } = useApp();
+  const { user, cars, orgOwner } = useApp();
   const activeCars = cars.filter(c => !c.deleted && c.status !== 'Satıldı');
   const [selectedCarId, setSelectedCarId] = useState('');
   const selectedCar = activeCars.find(c => c.id === selectedCarId);
 
-  const companyName = user?.company_name || 'ASLANBAŞ OTO A.Ş.';
-  const companyPhone = user?.phone || '05401250404';
-  const logoPath = user?.logo_url || '';
+  // Always use org owner (admin/galeri sahibi) info
+  const companyName = orgOwner?.company_name || user?.company_name || '';
+  const companyPhone = orgOwner?.phone || user?.phone || '';
+  const logoPath = orgOwner?.logo_url || user?.logo_url || '';
 
   const fetchLogoAsDataUrl = () => {
     return new Promise((resolve) => {
@@ -160,27 +161,39 @@ const PromoCardModal = ({ isOpen, onClose }) => {
         `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${getPartColor(p(id))}" stroke="${getPartBorder(p(id))}" stroke-width="1.2"/>
          <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="8" font-weight="600" fill="#333">${getPartLabel(p(id))}</text>`
       ).join('');
-      return `<svg viewBox="0 0 200 265" width="220" xmlns="http://www.w3.org/2000/svg">
-        <rect x="30" y="25" width="140" height="210" rx="22" fill="none" stroke="#999" stroke-width="1.5"/>
+      const legendItems = [
+        { color: '#22c55e', label: 'Orijinal' },
+        { color: '#eab308', label: 'Boyali' },
+        { color: '#3b82f6', label: 'Lokal' },
+        { color: '#ef4444', label: 'Degisen' },
+      ];
+      const legendHtml = legendItems.map((item, i) =>
+        `<g transform="translate(${i * 47}, 0)"><rect x="0" y="0" width="10" height="10" rx="2" fill="${item.color}"/><text x="13" y="8" font-size="7" font-weight="600" fill="#555">${item.label}</text></g>`
+      ).join('');
+      return `<svg viewBox="0 0 200 290" width="220" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="25" width="140" height="210" rx="22" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
         <rect x="45" y="77" width="110" height="28" rx="4" fill="#87CEEB" opacity="0.3" stroke="#999" stroke-width="0.8"/>
         <rect x="45" y="170" width="110" height="28" rx="4" fill="#87CEEB" opacity="0.3" stroke="#999" stroke-width="0.8"/>
         ${rects}
+        <g transform="translate(10, 268)">${legendHtml}</g>
       </svg>`;
     };
 
     const watermarkCSS = logoDataUrl ? `.watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.06;z-index:0;pointer-events:none;}.watermark img{width:350px;height:auto;}` : '';
     const watermarkHTML = logoDataUrl ? `<div class="watermark"><img src="${logoDataUrl}"/></div>` : '';
-    const logoHeader = logoDataUrl ? `<img src="${logoDataUrl}" style="height:36px;width:auto;margin-left:10px;vertical-align:middle;"/>` : '';
+    const logoHeader = logoDataUrl ? `<img src="${logoDataUrl}" style="height:36px;width:auto;margin-left:10px;vertical-align:middle;border-radius:4px;"/>` : '';
 
     const w = window.open('', '_blank');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tanıtım Kartı - ${selectedCar.plate}</title>
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tanitim Karti - ${selectedCar.plate}</title>
 <style>
-@page{margin:15mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;color:#222;}
+@page{margin:10mm;size:A4;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#222;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 ${watermarkCSS}
-.content{position:relative;z-index:1;max-width:560px;margin:20px auto;border:1.5px solid #ddd;border-radius:4px;overflow:hidden;background:#fff;}
-.card-head{background:#111;color:#fff;padding:18px 24px;text-align:center;}
-.card-head h1{font-size:22px;font-weight:800;letter-spacing:1px;display:inline;vertical-align:middle;}
-.card-head .sub{color:#d4a030;font-size:11px;letter-spacing:3px;margin-top:4px;}
+.card{position:relative;z-index:1;max-width:560px;margin:0 auto;border:1.5px solid #ddd;border-radius:8px;overflow:hidden;background:#fff;}
+.header{background:#111;color:#fff;padding:20px 24px;text-align:center;}
+.header h1{font-size:20px;font-weight:800;letter-spacing:1px;display:inline;vertical-align:middle;}
+.header .sub{color:#d4a030;font-size:11px;letter-spacing:3px;margin-top:5px;}
 .gold{background:#d4a030;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;}
 .gold h2{font-size:26px;font-weight:800;margin:0;}
 .gold .mdl{font-size:16px;font-weight:700;margin-top:2px;}
@@ -192,11 +205,11 @@ ${watermarkCSS}
 .spec:last-child{border-right:none;}
 .spec .lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin-bottom:4px;}
 .spec .val{font-size:13px;font-weight:700;}
-.body-row{display:flex;min-height:280px;}
+.body-row{display:flex;min-height:260px;}
 .body-left{flex:1;padding:20px 24px;border-right:1px solid #ddd;}
-.body-right{width:240px;padding:16px;}
-.body-left h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px;}
-.body-left p{font-size:12px;color:#555;line-height:1.6;margin-bottom:16px;}
+.body-right{width:240px;padding:16px;display:flex;flex-direction:column;align-items:center;}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#555;font-weight:600;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee;}
+.desc{font-size:12px;color:#555;line-height:1.6;margin-bottom:16px;}
 .mech .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px;}
 .mech .row .l{color:#666;}
 .mech .row .v{font-weight:600;}
@@ -205,36 +218,39 @@ ${watermarkCSS}
 .footer .ph{font-size:18px;font-weight:700;}
 </style></head><body>
 ${watermarkHTML}
-<div class="content">
-  <div class="card-head"><h1>${companyName} ${logoHeader}</h1><div class="sub">GALERİ SAHİBİ</div></div>
+<div class="card">
+  <div class="header">
+    <h1>${companyName} ${logoHeader}</h1>
+    <div class="sub">GALERi SAHiBi</div>
+  </div>
   <div class="gold">
     <div><h2>${selectedCar.brand?.toUpperCase()}</h2><div class="mdl">${selectedCar.model?.toUpperCase()} ${selectedCar.vehicle_type?.toUpperCase() || ''}</div><div class="yr">${selectedCar.year}</div></div>
     <div><div class="pr-label">Fiyat</div><div class="pr-val">${formatCurrency(selectedCar.sale_price)}</div></div>
   </div>
   <div class="specs">
     <div class="spec"><div class="lbl">Kilometre</div><div class="val">${selectedCar.km || '0'} KM</div></div>
-    <div class="spec"><div class="lbl">Yakıt</div><div class="val">${selectedCar.fuel_type || '-'}</div></div>
+    <div class="spec"><div class="lbl">Yakit</div><div class="val">${selectedCar.fuel_type || '-'}</div></div>
     <div class="spec"><div class="lbl">Vites</div><div class="val">${selectedCar.gear || '-'}</div></div>
     <div class="spec"><div class="lbl">Kasa Tipi</div><div class="val">${selectedCar.vehicle_type || '-'}</div></div>
     <div class="spec"><div class="lbl">Muayene</div><div class="val">${selectedCar.inspection_date ? new Date(selectedCar.inspection_date).toLocaleDateString('tr-TR', { month: '2-digit', year: '2-digit' }) : '-'}</div></div>
   </div>
   <div class="body-row">
     <div class="body-left">
-      <h4>Araç Açıklaması</h4>
-      <p>${selectedCar.description || 'Araç hakkında detaylı bilgi için lütfen satış temsilcimiz ile iletişime geçiniz. Araçlarımız ekspertiz garantilidir.'}</p>
-      <h4>Mekanik Durum</h4>
+      <div class="section-title">Arac Aciklamasi</div>
+      <p class="desc">${selectedCar.description || 'Arac hakkinda detayli bilgi icin lutfen satis temsilcimiz ile iletisime geciniz. Araclarimiz ekspertiz garantilidir.'}</p>
+      <div class="section-title">Mekanik Durum</div>
       <div class="mech">
         <div class="row"><span class="l">MOTOR DURUMU</span><span class="v">${mechMotor}</span></div>
-        <div class="row"><span class="l">ŞANZIMAN DURUMU</span><span class="v">${mechSanziman}</span></div>
-        <div class="row"><span class="l">YÜRÜYEN DURUMU</span><span class="v">${mechYuruyen}</span></div>
+        <div class="row"><span class="l">SANZIMAN DURUMU</span><span class="v">${mechSanziman}</span></div>
+        <div class="row"><span class="l">YURUYEN DURUMU</span><span class="v">${mechYuruyen}</span></div>
       </div>
     </div>
     <div class="body-right">
-      <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px;">Kaporta Durum Özeti</h4>
+      <div class="section-title" style="width:100%">Kaporta Durum Ozeti</div>
       ${buildSvg()}
     </div>
   </div>
-  <div class="footer"><div class="ft">İletişim</div><div class="ph">${companyPhone}</div></div>
+  <div class="footer"><div class="ft">Iletisim</div><div class="ph">${companyPhone}</div></div>
 </div></body></html>`);
     w.document.close();
     w.onload = () => w.print();

@@ -2,14 +2,21 @@
 
 ## Project Overview
 - **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 4.9.1
-- **Last Updated:** 2026-03-07
-- **Status:** MVP Complete + Report Mobile Optimization
+- **Version:** 4.10.0
+- **Last Updated:** 2026-03-16
+- **Status:** MVP Complete + Promo Card Owner Fix + Deploy Support
 
 ## Original Problem Statement
 Kullanıcı, GitHub'daki mevcut Galeri CRM uygulamasını profesyonelleştirmek ve Play Store/App Store'a yüklemek istedi.
 
 ## Implementation Status
+
+### v4.10.0 - Tanıtım Kartı Düzeltmesi + Deploy Desteği
+- [x] Tanıtım kartında her zaman galeri sahibi (admin) adı gösteriliyor
+- [x] /api/org/owner endpoint eklendi - org admin bilgisini döndürür
+- [x] Yazdırma/PDF çıktısı önizlemeyle birebir eşleştirildi (SVG legend eklendi)
+- [x] requirements.txt temizlendi (emergentintegrations kaldırıldı - Railway deploy düzeltmesi)
+- [x] Railway deploy rehberi verildi
 
 ### v4.9.1 - Rapor Mobil Optimizasyonu
 - [x] Mobilde kart düzeni (tablolar yerine) - tüm rapor tipleri için

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI, permissionsAPI } from '../services/api';
+import api from '../services/api';
 
 const AppContext = createContext(null);
 
@@ -26,6 +27,7 @@ export const AppProvider = ({ children }) => {
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [permissions, setPermissions] = useState(null);
+  const [orgOwner, setOrgOwner] = useState(null);
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -46,13 +48,14 @@ export const AppProvider = ({ children }) => {
     
     setLoading(true);
     try {
-      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes] = await Promise.all([
+      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes, ownerRes] = await Promise.all([
         carsAPI.getAll(),
         customersAPI.getAll(),
         transactionsAPI.getAll(),
         statsAPI.get(),
         appointmentsAPI.getAll(),
         permissionsAPI.get().catch(() => ({ data: null })),
+        api.get('/org/owner').catch(() => ({ data: null })),
       ]);
 
       setCars(carsRes.data || []);
@@ -60,6 +63,7 @@ export const AppProvider = ({ children }) => {
       setTransactions(transactionsRes.data || []);
       setStats(statsRes.data || null);
       setAppointments(appointmentsRes.data || []);
+      if (ownerRes.data) setOrgOwner(ownerRes.data);
       if (permRes.data) {
         setPermissions({
           role_defaults: permRes.data.role_defaults || permRes.data.permissions || null,
@@ -352,6 +356,9 @@ export const AppProvider = ({ children }) => {
       if (!roleDefaults?.[role]) return false;
       return roleDefaults[role][key] === true;
     },
+
+    // Org owner info (galeri sahibi)
+    orgOwner,
 
     // Theme
     theme,
