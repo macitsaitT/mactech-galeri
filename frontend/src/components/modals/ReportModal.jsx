@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { formatCurrency, formatDate } from '../../utils/helpers';
+import { formatCurrency, formatDate, openPrintableHTML } from '../../utils/helpers';
 import { fileAPI, usersAPI } from '../../services/api';
 import {
   Dialog,
@@ -397,10 +397,7 @@ const ReportModal = ({ isOpen, onClose }) => {
       reportType,
       carSoldByMap,
     });
-    const w = window.open('', '_blank');
-    w.document.write(html);
-    w.document.close();
-    w.onload = () => w.print();
+    openPrintableHTML(html);
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatDate, formatCurrency } from '../utils/helpers';
+import { formatDate, formatCurrency, downloadBlob } from '../utils/helpers';
 import { 
   Search, 
   Users, 
@@ -11,7 +11,8 @@ import {
   Car,
   Plus,
   Download,
-  MessageCircle
+  MessageCircle,
+  CheckCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,20 +21,6 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import { exportAPI } from '../services/api';
-
-const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
-};
 
 const CustomerCard = ({ customer, cars, onEdit, onDelete }) => {
   const interestedCar = cars.find(c => c.id === customer.interested_car_id);
@@ -163,6 +150,7 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [exporting, setExporting] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const filteredCustomers = useMemo(() => {
     let result = customers.filter(c => !c.deleted);
@@ -249,12 +237,15 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
         <button
           onClick={async () => {
             setExporting(true);
+            setDownloadSuccess(false);
             try {
               const res = await exportAPI.customers();
-              downloadBlob(new Blob([res.data]), 'musteriler.xlsx');
+              downloadBlob(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'musteriler.docx');
+              setDownloadSuccess(true);
+              setTimeout(() => setDownloadSuccess(false), 4000);
             } catch (e) {
               console.error(e);
-              alert('Excel indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
+              alert('Dosya indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
             } finally {
               setExporting(false);
             }
@@ -263,8 +254,11 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
           className="flex items-center gap-2 px-4 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
           data-testid="export-customers-btn"
         >
-          <Download size={16} className={exporting ? 'animate-bounce' : ''} />
-          {exporting ? 'İndiriliyor...' : 'Excel'}
+          {downloadSuccess ? (
+            <><CheckCircle size={16} className="text-success" /> İndirildi!</>
+          ) : (
+            <><Download size={16} className={exporting ? 'animate-bounce' : ''} /> {exporting ? 'İndiriliyor...' : 'Word'}</>
+          )}
         </button>
       </div>
 

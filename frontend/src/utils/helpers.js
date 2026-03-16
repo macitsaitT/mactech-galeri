@@ -163,3 +163,47 @@ export const isValidPlate = (plate) => {
   const cleaned = plate.replace(/\s/g, '').toUpperCase();
   return /^[0-9]{2}[A-Z]{1,3}[0-9]{1,4}$/.test(cleaned);
 };
+
+// Download blob as file with mobile-friendly feedback
+export const downloadBlob = (blob, filename) => {
+  // iOS Safari doesn't support download attribute well
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  if (isIOS && navigator.share && blob.type) {
+    // Use Web Share API on iOS if available
+    const file = new File([blob], filename, { type: blob.type });
+    navigator.share({ files: [file] }).catch(() => {
+      // Fallback to regular download
+      triggerDownload(blob, filename);
+    });
+  } else {
+    triggerDownload(blob, filename);
+  }
+};
+
+const triggerDownload = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1000);
+};
+
+// Open printable HTML without about:blank
+export const openPrintableHTML = (html) => {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (w) {
+    w.onload = () => {
+      setTimeout(() => w.print(), 500);
+    };
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+};

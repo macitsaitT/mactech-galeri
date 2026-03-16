@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatCurrency, formatDate } from '../utils/helpers';
+import { formatCurrency, formatDate, downloadBlob } from '../utils/helpers';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -11,24 +11,11 @@ import {
   Calendar,
   Filter,
   Download,
-  Users
+  Users,
+  CheckCircle
 } from 'lucide-react';
 import { exportAPI, usersAPI } from '../services/api';
 import EditTransactionModal from '../components/modals/EditTransactionModal';
-
-const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
-};
 
 const FinancePage = () => {
   const { transactions, cars, deleteTransaction, user } = useApp();
@@ -39,6 +26,7 @@ const FinancePage = () => {
   const [orgUsers, setOrgUsers] = useState([]);
   const [exporting, setExporting] = useState(false);
   const [editModal, setEditModal] = useState({ open: false, tx: null });
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const userRole = user?.role || 'admin';
 
@@ -226,9 +214,12 @@ const FinancePage = () => {
           <button
             onClick={async () => {
               setExporting(true);
+              setDownloadSuccess(false);
               try {
                 const res = await exportAPI.transactions();
-                downloadBlob(new Blob([res.data]), 'islemler.docx');
+                downloadBlob(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'islemler.docx');
+                setDownloadSuccess(true);
+                setTimeout(() => setDownloadSuccess(false), 4000);
               } catch (e) {
                 console.error(e);
                 alert('Word indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
@@ -240,8 +231,11 @@ const FinancePage = () => {
             className="flex items-center gap-2 px-4 py-2 text-sm bg-background border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
             data-testid="export-transactions-btn"
           >
-            <Download size={16} className={exporting ? 'animate-bounce' : ''} />
-            {exporting ? 'İndiriliyor...' : 'Word'}
+            {downloadSuccess ? (
+              <><CheckCircle size={16} className="text-success" /> İndirildi!</>
+            ) : (
+              <><Download size={16} className={exporting ? 'animate-bounce' : ''} /> {exporting ? 'İndiriliyor...' : 'Word'}</>
+            )}
           </button>
         </div>
 

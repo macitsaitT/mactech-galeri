@@ -1,28 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import VehicleCard from '../components/vehicles/VehicleCard';
-import { Search, SlidersHorizontal, Car, Download } from 'lucide-react';
+import { Search, SlidersHorizontal, Car, Download, CheckCircle } from 'lucide-react';
 import { exportAPI } from '../services/api';
-
-const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
-};
+import { downloadBlob } from '../utils/helpers';
 
 const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpenses, onDeposit, onSale, onDeleteCar, onCancelSale }) => {
   const { cars } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [exporting, setExporting] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   // Filter cars based on view type
   const filteredCars = useMemo(() => {
@@ -125,9 +113,12 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
         <button
           onClick={async () => {
             setExporting(true);
+            setDownloadSuccess(false);
             try {
               const res = await exportAPI.cars();
-              downloadBlob(new Blob([res.data]), 'araclar.docx');
+              downloadBlob(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'araclar.docx');
+              setDownloadSuccess(true);
+              setTimeout(() => setDownloadSuccess(false), 4000);
             } catch (e) {
               console.error(e);
               alert('Word indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
@@ -139,8 +130,11 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
           className="flex items-center gap-2 px-4 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
           data-testid="export-cars-btn"
         >
-          <Download size={16} className={exporting ? 'animate-bounce' : ''} />
-          {exporting ? 'İndiriliyor...' : 'Word'}
+          {downloadSuccess ? (
+            <><CheckCircle size={16} className="text-success" /> İndirildi!</>
+          ) : (
+            <><Download size={16} className={exporting ? 'animate-bounce' : ''} /> {exporting ? 'İndiriliyor...' : 'Word'}</>
+          )}
         </button>
       </div>
 
