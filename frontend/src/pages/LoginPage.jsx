@@ -17,7 +17,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    companyName: 'Aslanbaş Oto',
+    companyName: 'MACTech',
     phone: ''
   });
 
@@ -145,7 +145,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md my-auto py-8">
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in">
-          <img src="/logo-aslanbas.png" alt="Aslanbaş" className="h-28 w-auto object-contain mx-auto" />
+          <img src="/logo-mactech.png" alt="MACTech" className="h-28 w-auto object-contain mx-auto" />
         </div>
 
         {/* Verification Screen */}
@@ -343,7 +343,7 @@ const LoginPage = () => {
         )}
 
         <p className="text-center text-muted-foreground text-xs mt-8">
-          © 2024 Aslanbaş Oto. Tüm hakları saklıdır.
+          © 2024 MACTech. Tüm hakları saklıdır.
         </p>
       </div>
     </div>

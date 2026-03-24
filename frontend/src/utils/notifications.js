@@ -13,8 +13,8 @@ export const sendLocalNotification = (title, body, tag = 'default') => {
 
   const notification = new Notification(title, {
     body,
-    icon: '/logo-aslanbas.png',
-    badge: '/logo-aslanbas.png',
+    icon: '/logo-mactech.png',
+    badge: '/logo-mactech.png',
     tag,
     vibrate: [200, 100, 200],
     requireInteraction: false
