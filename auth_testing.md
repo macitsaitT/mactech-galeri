@@ -43,5 +43,5 @@ await page.context.add_cookies([{
     "secure": True,
     "sameSite": "None"
 }])
-await page.goto("https://crm-modular-build.preview.emergentagent.com")
+await page.goto("https://image-gallery-live.preview.emergentagent.com")
 ```

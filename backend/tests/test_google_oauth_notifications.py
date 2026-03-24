@@ -13,7 +13,7 @@ import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://crm-modular-build.preview.emergentagent.com"
+    BASE_URL = "https://image-gallery-live.preview.emergentagent.com"
 
 
 class TestGoogleOAuthEndpoint:
