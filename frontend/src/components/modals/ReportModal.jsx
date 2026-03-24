@@ -218,7 +218,7 @@ const ReportModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen, userRole]);
 
-  const companyName = user?.company_name || 'ASLANBAŞ OTO A.Ş.';
+  const companyName = user?.company_name || 'MACTech';
   const companyPhone = user?.phone || '05401250404';
   const logoPath = user?.logo_url || '';
 

@@ -145,7 +145,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md my-auto py-8">
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in">
-          <img src="/logo-mactech.png" alt="MACTech" className="h-28 w-auto object-contain mx-auto" />
+          <img src="/logo-mactech.png" alt="MACTech" className="h-36 w-auto object-contain mx-auto" />
         </div>
 
         {/* Verification Screen */}
