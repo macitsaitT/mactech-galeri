@@ -2,6 +2,15 @@
 
 Bu dosya, MACTech platformunun merkezi mimarisini gösteren örnek kod içerir.
 
+## ⚠️ ÖDEME SİSTEMİ NOTU
+
+**Ödeme sadece WEB SİTESİ üzerinden alınacak!**
+- Mobil uygulamada ödeme butonu YOK
+- Mobil'de "Web sitesinden abone ol" yönlendirmesi var
+- iyzico Türk Lirası (TRY) ile çalışır
+
+---
+
 ## 1. Veritabanı Modelleri (models.py)
 
 ```python
@@ -376,19 +385,51 @@ router.include_router(gallery_router, prefix="/gallery", tags=["Gallery"])
 router.include_router(subscription_router, prefix="/subscriptions", tags=["Subscriptions"])
 ```
 
-## 4. Abonelik Servisi (subscriptions.py)
+## 4. Abonelik Servisi - iyzico Entegrasyonu (subscriptions.py)
 
 ```python
 from fastapi import APIRouter, Depends, HTTPException, Request
-from datetime import datetime, timezone
-import stripe
+from datetime import datetime, timezone, timedelta
+import hmac
+import hashlib
+import base64
+import secrets
+import httpx
 import uuid
 import os
+import json
 
 router = APIRouter()
 
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+# iyzico Configuration
+IYZICO_API_KEY = os.environ.get("IYZICO_API_KEY")
+IYZICO_SECRET_KEY = os.environ.get("IYZICO_SECRET_KEY")
+IYZICO_BASE_URL = os.environ.get("IYZICO_BASE_URL", "https://sandbox-api.iyzipay.com")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://mactech.com")
+
+
+# ==================== iyzico AUTH HELPER ====================
+
+def generate_iyzico_auth_header() -> dict:
+    """Generate HMAC-SHA256 authentication header for iyzico API"""
+    random_key = secrets.token_hex(20)
+    signature_string = IYZICO_API_KEY + random_key + IYZICO_SECRET_KEY
+    
+    signature = hmac.new(
+        IYZICO_SECRET_KEY.encode(),
+        signature_string.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    
+    auth_string = f"apiKey:{IYZICO_API_KEY},randomKey:{random_key},signature:{signature}"
+    base64_auth = base64.b64encode(auth_string.encode()).decode()
+    
+    return {
+        "Authorization": f"IYZWSv2 {base64_auth}",
+        "x-iyzi-rnd": random_key,
+        "Content-Type": "application/json"
+    }
+
 
 # ==================== PLAN LİSTESİ ====================
 
@@ -441,189 +482,342 @@ async def get_subscription_status(
     }
 
 
-# ==================== STRIPE CHECKOUT ====================
+# ==================== iyzico CHECKOUT (SADECE WEB) ====================
 
 @router.post("/checkout")
-async def create_checkout_session(
+async def create_iyzico_checkout(
     data: dict,
     context: dict = Depends(org_middleware)
 ):
-    """Stripe Checkout Session oluştur"""
+    """
+    iyzico Checkout Form oluştur - SADECE WEB SİTESİNDEN
+    Mobil uygulamada bu endpoint çağrılmaz!
+    """
     sector_id = data.get("sector_id")
     plan_id = data.get("plan_id")
-    period = data.get("period", "monthly")  # monthly veya yearly
     
     # Plan bilgisini al
     plan = await db.plans.find_one({"id": plan_id, "sector_id": sector_id})
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
     
-    # Organizasyon bilgisi
+    # Organizasyon ve kullanıcı bilgisi
     org = await db.organizations.find_one({"id": context["org_id"]})
     user = await db.users.find_one({"id": context["user_id"]})
     
-    # Stripe müşteri oluştur veya bul
-    existing_sub = await db.subscriptions.find_one({
+    # iyzico pricing plan reference code (önceden oluşturulmuş)
+    pricing_plan_ref = plan.get("iyzico_plan_reference_code")
+    if not pricing_plan_ref:
+        raise HTTPException(status_code=400, detail="Plan not configured for iyzico")
+    
+    conversation_id = str(uuid.uuid4())
+    
+    # Checkout session'ı kaydet (webhook ile eşleştirmek için)
+    await db.checkout_sessions.insert_one({
+        "id": conversation_id,
         "org_id": context["org_id"],
-        "stripe_customer_id": {"$exists": True}
-    })
-    
-    if existing_sub and existing_sub.get("stripe_customer_id"):
-        customer_id = existing_sub["stripe_customer_id"]
-    else:
-        customer = stripe.Customer.create(
-            email=user["email"],
-            name=org["name"],
-            metadata={
-                "org_id": context["org_id"],
-                "user_id": context["user_id"]
-            }
-        )
-        customer_id = customer.id
-    
-    # Fiyat belirle
-    price = plan["price_yearly"] if period == "yearly" else plan["price_monthly"]
-    interval = "year" if period == "yearly" else "month"
-    
-    # Stripe Price oluştur (veya mevcut kullan)
-    stripe_price = stripe.Price.create(
-        unit_amount=int(price * 100),  # Kuruş cinsinden
-        currency="try",
-        recurring={"interval": interval},
-        product_data={
-            "name": f"{plan['name']} - {sector_id.title()}",
-            "metadata": {
-                "sector_id": sector_id,
-                "plan_id": plan_id
-            }
-        }
-    )
-    
-    # Checkout Session
-    session = stripe.checkout.Session.create(
-        customer=customer_id,
-        payment_method_types=["card"],
-        line_items=[{
-            "price": stripe_price.id,
-            "quantity": 1
-        }],
-        mode="subscription",
-        success_url=f"{FRONTEND_URL}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{FRONTEND_URL}/subscription/cancel",
-        metadata={
-            "org_id": context["org_id"],
-            "sector_id": sector_id,
-            "plan_id": plan_id
-        }
-    )
-    
-    return {
-        "checkout_url": session.url,
-        "session_id": session.id
-    }
-
-
-# ==================== STRIPE WEBHOOK ====================
-
-@router.post("/webhook")
-async def stripe_webhook(request: Request):
-    """Stripe Webhook handler"""
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-    
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
-    
-    # Event handling
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        await handle_checkout_completed(session)
-    
-    elif event["type"] == "invoice.paid":
-        invoice = event["data"]["object"]
-        await handle_invoice_paid(invoice)
-    
-    elif event["type"] == "customer.subscription.deleted":
-        subscription = event["data"]["object"]
-        await handle_subscription_cancelled(subscription)
-    
-    return {"status": "success"}
-
-
-async def handle_checkout_completed(session: dict):
-    """Ödeme tamamlandığında abonelik oluştur"""
-    org_id = session["metadata"]["org_id"]
-    sector_id = session["metadata"]["sector_id"]
-    plan_id = session["metadata"]["plan_id"]
-    
-    now = datetime.now(timezone.utc)
-    
-    # Abonelik oluştur
-    subscription = {
-        "id": str(uuid.uuid4()),
-        "org_id": org_id,
+        "user_id": context["user_id"],
         "sector_id": sector_id,
         "plan_id": plan_id,
-        "status": "active",
-        "current_period_start": now.isoformat(),
-        "current_period_end": (now + timedelta(days=30)).isoformat(),
-        "stripe_customer_id": session["customer"],
-        "stripe_subscription_id": session["subscription"],
-        "created_at": now.isoformat()
-    }
-    
-    await db.subscriptions.insert_one(subscription)
-    
-    # org_sectors güncelle
-    await db.org_sectors.update_one(
-        {"org_id": org_id, "sector_id": sector_id},
-        {"$set": {"status": "active"}}
-    )
-    
-    print(f"[SUBSCRIPTION] Org {org_id} subscribed to {sector_id} ({plan_id})")
-
-
-async def handle_subscription_cancelled(stripe_sub: dict):
-    """Abonelik iptal edildiğinde"""
-    sub = await db.subscriptions.find_one({
-        "stripe_subscription_id": stripe_sub["id"]
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    if sub:
-        await db.subscriptions.update_one(
-            {"id": sub["id"]},
-            {"$set": {"status": "cancelled"}}
+    # iyzico API çağrısı
+    headers = generate_iyzico_auth_header()
+    
+    payload = {
+        "locale": "tr",
+        "conversationId": conversation_id,
+        "callbackUrl": f"{FRONTEND_URL}/api/subscriptions/callback",
+        "pricingPlanReferenceCode": pricing_plan_ref,
+        "subscriptionInitialStatus": "ACTIVE",
+        "customer": {
+            "name": user.get("full_name", ""),
+            "surname": "",
+            "email": user["email"],
+            "gsmNumber": user.get("phone", ""),
+            "identityNumber": "11111111111",  # TC Kimlik (test için)
+            "shippingContactName": org.get("name", ""),
+            "shippingCity": "Istanbul",
+            "shippingCountry": "Turkey",
+            "shippingAddress": org.get("address", "Istanbul"),
+            "billingContactName": org.get("name", ""),
+            "billingCity": "Istanbul",
+            "billingCountry": "Turkey",
+            "billingAddress": org.get("address", "Istanbul")
+        }
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{IYZICO_BASE_URL}/v2/subscription/checkoutform/initialize",
+            headers=headers,
+            json=payload
         )
         
-        await db.org_sectors.update_one(
-            {"org_id": sub["org_id"], "sector_id": sub["sector_id"]},
-            {"$set": {"status": "expired"}}
+        result = response.json()
+        
+        if result.get("status") != "success":
+            raise HTTPException(
+                status_code=400,
+                detail=f"iyzico error: {result.get('errorMessage', 'Unknown error')}"
+            )
+        
+        return {
+            "checkout_form_content": result.get("checkoutFormContent"),
+            "token": result.get("token"),
+            "conversation_id": conversation_id
+        }
+
+
+# ==================== iyzico CALLBACK ====================
+
+@router.post("/callback")
+async def iyzico_callback(request: Request):
+    """
+    iyzico ödeme sonrası callback
+    Kullanıcı ödeme yaptıktan sonra buraya yönlendirilir
+    """
+    form_data = await request.form()
+    token = form_data.get("token")
+    
+    if not token:
+        raise HTTPException(status_code=400, detail="Token required")
+    
+    # iyzico'dan ödeme sonucunu al
+    headers = generate_iyzico_auth_header()
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{IYZICO_BASE_URL}/v2/subscription/checkoutform/retrieve",
+            headers=headers,
+            json={"locale": "tr", "token": token}
         )
         
-        print(f"[CANCELLED] Subscription {sub['id']} cancelled")
+        result = response.json()
+        
+        if result.get("status") == "success":
+            # Başarılı ödeme
+            subscription_ref = result.get("subscriptionReferenceCode")
+            customer_ref = result.get("customerReferenceCode")
+            conversation_id = result.get("conversationId")
+            
+            # Checkout session'ı bul
+            session = await db.checkout_sessions.find_one({"id": conversation_id})
+            
+            if session:
+                now = datetime.now(timezone.utc)
+                
+                # Abonelik oluştur
+                subscription = {
+                    "id": str(uuid.uuid4()),
+                    "org_id": session["org_id"],
+                    "sector_id": session["sector_id"],
+                    "plan_id": session["plan_id"],
+                    "status": "active",
+                    "iyzico_subscription_ref": subscription_ref,
+                    "iyzico_customer_ref": customer_ref,
+                    "current_period_start": now.isoformat(),
+                    "current_period_end": (now + timedelta(days=30)).isoformat(),
+                    "created_at": now.isoformat()
+                }
+                await db.subscriptions.insert_one(subscription)
+                
+                # org_sectors güncelle
+                await db.org_sectors.update_one(
+                    {"org_id": session["org_id"], "sector_id": session["sector_id"]},
+                    {"$set": {"status": "active"}}
+                )
+                
+                # Checkout session'ı güncelle
+                await db.checkout_sessions.update_one(
+                    {"id": conversation_id},
+                    {"$set": {"status": "completed", "subscription_id": subscription["id"]}}
+                )
+            
+            # Başarı sayfasına yönlendir
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(
+                url=f"{FRONTEND_URL}/subscription/success?ref={subscription_ref}",
+                status_code=303
+            )
+        else:
+            # Başarısız ödeme
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(
+                url=f"{FRONTEND_URL}/subscription/failed?error={result.get('errorMessage', 'Payment failed')}",
+                status_code=303
+            )
+
+
+# ==================== iyzico WEBHOOK ====================
+
+@router.post("/webhook")
+async def iyzico_webhook(request: Request):
+    """
+    iyzico Webhook handler
+    Yinelenen ödemeler ve abonelik değişiklikleri için
+    """
+    try:
+        raw_body = await request.body()
+        signature_header = request.headers.get("X-IYZ-SIGNATURE-V3")
+        
+        # Signature validation
+        if signature_header:
+            webhook_data = json.loads(raw_body.decode('utf-8'))
+            
+            # Validate signature (simplified)
+            iyzi_event_type = webhook_data.get("iyziEventType")
+            status = webhook_data.get("status")
+            
+            if status == "SUCCESS":
+                subscription_ref = webhook_data.get("subscriptionReferenceCode")
+                
+                # Yinelenen ödeme başarılı
+                await db.subscriptions.update_one(
+                    {"iyzico_subscription_ref": subscription_ref},
+                    {"$set": {
+                        "status": "active",
+                        "last_payment_date": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                # Ödeme kaydı oluştur
+                await db.payments.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "subscription_ref": subscription_ref,
+                    "event_type": iyzi_event_type,
+                    "status": "success",
+                    "raw_data": webhook_data,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+                
+            elif status == "FAILURE":
+                subscription_ref = webhook_data.get("subscriptionReferenceCode")
+                
+                # Ödeme başarısız - aboneliği askıya al
+                sub = await db.subscriptions.find_one({
+                    "iyzico_subscription_ref": subscription_ref
+                })
+                
+                if sub:
+                    await db.subscriptions.update_one(
+                        {"id": sub["id"]},
+                        {"$set": {"status": "past_due"}}
+                    )
+                    
+                    # org_sectors'ı da güncelle
+                    await db.org_sectors.update_one(
+                        {"org_id": sub["org_id"], "sector_id": sub["sector_id"]},
+                        {"$set": {"status": "expired"}}
+                    )
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        print(f"Webhook error: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+
+# ==================== ABONELİK İPTAL ====================
+
+@router.post("/cancel")
+async def cancel_subscription(
+    data: dict,
+    context: dict = Depends(org_middleware)
+):
+    """Aboneliği iptal et"""
+    sector_id = data.get("sector_id")
+    
+    subscription = await db.subscriptions.find_one({
+        "org_id": context["org_id"],
+        "sector_id": sector_id,
+        "status": "active"
+    })
+    
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Active subscription not found")
+    
+    # iyzico'da aboneliği iptal et
+    headers = generate_iyzico_auth_header()
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{IYZICO_BASE_URL}/v2/subscription/subscriptions/{subscription['iyzico_subscription_ref']}/cancel",
+            headers=headers,
+            json={"locale": "tr"}
+        )
+        
+        result = response.json()
+        
+        if result.get("status") == "success":
+            # Veritabanını güncelle
+            await db.subscriptions.update_one(
+                {"id": subscription["id"]},
+                {"$set": {
+                    "status": "cancelled",
+                    "cancelled_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # org_sectors güncelle (dönem sonuna kadar erişim devam eder)
+            await db.org_sectors.update_one(
+                {"org_id": context["org_id"], "sector_id": sector_id},
+                {"$set": {"cancel_at_period_end": True}}
+            )
+            
+            return {"success": True, "message": "Subscription will be cancelled at period end"}
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"iyzico error: {result.get('errorMessage', 'Unknown error')}"
+            )
 ```
 
-## 5. Frontend Paywall Komponenti (React)
+## 5. Frontend Paywall Komponenti (React Web)
 
 ```jsx
-// components/Paywall.jsx
-import React from 'react';
+// components/Paywall.jsx - WEB SİTESİ İÇİN
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const Paywall = ({ error, onClose }) => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   
   if (!error || error.error !== 'subscription_required') {
     return null;
   }
   
   const { sector, trial_ended_at, plans, checkout_url } = error;
+  
+  const handleSubscribe = async (plan) => {
+    setLoading(true);
+    setSelectedPlan(plan.id);
+    
+    try {
+      const response = await api.post('/subscriptions/checkout', {
+        sector_id: sector,
+        plan_id: plan.id
+      });
+      
+      // iyzico checkout form'u göster
+      if (response.data.checkout_form_content) {
+        // Yeni pencerede veya modal'da iyzico formunu göster
+        const checkoutWindow = window.open('', 'iyzico_checkout', 'width=500,height=600');
+        checkoutWindow.document.write(response.data.checkout_form_content);
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Ödeme başlatılamadı. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+      setSelectedPlan(null);
+    }
+  };
   
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -646,8 +840,12 @@ const Paywall = ({ error, onClose }) => {
           {plans.map((plan) => (
             <div 
               key={plan.id}
-              className="border border-border rounded-xl p-4 hover:border-primary transition-colors cursor-pointer"
-              onClick={() => navigate(`/subscribe/${sector}?plan=${plan.id}`)}
+              className={`border rounded-xl p-4 cursor-pointer transition-all ${
+                selectedPlan === plan.id 
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-border hover:border-primary'
+              }`}
+              onClick={() => !loading && handleSubscribe(plan)}
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -665,21 +863,27 @@ const Paywall = ({ error, onClose }) => {
                   <p className="text-xs text-muted-foreground">/ay</p>
                 </div>
               </div>
+              
+              {loading && selectedPlan === plan.id && (
+                <div className="mt-2 text-center text-sm text-muted-foreground">
+                  Ödeme sayfası açılıyor...
+                </div>
+              )}
             </div>
           ))}
         </div>
         
-        {/* CTA */}
-        <button
-          onClick={() => navigate(checkout_url)}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors"
-        >
-          Plan Seç ve Devam Et
-        </button>
+        {/* iyzico Logo */}
+        <div className="text-center mb-4">
+          <p className="text-xs text-muted-foreground">
+            Güvenli ödeme: <strong>iyzico</strong> altyapısı ile
+          </p>
+        </div>
         
         <button
           onClick={onClose}
           className="w-full mt-3 text-muted-foreground hover:text-foreground transition-colors"
+          disabled={loading}
         >
           Daha Sonra
         </button>
@@ -691,7 +895,184 @@ const Paywall = ({ error, onClose }) => {
 export default Paywall;
 ```
 
-## 6. API İstek Interceptor (axios)
+## 6. Mobil Uygulama Paywall (React Native/Expo) - WEB'E YÖNLENDİRME
+
+```jsx
+// components/MobilePaywall.jsx - MOBİL UYGULAMA İÇİN
+// ÖNEMLİ: Mobil uygulamada ödeme YAPILMAZ, web sitesine yönlendirilir!
+
+import React from 'react';
+import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { Lock, ExternalLink, Globe } from 'lucide-react-native';
+
+const MobilePaywall = ({ error, onClose }) => {
+  if (!error || error.error !== 'subscription_required') {
+    return null;
+  }
+  
+  const { sector, plans } = error;
+  
+  const openWebsite = () => {
+    // Web sitesine yönlendir - ödeme orada yapılacak
+    const url = `https://mactech.com/subscribe/${sector}`;
+    Linking.openURL(url);
+  };
+  
+  return (
+    <View style={styles.overlay}>
+      <View style={styles.modal}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.iconContainer}>
+            <Lock size={32} color="#C4A35A" />
+          </View>
+          <Text style={styles.title}>Deneme Süreniz Doldu</Text>
+          <Text style={styles.subtitle}>
+            Devam etmek için web sitemizden abone olun
+          </Text>
+        </View>
+        
+        {/* Plan Preview */}
+        <View style={styles.planPreview}>
+          <Text style={styles.planLabel}>Mevcut Planlar:</Text>
+          {plans.slice(0, 2).map((plan) => (
+            <View key={plan.id} style={styles.planItem}>
+              <Text style={styles.planName}>{plan.name}</Text>
+              <Text style={styles.planPrice}>₺{plan.price_monthly}/ay</Text>
+            </View>
+          ))}
+        </View>
+        
+        {/* Web'e Yönlendir Butonu */}
+        <TouchableOpacity style={styles.webButton} onPress={openWebsite}>
+          <Globe size={20} color="#0A0A0A" />
+          <Text style={styles.webButtonText}>Web Sitesinden Abone Ol</Text>
+          <ExternalLink size={16} color="#0A0A0A" />
+        </TouchableOpacity>
+        
+        {/* Info */}
+        <Text style={styles.infoText}>
+          Ödemeler güvenli şekilde web sitemiz üzerinden iyzico ile alınmaktadır.
+          Abone olduktan sonra mobil uygulamada otomatik olarak aktif olacaktır.
+        </Text>
+        
+        {/* Close */}
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Text style={styles.closeButtonText}>Daha Sonra</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modal: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(196, 163, 90, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888888',
+    textAlign: 'center',
+  },
+  planPreview: {
+    backgroundColor: '#0A0A0A',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  planLabel: {
+    fontSize: 12,
+    color: '#888888',
+    marginBottom: 12,
+  },
+  planItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A2A',
+  },
+  planName: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  planPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#C4A35A',
+  },
+  webButton: {
+    backgroundColor: '#C4A35A',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  webButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0A0A0A',
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  closeButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  closeButtonText: {
+    fontSize: 14,
+    color: '#888888',
+  },
+});
+
+export default MobilePaywall;
+```
+
+## 7. API İstek Interceptor (axios) - Web
 
 ```javascript
 // services/api.js
@@ -742,7 +1123,48 @@ api.interceptors.response.use(
 export default api;
 ```
 
-## 7. Örnek Seed Data
+## 8. iyzico Kurulum Gereksinimleri
+
+### Backend .env Dosyası:
+```env
+# iyzico Credentials (Sandbox için)
+IYZICO_API_KEY=sandbox-xxxxxxxxxxxxx
+IYZICO_SECRET_KEY=sandbox-xxxxxxxxxxxxx
+IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
+
+# iyzico Credentials (Production için)
+# IYZICO_API_KEY=your_live_api_key
+# IYZICO_SECRET_KEY=your_live_secret_key
+# IYZICO_BASE_URL=https://api.iyzipay.com
+
+FRONTEND_URL=https://mactech.com
+```
+
+### iyzico Dashboard Ayarları:
+1. **Merchant Settings > API Keys** - API Key ve Secret Key alın
+2. **Merchant Settings > Merchant Notifications** - Webhook URL ekleyin:
+   - URL: `https://api.mactech.com/api/subscriptions/webhook`
+   - HTTPS zorunlu!
+
+### requirements.txt Eklentisi:
+```
+httpx>=0.24.0
+```
+
+### iyzico Test Kartları:
+```
+Başarılı Ödeme:
+- Kart No: 5528790000000008
+- SKT: 12/30
+- CVV: 123
+
+Başarısız Ödeme (Yetersiz Bakiye):
+- Kart No: 4111111111111129
+- SKT: 12/30
+- CVV: 123
+```
+
+## 9. Örnek Seed Data
 
 ```python
 # scripts/seed_data.py
@@ -781,6 +1203,7 @@ PLANS = [
         "price_monthly": 0,
         "price_yearly": 0,
         "trial_days": 14,
+        "iyzico_plan_reference_code": None,  # Free plan için iyzico yok
         "features": {
             "max_cars": 10,
             "max_customers": 50,
@@ -797,6 +1220,7 @@ PLANS = [
         "price_monthly": 299,
         "price_yearly": 2990,
         "trial_days": 14,
+        "iyzico_plan_reference_code": "gallery-pro-monthly",  # iyzico'da oluşturulan plan referansı
         "features": {
             "max_cars": 500,
             "max_customers": 1000,
@@ -814,6 +1238,7 @@ PLANS = [
         "price_monthly": 799,
         "price_yearly": 7990,
         "trial_days": 14,
+        "iyzico_plan_reference_code": "gallery-enterprise-monthly",
         "features": {
             "max_cars": -1,  # Sınırsız
             "max_customers": -1,
@@ -834,6 +1259,7 @@ PLANS = [
         "price_monthly": 399,
         "price_yearly": 3990,
         "trial_days": 14,
+        "iyzico_plan_reference_code": "realestate-pro-monthly",
         "features": {
             "max_properties": 200,
             "max_clients": 500,
@@ -846,6 +1272,57 @@ PLANS = [
 
 ---
 
+## 📱 Mobil Uygulama Ödeme Akışı
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    MOBİL UYGULAMA ÖDEME AKIŞI                    │
+│                  (Uygulama içi ödeme YAPILMAZ!)                  │
+└─────────────────────────────────────────────────────────────────┘
+
+Kullanıcı mobil uygulamada paywall'a takılır
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │  MobilePaywall      │
+         │  komponenti açılır  │
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │ "Web Sitesinden     │
+         │  Abone Ol" butonu   │
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │ Linking.openURL()   │
+         │ → mactech.com/      │
+         │   subscribe/gallery │
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │ Web sitesinde       │
+         │ iyzico ile ödeme    │
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │ Ödeme başarılı      │
+         │ → subscriptions     │
+         │   tablosu güncellenir│
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │ Kullanıcı mobil     │
+         │ uygulamaya döner    │
+         │ → API çağrısı yapar │
+         │ → Abonelik aktif!   │
+         └─────────────────────┘
+```
+
 ## Özet
 
 Bu mimari ile:
@@ -856,7 +1333,9 @@ Bu mimari ile:
 4. ✅ **14 Gün Deneme** - İlk erişimde otomatik başlar
 5. ✅ **Paywall** - 402 status code ile frontend'e bildirilir
 6. ✅ **Dinamik API** - /api/v1/{sector}/... yapısı
-7. ✅ **Ölçeklenebilir** - Yeni sektör eklemek için sadece:
+7. ✅ **iyzico Entegrasyonu** - Türk Lirası ile abonelik ödemeleri
+8. ✅ **Sadece Web Ödeme** - Mobil'de web'e yönlendirme
+9. ✅ **Ölçeklenebilir** - Yeni sektör eklemek için sadece:
    - sectors tablosuna kayıt
-   - plans tablosuna planlar
+   - plans tablosuna planlar (+ iyzico'da plan oluştur)
    - routes/{sector}.py dosyası
