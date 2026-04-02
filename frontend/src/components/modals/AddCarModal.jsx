@@ -10,21 +10,46 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const handleFileUpload = async (files) => {
     if (!files || files.length === 0) return;
     setUploading(true);
+    setUploadProgress(0);
     try {
       const newPhotos = [...(formData.photos || [])];
-      for (const file of files) {
-        // Limit artırıldı: 25MB
+      const totalFiles = files.length;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Limit: 25MB
         if (file.size > 25 * 1024 * 1024) {
           alert('Dosya çok büyük (max 25MB)');
           continue;
         }
-        const fd = new FormData();
-        fd.append('file', file);
-        const res = await fileAPI.upload(fd);
-        newPhotos.push(res.data.path);
+        
+        try {
+          // Smart upload kullan - otomatik olarak en uygun yöntemi seçer
+          const res = await fileAPI.smartUpload(file, (progress) => {
+            // Her dosya için progress
+            const overallProgress = Math.round(((i + progress / 100) / totalFiles) * 100);
+            setUploadProgress(overallProgress);
+          });
+          newPhotos.push(res.data.path);
+          setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+        } catch (uploadError) {
+          console.error('Smart upload failed, trying fallback:', uploadError);
+          // Fallback: Normal upload dene
+          try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fileAPI.upload(fd);
+            newPhotos.push(res.data.path);
+          } catch (fallbackError) {
+            console.error('All upload methods failed:', fallbackError);
+            alert(`"${file.name}" yüklenemedi. Lütfen daha küçük bir dosya deneyin.`);
+          }
+        }
       }
       handleChange('photos', newPhotos);
     } catch (err) {
@@ -32,6 +57,7 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
       alert('Fotoğraf yüklenemedi: ' + (err.response?.data?.detail || err.message));
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -54,7 +80,13 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
             <Loader2 size={48} className="animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+            <p className="text-sm text-muted-foreground">Yükleniyor... %{uploadProgress}</p>
+            <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
           </div>
         ) : (
           <>

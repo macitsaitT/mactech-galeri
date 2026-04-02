@@ -44,7 +44,86 @@ export const authAPI = {
 };
 
 export const fileAPI = {
-  upload: (formData) => api.post('/upload', formData, { headers: { 'Content-Type': undefined } }),
+  upload: (formData) => api.post('/upload', formData, { 
+    headers: { 'Content-Type': undefined },
+    timeout: 120000 // 2 dakika timeout
+  }),
+  
+  // Base64 ile yükleme - Network Error sorununu çözer
+  uploadBase64: async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result.split(',')[1]; // data:image/...;base64, kısmını çıkar
+          const formData = new FormData();
+          formData.append('filename', file.name);
+          formData.append('data', base64Data);
+          
+          const response = await api.post('/upload-base64', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000
+          });
+          resolve(response);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+  
+  // Chunked upload - Çok büyük dosyalar için
+  uploadChunked: async (file, onProgress) => {
+    const CHUNK_SIZE = 512 * 1024; // 512KB chunk
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const uploadId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+      
+      const chunkBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(chunk);
+      });
+      
+      const formData = new FormData();
+      formData.append('upload_id', uploadId);
+      formData.append('chunk_index', i.toString());
+      formData.append('total_chunks', totalChunks.toString());
+      formData.append('filename', file.name);
+      formData.append('chunk_data', chunkBase64);
+      
+      const response = await api.post('/upload-chunk', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000
+      });
+      
+      if (onProgress) {
+        onProgress(Math.round(((i + 1) / totalChunks) * 100));
+      }
+      
+      if (response.data.status === 'complete') {
+        return response;
+      }
+    }
+  },
+  
+  // Otomatik yöntem seçimi - En uygun yöntemi kullanır
+  smartUpload: async (file, onProgress) => {
+    // 2MB'dan büyük dosyalar için chunked upload
+    if (file.size > 2 * 1024 * 1024) {
+      return fileAPI.uploadChunked(file, onProgress);
+    }
+    // 2MB'dan küçük dosyalar için base64 upload
+    return fileAPI.uploadBase64(file);
+  },
+  
   getUrl: (path) => {
     const token = localStorage.getItem('crm_token');
     return `${API_URL}/files/${path}?auth=${token}`;
