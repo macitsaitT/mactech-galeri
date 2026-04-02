@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { formatCurrency } from '../../utils/helpers';
 import { fileAPI } from '../../services/api';
+import { useApp } from '../../context/AppContext';
 import {
-  Car, Calendar, Gauge, Fuel, Settings, MapPin, Shield, FileText, X, User
+  Car, Calendar, Gauge, Fuel, Settings, MapPin, Shield, FileText, X, User, Receipt, TrendingDown
 } from 'lucide-react';
 import {
   Dialog,
@@ -27,6 +28,32 @@ const partNames = {
 };
 
 const VehicleDetailModal = ({ isOpen, onClose, car }) => {
+  const { transactions } = useApp();
+  
+  // Araç giderlerini hesapla
+  const carExpenses = useMemo(() => {
+    if (!car) return [];
+    return transactions
+      .filter(t => t.car_id === car.id && t.type === 'expense' && !t.deleted)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [transactions, car]);
+
+  const totalExpenses = useMemo(() => 
+    carExpenses.reduce((sum, t) => sum + (t.amount || 0), 0),
+    [carExpenses]
+  );
+
+  // Kategori bazlı gider özeti
+  const expensesByCategory = useMemo(() => {
+    const grouped = {};
+    carExpenses.forEach(t => {
+      const cat = t.category || 'Diğer';
+      if (!grouped[cat]) grouped[cat] = 0;
+      grouped[cat] += t.amount || 0;
+    });
+    return Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+  }, [carExpenses]);
+
   if (!car) return null;
 
   const getPhotoUrl = (photo) => {
@@ -94,9 +121,84 @@ const VehicleDetailModal = ({ isOpen, onClose, car }) => {
           {/* Prices */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" data-testid="vehicle-detail-prices">
             <PriceCard label="Alış Fiyatı" value={car.purchase_price} />
-            <PriceCard label="Satış Fiyatı" value={car.sale_price} accent />
-            {car.deposit_amount > 0 && <PriceCard label="Kapora" value={car.deposit_amount} warning />}
+            <PriceCard label="Toplam Gider" value={totalExpenses} warning />
+            {car.deposit_amount > 0 && <PriceCard label="Kapora" value={car.deposit_amount} accent />}
           </div>
+
+          {/* Gider Detayları - Kategori Bazlı */}
+          {carExpenses.length > 0 && (
+            <div className="p-4 bg-muted/30 rounded-lg border border-border" data-testid="vehicle-detail-expense-breakdown">
+              <div className="flex items-center gap-2 mb-3">
+                <Receipt size={18} className="text-warning" />
+                <h4 className="font-heading font-semibold">Gider Detayları</h4>
+              </div>
+              
+              {/* Kategori Bazlı Özet */}
+              <div className="space-y-2 mb-4">
+                {expensesByCategory.map(([category, amount]) => (
+                  <div key={category} className="flex items-center justify-between p-2 bg-background/50 rounded-lg">
+                    <span className="text-sm text-muted-foreground">{category}</span>
+                    <span className="font-medium text-sm text-destructive tabular-nums">
+                      {formatCurrency(amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Detaylı Liste */}
+              <details className="group">
+                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <span className="group-open:hidden">▶</span>
+                  <span className="hidden group-open:inline">▼</span>
+                  Tüm giderleri göster ({carExpenses.length} kayıt)
+                </summary>
+                <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                  {carExpenses.map((tx) => (
+                    <div key={tx.id} className="flex items-center gap-2 p-2 bg-destructive/5 rounded-lg text-sm">
+                      <TrendingDown size={14} className="text-destructive flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium">{tx.category}</span>
+                        {tx.description && (
+                          <span className="text-muted-foreground ml-1">- {tx.description}</span>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className="font-bold text-destructive tabular-nums">{formatCurrency(tx.amount)}</span>
+                        <p className="text-xs text-muted-foreground">{tx.date}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+          )}
+
+          {/* Maliyet Özeti - Satış durumunda */}
+          {car.status === 'Satıldı' && car.sold_price && (
+            <div className="p-4 bg-success/10 border border-success/20 rounded-lg" data-testid="vehicle-profit-summary">
+              <h4 className="font-heading font-semibold mb-3 text-success">Satış Özeti</h4>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Satış Fiyatı:</span>
+                  <span className="font-bold text-success">{formatCurrency(car.sold_price)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Alış Fiyatı:</span>
+                  <span className="font-medium">{formatCurrency(car.purchase_price)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Toplam Gider:</span>
+                  <span className="font-medium text-destructive">{formatCurrency(totalExpenses)}</span>
+                </div>
+                <div className="flex justify-between border-t border-success/20 pt-2">
+                  <span className="font-semibold">Net Kâr:</span>
+                  <span className={`font-bold ${(car.sold_price - car.purchase_price - totalExpenses) >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {formatCurrency(car.sold_price - car.purchase_price - totalExpenses)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Deposit Customer Info */}
           {car.deposit_amount > 0 && car.deposit_customer_name && (

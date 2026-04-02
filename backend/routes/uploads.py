@@ -15,13 +15,14 @@ router = APIRouter()
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     ext = file.filename.split(".")[-1].lower() if "." in file.filename else "bin"
-    allowed = {"jpg", "jpeg", "png", "gif", "webp"}
+    allowed = {"jpg", "jpeg", "png", "gif", "webp", "heic", "heif"}
     if ext not in allowed:
         raise HTTPException(status_code=400, detail="Only image files allowed")
 
     data = await file.read()
-    if len(data) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+    # Limit artırıldı: 25MB
+    if len(data) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large (max 25MB)")
 
     if not validate_file_magic(data, ext):
         raise HTTPException(status_code=400, detail="Dosya içeriği uzantıyla eşleşmiyor")

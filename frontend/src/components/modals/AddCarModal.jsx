@@ -16,8 +16,9 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
     try {
       const newPhotos = [...(formData.photos || [])];
       for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) {
-          alert('Dosya çok büyük (max 10MB)');
+        // Limit artırıldı: 25MB
+        if (file.size > 25 * 1024 * 1024) {
+          alert('Dosya çok büyük (max 25MB)');
           continue;
         }
         const fd = new FormData();
@@ -59,7 +60,7 @@ const PhotoUploadTab = ({ formData, handleChange }) => {
           <>
             <Upload size={48} className="mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-2">Fotoğraf yüklemek için tıklayın veya sürükleyin</p>
-            <p className="text-xs text-muted-foreground">PNG, JPG, WebP (max. 10MB)</p>
+            <p className="text-xs text-muted-foreground">PNG, JPG, WebP, HEIC (max. 25MB)</p>
             <input
               type="file"
               accept="image/*"
