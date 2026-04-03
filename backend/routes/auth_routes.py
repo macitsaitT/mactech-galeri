@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List
 import uuid
 import secrets
@@ -14,6 +14,9 @@ from security import validate_email, validate_password, sanitize_string
 
 limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
+
+# QR Login Sessions - bellekte tutulur (production'da Redis kullanılabilir)
+qr_sessions = {}
 
 
 @router.post("/auth/register")
@@ -210,6 +213,139 @@ async def update_profile(profile: ProfileUpdate, current_user: dict = Depends(ge
         await db.users.update_one({"id": current_user["user_id"]}, {"$set": update_data})
     user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0, "verification_code": 0})
     return user
+
+
+# ==================== QR KOD İLE GİRİŞ ====================
+
+@router.post("/auth/qr/generate")
+async def generate_qr_session():
+    """
+    Bilgisayar için QR kod session'ı oluşturur
+    Bu session_id QR kod içinde gösterilir
+    """
+    session_id = str(uuid.uuid4())
+    qr_sessions[session_id] = {
+        "status": "pending",  # pending, scanned, approved, expired
+        "created_at": datetime.now(timezone.utc),
+        "user_id": None,
+        "token": None
+    }
+    
+    # 5 dakika sonra expire olacak
+    return {
+        "session_id": session_id,
+        "expires_in": 300  # 5 dakika
+    }
+
+
+@router.get("/auth/qr/status/{session_id}")
+async def check_qr_status(session_id: str):
+    """
+    Bilgisayar bu endpoint'i polling ile kontrol eder
+    Telefon onayladığında token döner
+    """
+    session = qr_sessions.get(session_id)
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session bulunamadı veya süresi doldu")
+    
+    # 5 dakikadan eski session'ları temizle
+    created_at = session["created_at"]
+    if datetime.now(timezone.utc) - created_at > timedelta(minutes=5):
+        del qr_sessions[session_id]
+        raise HTTPException(status_code=410, detail="Session süresi doldu")
+    
+    if session["status"] == "approved" and session["token"]:
+        # Giriş onaylandı - token'ı döndür ve session'ı temizle
+        token = session["token"]
+        user_id = session["user_id"]
+        del qr_sessions[session_id]
+        
+        # Kullanıcı bilgilerini al
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        
+        return {
+            "status": "approved",
+            "token": token,
+            "user": user
+        }
+    
+    return {"status": session["status"]}
+
+
+@router.post("/auth/qr/scan")
+async def scan_qr_code(data: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Telefon QR kodu okuttuğunda bu endpoint çağrılır
+    Giriş yapmış kullanıcı bilgisayara giriş izni verir
+    """
+    session_id = data.get("session_id")
+    
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id gerekli")
+    
+    session = qr_sessions.get(session_id)
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session bulunamadı veya süresi doldu")
+    
+    # Session'ı scanned olarak işaretle
+    qr_sessions[session_id]["status"] = "scanned"
+    
+    return {
+        "message": "QR kod okundu. Lütfen girişi onaylayın.",
+        "session_id": session_id
+    }
+
+
+@router.post("/auth/qr/approve")
+async def approve_qr_login(data: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Telefon girişi onayladığında bu endpoint çağrılır
+    Bilgisayar için token oluşturulur
+    """
+    session_id = data.get("session_id")
+    
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id gerekli")
+    
+    session = qr_sessions.get(session_id)
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session bulunamadı veya süresi doldu")
+    
+    # Kullanıcı bilgilerini al
+    user = await db.users.find_one({"id": current_user["user_id"]})
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    
+    # Yeni token oluştur
+    org_id = user.get("org_id", user["id"])
+    role = user.get("role", "admin")
+    token = create_token(user["id"], user["email"], org_id, role)
+    
+    # Session'ı onayla
+    qr_sessions[session_id]["status"] = "approved"
+    qr_sessions[session_id]["user_id"] = user["id"]
+    qr_sessions[session_id]["token"] = token
+    
+    return {
+        "message": "Giriş onaylandı! Bilgisayarınızda oturum açıldı.",
+        "success": True
+    }
+
+
+@router.post("/auth/qr/reject")
+async def reject_qr_login(data: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Telefon girişi reddederse
+    """
+    session_id = data.get("session_id")
+    
+    if session_id and session_id in qr_sessions:
+        del qr_sessions[session_id]
+    
+    return {"message": "Giriş reddedildi.", "success": True}
 
 
 @router.delete("/auth/delete-account")

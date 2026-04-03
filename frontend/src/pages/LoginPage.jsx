@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../context/AppContext';
 import { authAPI } from '../services/api';
 import { formatPhoneInput } from '../utils/helpers';
-import { Car, Eye, EyeOff, Loader2, Mail, Phone, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Phone, ArrowLeft, CheckCircle2, QrCode, Smartphone, Monitor, RefreshCw } from 'lucide-react';
 
 const LoginPage = () => {
   const { login, register, setUser, setToken } = useApp();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState('login'); // login, register, verify, qr
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [verificationData, setVerificationData] = useState({ email: '', code: '', expectedCode: '' });
-  const hasProcessedOAuth = useRef(false);
+
+  // QR Login State
+  const [qrSessionId, setQrSessionId] = useState(null);
+  const [qrStatus, setQrStatus] = useState('pending'); // pending, scanned, approved, expired
+  const qrPollInterval = useRef(null);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -21,42 +25,69 @@ const LoginPage = () => {
     phone: ''
   });
 
-  // Handle Google OAuth callback
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes('session_id=') && !hasProcessedOAuth.current) {
-      hasProcessedOAuth.current = true;
-      const sessionId = hash.split('session_id=')[1]?.split('&')[0];
-      if (sessionId) {
-        handleGoogleCallback(sessionId);
-      }
-    }
-  }, []);
-
-  const handleGoogleCallback = async (sessionId) => {
-    setGoogleLoading(true);
-    setError('');
+  // QR Kod oluştur
+  const generateQRSession = async () => {
     try {
-      const res = await authAPI.googleAuth(sessionId);
-      const { token, user } = res.data;
-      localStorage.setItem('crm_token', token);
-      localStorage.setItem('crm_user', JSON.stringify(user));
-      // Clear the hash from URL
-      window.history.replaceState(null, '', window.location.pathname);
-      window.location.reload();
+      setLoading(true);
+      setError('');
+      const res = await authAPI.generateQRSession();
+      setQrSessionId(res.data.session_id);
+      setQrStatus('pending');
+      setMode('qr');
+      
+      // Polling başlat
+      startQRPolling(res.data.session_id);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Google ile giriş başarısız.');
-      window.history.replaceState(null, '', window.location.pathname);
+      setError('QR kod oluşturulamadı. Lütfen tekrar deneyin.');
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   };
 
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-  const handleGoogleLogin = () => {
-    const redirectUrl = window.location.origin + window.location.pathname;
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  // QR Status Polling
+  const startQRPolling = (sessionId) => {
+    // Önceki polling'i temizle
+    if (qrPollInterval.current) {
+      clearInterval(qrPollInterval.current);
+    }
+
+    qrPollInterval.current = setInterval(async () => {
+      try {
+        const res = await authAPI.checkQRStatus(sessionId);
+        setQrStatus(res.data.status);
+
+        if (res.data.status === 'approved' && res.data.token) {
+          // Giriş başarılı!
+          clearInterval(qrPollInterval.current);
+          localStorage.setItem('crm_token', res.data.token);
+          localStorage.setItem('crm_user', JSON.stringify(res.data.user));
+          window.location.reload();
+        }
+      } catch (err) {
+        if (err.response?.status === 410 || err.response?.status === 404) {
+          // Session expired
+          setQrStatus('expired');
+          clearInterval(qrPollInterval.current);
+        }
+      }
+    }, 2000); // Her 2 saniyede kontrol et
+  };
+
+  // Component unmount olduğunda polling'i temizle
+  useEffect(() => {
+    return () => {
+      if (qrPollInterval.current) {
+        clearInterval(qrPollInterval.current);
+      }
+    };
+  }, []);
+
+  // QR'ı yenile
+  const refreshQR = () => {
+    if (qrPollInterval.current) {
+      clearInterval(qrPollInterval.current);
+    }
+    generateQRSession();
   };
 
   const handleLogin = async (e) => {
@@ -103,98 +134,87 @@ const LoginPage = () => {
     }
   };
 
-  const handleVerify = async (e) => {
+  const handleVerifyEmail = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (verificationData.code !== verificationData.expectedCode) {
-      setError('Doğrulama kodu hatalı. Lütfen tekrar deneyin.');
-      return;
-    }
-
     setLoading(true);
     try {
-      const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
-      await fetch(`${API_URL}/auth/verify-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: verificationData.email, code: verificationData.code })
+      await authAPI.verifyEmail({
+        email: verificationData.email,
+        code: verificationData.code
       });
+      const loginRes = await authAPI.login({
+        email: verificationData.email,
+        password: formData.password
+      });
+      localStorage.setItem('crm_token', loginRes.data.token);
+      localStorage.setItem('crm_user', JSON.stringify(loginRes.data.user));
       window.location.reload();
     } catch (err) {
-      setError('Doğrulama başarısız.');
+      setError(err.response?.data?.detail || 'Doğrulama başarısız.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Show loading while processing Google OAuth
-  if (googleLoading) {
-    return (
-      <div className="min-h-[100dvh] gradient-asphalt flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <Loader2 size={48} className="animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Google ile giriş yapılıyor...</p>
-        </div>
-      </div>
-    );
-  }
+  // QR kod URL'i - mobil uygulama bu URL'yi açacak
+  const qrCodeValue = qrSessionId ? `mactech://qr-login?session_id=${qrSessionId}` : '';
+  // Web için alternatif URL
+  const webQrUrl = qrSessionId ? `${window.location.origin}/qr-login?session_id=${qrSessionId}` : '';
 
   return (
-    <div className="min-h-[100dvh] gradient-asphalt flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-md my-auto py-8">
+    <div className="min-h-screen gradient-asphalt flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in">
           <img src="/logo-mactech.png" alt="MACTech" className="h-36 w-auto object-contain mx-auto" />
         </div>
 
-        {/* Verification Screen */}
+        {/* Verification Form */}
         {mode === 'verify' && (
           <div className="bg-card border border-border rounded-2xl p-8 shadow-xl animate-slide-up">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Mail size={32} className="text-primary" />
-              </div>
+              <CheckCircle2 size={48} className="text-success mx-auto mb-3" />
               <h2 className="font-heading font-semibold text-xl">E-posta Doğrulama</h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                <span className="font-medium text-foreground">{verificationData.email}</span> adresine gönderilen 6 haneli doğrulama kodunu girin
+              <p className="text-muted-foreground text-sm mt-1">
+                {verificationData.email} adresine gönderilen kodu girin
               </p>
             </div>
 
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg p-3 mb-4" data-testid="verify-error">
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg p-3 mb-4">
                 {error}
               </div>
             )}
 
-            {/* Show code for demo purposes */}
+            {/* Demo: Kodu göster */}
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4 text-center">
-              <p className="text-xs text-muted-foreground">Doğrulama Kodu:</p>
-              <p className="text-2xl font-bold tracking-[0.5em] text-primary" data-testid="verification-code-display">{verificationData.expectedCode}</p>
+              <p className="text-xs text-muted-foreground mb-1">Demo için doğrulama kodunuz:</p>
+              <p className="font-mono text-2xl font-bold text-primary tracking-widest">{verificationData.expectedCode}</p>
             </div>
 
-            <form onSubmit={handleVerify} className="space-y-4">
-              <input
-                type="text"
-                maxLength={6}
-                value={verificationData.code}
-                onChange={(e) => setVerificationData(prev => ({ ...prev, code: e.target.value.replace(/\D/g, '') }))}
-                className="w-full h-14 px-4 bg-background border border-border rounded-lg text-center text-2xl tracking-[0.5em] font-bold focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                placeholder="------"
-                data-testid="verification-code-input"
-              />
+            <form onSubmit={handleVerifyEmail} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Doğrulama Kodu</label>
+                <input
+                  type="text"
+                  value={verificationData.code}
+                  onChange={(e) => setVerificationData({ ...verificationData, code: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                  className="w-full h-14 px-4 bg-background border border-border rounded-lg text-center text-2xl tracking-[0.5em] font-mono focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                  data-testid="verification-code-input"
+                />
+              </div>
 
               <button
                 type="submit"
                 disabled={loading || verificationData.code.length !== 6}
                 className="w-full h-12 gradient-gold rounded-full font-heading font-bold uppercase tracking-wider text-primary-foreground shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                data-testid="verify-btn"
+                data-testid="verify-submit-btn"
               >
-                {loading ? (
-                  <><Loader2 size={20} className="animate-spin" /><span>Doğrulanıyor...</span></>
-                ) : (
-                  <><CheckCircle2 size={20} /><span>Doğrula</span></>
-                )}
+                {loading ? <><Loader2 size={20} className="animate-spin" /> Doğrulanıyor...</> : 'Doğrula ve Giriş Yap'}
               </button>
             </form>
 
@@ -208,8 +228,109 @@ const LoginPage = () => {
           </div>
         )}
 
+        {/* QR Code Login */}
+        {mode === 'qr' && (
+          <div className="bg-card border border-border rounded-2xl p-8 shadow-xl animate-slide-up">
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Monitor className="text-primary" size={28} />
+                <ArrowLeft className="text-muted-foreground" size={20} />
+                <Smartphone className="text-primary" size={28} />
+              </div>
+              <h2 className="font-heading font-semibold text-xl">QR Kod ile Giriş</h2>
+              <p className="text-muted-foreground text-sm mt-1">
+                Telefonunuzdaki MACTech uygulaması ile QR kodu okutun
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg p-3 mb-4">
+                {error}
+              </div>
+            )}
+
+            <div className="flex justify-center mb-6">
+              {qrStatus === 'expired' ? (
+                <div className="w-64 h-64 bg-muted/50 rounded-2xl flex flex-col items-center justify-center">
+                  <p className="text-muted-foreground mb-4">QR kod süresi doldu</p>
+                  <button
+                    onClick={refreshQR}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    <RefreshCw size={18} />
+                    Yenile
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="bg-white p-4 rounded-2xl shadow-lg">
+                    <QRCodeSVG
+                      value={webQrUrl}
+                      size={220}
+                      level="H"
+                      includeMargin={false}
+                      imageSettings={{
+                        src: "/logo-mactech.png",
+                        x: undefined,
+                        y: undefined,
+                        height: 40,
+                        width: 40,
+                        excavate: true,
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Status Overlay */}
+                  {qrStatus === 'scanned' && (
+                    <div className="absolute inset-0 bg-card/90 rounded-2xl flex flex-col items-center justify-center">
+                      <Loader2 size={40} className="text-primary animate-spin mb-3" />
+                      <p className="font-medium text-primary">QR Kod Okundu!</p>
+                      <p className="text-sm text-muted-foreground">Telefonunuzda onaylayın...</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Status Indicator */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className={`w-2 h-2 rounded-full ${
+                qrStatus === 'pending' ? 'bg-yellow-500 animate-pulse' :
+                qrStatus === 'scanned' ? 'bg-blue-500 animate-pulse' :
+                qrStatus === 'approved' ? 'bg-green-500' :
+                'bg-red-500'
+              }`} />
+              <span className="text-sm text-muted-foreground">
+                {qrStatus === 'pending' && 'QR kod bekleniyor...'}
+                {qrStatus === 'scanned' && 'Telefonda onay bekleniyor...'}
+                {qrStatus === 'approved' && 'Giriş başarılı!'}
+                {qrStatus === 'expired' && 'Süre doldu'}
+              </span>
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-muted/30 rounded-xl p-4 mb-6">
+              <h4 className="font-medium text-sm mb-2">Nasıl çalışır?</h4>
+              <ol className="text-sm text-muted-foreground space-y-1">
+                <li>1. Telefonunuzda MACTech uygulamasını açın</li>
+                <li>2. Hesabınıza giriş yapın (yapılmadıysa)</li>
+                <li>3. QR kod okutma seçeneğine tıklayın</li>
+                <li>4. Bu ekrandaki QR kodu okutun</li>
+                <li>5. Telefonda girişi onaylayın</li>
+              </ol>
+            </div>
+
+            <button
+              onClick={() => { setMode('login'); setError(''); if(qrPollInterval.current) clearInterval(qrPollInterval.current); }}
+              className="w-full text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1"
+            >
+              <ArrowLeft size={14} /> E-posta ile giriş yap
+            </button>
+          </div>
+        )}
+
         {/* Login / Register Form */}
-        {mode !== 'verify' && (
+        {mode !== 'verify' && mode !== 'qr' && (
           <div className="bg-card border border-border rounded-2xl p-8 shadow-xl animate-slide-up">
             <h2 className="font-heading font-semibold text-xl text-center mb-6">
               {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
@@ -221,27 +342,27 @@ const LoginPage = () => {
               </div>
             )}
 
-            {/* Google Login Button */}
-            <button
-              onClick={handleGoogleLogin}
-              className="w-full h-12 bg-white text-gray-800 border border-gray-300 rounded-full font-medium flex items-center justify-center gap-3 hover:bg-gray-50 transition-all active:scale-95 mb-4"
-              data-testid="google-login-btn"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Google ile {mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
-            </button>
+            {/* QR Login Button - Sadece login modunda */}
+            {mode === 'login' && (
+              <>
+                <button
+                  onClick={generateQRSession}
+                  disabled={loading}
+                  className="w-full h-12 bg-primary/10 text-primary border border-primary/30 rounded-full font-medium flex items-center justify-center gap-3 hover:bg-primary/20 transition-all active:scale-95 mb-4"
+                  data-testid="qr-login-btn"
+                >
+                  <QrCode size={20} />
+                  QR Kod ile Giriş Yap
+                </button>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-border"></div>
-              <span className="text-xs text-muted-foreground">veya</span>
-              <div className="flex-1 h-px bg-border"></div>
-            </div>
+                {/* Divider */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 h-px bg-border"></div>
+                  <span className="text-xs text-muted-foreground">veya</span>
+                  <div className="flex-1 h-px bg-border"></div>
+                </div>
+              </>
+            )}
 
             <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-4">
               {mode === 'register' && (

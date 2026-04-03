@@ -36,11 +36,16 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  googleAuth: (sessionId) => api.post('/auth/google', { session_id: sessionId }),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
   deleteAccount: () => api.delete('/auth/delete-account'),
   verifyEmail: (data) => api.post('/auth/verify-email', data),
+  // QR Login endpoints
+  generateQRSession: () => api.post('/auth/qr/generate'),
+  checkQRStatus: (sessionId) => api.get(`/auth/qr/status/${sessionId}`),
+  scanQRCode: (sessionId) => api.post('/auth/qr/scan', { session_id: sessionId }),
+  approveQRLogin: (sessionId) => api.post('/auth/qr/approve', { session_id: sessionId }),
+  rejectQRLogin: (sessionId) => api.post('/auth/qr/reject', { session_id: sessionId }),
 };
 
 export const fileAPI = {
