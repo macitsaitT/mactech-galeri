@@ -6,6 +6,16 @@ import os
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-mongo_url = os.environ['MONGO_URL']
+# MongoDB bağlantısı - Railway için güvenli
+mongo_url = os.environ.get('MONGO_URL', os.environ.get('DATABASE_URL', ''))
+db_name = os.environ.get('DB_NAME', 'mactech_gallery')
+
+if not mongo_url:
+    raise Exception("MONGO_URL environment variable is required!")
+
+print(f"[DB] Connecting to MongoDB... DB: {db_name}")
+
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[db_name]
+
+print(f"[DB] MongoDB connection initialized")
