@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+// Backend URL - Railway veya local
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+const API_URL = BACKEND_URL + '/api';
+
+console.log('[API] Backend URL:', BACKEND_URL);
+console.log('[API] Full API URL:', API_URL);
 
 // Create axios instance
 const api = axios.create({
@@ -8,6 +13,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 saniye timeout
 });
 
 // Add token to requests
