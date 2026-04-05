@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import './index.css';
 import { requestNotificationPermission, startNotificationService, stopNotificationService } from './utils/notifications';
@@ -10,6 +11,7 @@ import Header from './components/layout/Header';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import SSOCallbackPage from './pages/SSOCallbackPage';
 import Dashboard from './pages/Dashboard';
 import InventoryPage from './pages/InventoryPage';
 import CustomersPage from './pages/CustomersPage';
@@ -485,7 +487,10 @@ const AppContent = () => {
 function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <Routes>
+        <Route path="/sso-callback" element={<SSOCallbackPage />} />
+        <Route path="*" element={<AppContent />} />
+      </Routes>
     </AppProvider>
   );
 }

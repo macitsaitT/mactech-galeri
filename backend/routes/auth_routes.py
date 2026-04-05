@@ -348,6 +348,108 @@ async def reject_qr_login(data: dict, current_user: dict = Depends(get_current_u
     return {"message": "Giriş reddedildi.", "success": True}
 
 
+# ==================== SSO (Single Sign-On) ====================
+
+@router.post("/auth/sso-login")
+async def sso_login(data: dict):
+    """
+    MACTech ana platformundan SSO ile giriş
+    Ana site'den gelen sso_token ile kullanıcıyı doğrular
+    """
+    sso_token = data.get("sso_token")
+    
+    if not sso_token:
+        raise HTTPException(status_code=400, detail="sso_token gerekli")
+    
+    try:
+        # MACTech ana platformundan token'ı doğrula
+        verify_url = "https://mactech.tr/api/platform/sso/verify"
+        
+        response = http_requests.post(
+            verify_url,
+            json={"sso_token": sso_token},
+            timeout=10
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail="SSO token geçersiz")
+        
+        sso_data = response.json()
+        
+        if not sso_data.get("valid"):
+            raise HTTPException(status_code=401, detail="SSO token doğrulanamadı")
+        
+        # Kullanıcı bilgilerini al
+        mactech_id = sso_data.get("user", {}).get("mactech_id")
+        email = sso_data.get("user", {}).get("email")
+        full_name = sso_data.get("user", {}).get("full_name", "")
+        phone = sso_data.get("user", {}).get("phone", "")
+        
+        if not mactech_id or not email:
+            raise HTTPException(status_code=400, detail="SSO yanıtında kullanıcı bilgileri eksik")
+        
+        # Kullanıcıyı mactech_id ile bul
+        user = await db.users.find_one({"mactech_id": mactech_id})
+        
+        if not user:
+            # Email ile de dene
+            user = await db.users.find_one({"email": email})
+            
+            if user:
+                # Mevcut kullanıcıya mactech_id ekle
+                await db.users.update_one(
+                    {"id": user["id"]},
+                    {"$set": {"mactech_id": mactech_id}}
+                )
+            else:
+                # Yeni kullanıcı oluştur
+                user_id = str(uuid.uuid4())
+                now = datetime.now(timezone.utc).isoformat()
+                
+                user = {
+                    "id": user_id,
+                    "mactech_id": mactech_id,
+                    "email": email,
+                    "password_hash": None,  # SSO kullanıcısı, şifre yok
+                    "company_name": full_name or "MACTech Kullanıcısı",
+                    "phone": phone,
+                    "address": "",
+                    "logo_url": "",
+                    "theme": "dark",
+                    "role": "admin",
+                    "org_id": user_id,
+                    "email_verified": True,  # SSO ile gelen zaten doğrulanmış
+                    "auth_provider": "sso",
+                    "created_at": now,
+                    "updated_at": now
+                }
+                
+                await db.users.insert_one(user)
+        
+        # JWT token oluştur
+        org_id = user.get("org_id", user["id"])
+        role = user.get("role", "admin")
+        token = create_token(user["id"], user["email"], org_id, role)
+        
+        # Son giriş zamanını güncelle
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Hassas bilgileri çıkar
+        user_response = {k: v for k, v in user.items() if k not in ["_id", "password_hash", "verification_code"]}
+        
+        return {
+            "token": token,
+            "user": user_response,
+            "message": "SSO ile giriş başarılı"
+        }
+        
+    except http_requests.RequestException as e:
+        raise HTTPException(status_code=503, detail=f"SSO servisi bağlantı hatası: {str(e)}")
+
+
 @router.delete("/auth/delete-account")
 async def delete_account(current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]

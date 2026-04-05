@@ -52,6 +52,8 @@ export const authAPI = {
   scanQRCode: (sessionId) => api.post('/auth/qr/scan', { session_id: sessionId }),
   approveQRLogin: (sessionId) => api.post('/auth/qr/approve', { session_id: sessionId }),
   rejectQRLogin: (sessionId) => api.post('/auth/qr/reject', { session_id: sessionId }),
+  // SSO Login endpoint
+  ssoLogin: (ssoToken) => api.post('/auth/sso-login', { sso_token: ssoToken }),
 };
 
 export const fileAPI = {
