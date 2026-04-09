@@ -50,7 +50,7 @@ async def handle_app_access_webhook(
     app = payload.get("app")
     
     # Sadece galeri uygulaması için işle
-    if app != "galeri":
+    if app and app != "galeri":
         return {"status": "ignored", "reason": "Not galeri app"}
     
     if not mactech_id or not email:
@@ -79,6 +79,18 @@ async def handle_app_access_webhook(
     
     else:
         raise HTTPException(status_code=400, detail=f"Unknown event: {event}")
+
+
+@router.post("/webhooks/mactech")
+async def handle_mactech_webhook(
+    payload: dict,
+    authorization: str = Header(None)
+):
+    """
+    MacTech webhook endpoint (alias for /webhooks/app-access)
+    MacTech admin panelinde yapılandırılmış URL için
+    """
+    return await handle_app_access_webhook(payload, authorization)
 
 
 async def handle_trial_started(user: dict, payload: dict, now: str):
@@ -153,13 +165,67 @@ async def handle_subscription_created(user: dict, payload: dict, now: str):
     """Pro plan satın alındı (Aylık veya Yıllık)"""
     
     mactech_id = payload["mactech_id"]
+    email = payload.get("email")
     started_at = payload.get("started_at", now)
     payment_frequency = payload.get("payment_frequency", "monthly")  # monthly | yearly
     subscription_end_date = payload.get("subscription_end_date")  # Yıllık için bitiş tarihi
     
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        # Kullanıcı yoksa oluştur
+        if not email:
+            raise HTTPException(status_code=400, detail="Email required for new user")
+        
+        import uuid
+        user_id = str(uuid.uuid4())
+        
+        user_doc = {
+            "id": user_id,
+            "mactech_id": mactech_id,
+            "email": email.lower().strip(),
+            "password_hash": None,  # SSO kullanıcısı
+            "company_name": payload.get("full_name", "MACTech Kullanıcısı"),
+            "phone": payload.get("phone", ""),
+            "address": "",
+            "logo_url": "",
+            "theme": "dark",
+            "role": "admin",
+            "org_id": user_id,
+            "email_verified": True,
+            "auth_provider": "sso",
+            # Subscription bilgileri
+            "subscription": "pro",
+            "payment_status": "active",
+            "payment_frequency": payment_frequency,
+            "trial_active": False,
+            "access_blocked": False,
+            "subscription_started_at": started_at,
+            "last_payment": now,
+            "created_at": now,
+            "updated_at": now
+        }
+        
+        if subscription_end_date:
+            user_doc["subscription_end_date"] = subscription_end_date
+        
+        await db.users.insert_one(user_doc)
+        
+        # Default permissions oluştur
+        from routes.users import DEFAULT_PERMISSIONS
+        await db.permissions.insert_one({
+            "org_id": user_id,
+            "permissions": DEFAULT_PERMISSIONS,
+            "created_at": now
+        })
+        
+        return {
+            "status": "success",
+            "action": "user_created_with_pro",
+            "payment_frequency": payment_frequency,
+            "user_id": user_id,
+            "mactech_id": mactech_id
+        }
     
+    # Mevcut kullanıcı - subscription güncelle
     update_data = {
         "subscription": "pro",
         "payment_status": "active",
