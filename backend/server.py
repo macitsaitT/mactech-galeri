@@ -30,6 +30,7 @@ from routes.uploads import router as uploads_router
 from routes.exports import router as exports_router
 from routes.encryption_routes import router as encryption_router
 from routes.year_end import router as year_end_router
+from routes.invoices import router as invoices_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,6 +59,7 @@ api_router.include_router(uploads_router)
 api_router.include_router(exports_router)
 api_router.include_router(encryption_router)
 api_router.include_router(year_end_router)
+api_router.include_router(invoices_router)
 
 
 @api_router.get("/")

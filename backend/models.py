@@ -54,6 +54,7 @@ class CarBase(BaseModel):
     status: str = "Stokta"
     entry_date: str = ""
     inspection_date: str = ""
+    inspection_notification_days: int = 30  # Kaç gün önce bildirim gönderilsin
     fuel_type: str = "Dizel"
     gear: str = "Otomatik"
     ownership: str = "stock"
@@ -79,6 +80,13 @@ class CarBase(BaseModel):
     expertise_score: int = 95
     tramer_amount: float = 0
     expertise_notes: str = ""
+    # Fatura Bilgileri
+    is_invoiced: bool = False  # Faturalı alım mı?
+    invoice_number: str = ""
+    invoice_date: str = ""
+    invoice_seller_name: str = ""
+    invoice_seller_tax_id: str = ""  # TC/Vergi No
+    invoice_seller_address: str = ""
 
 
 class CarCreate(CarBase):

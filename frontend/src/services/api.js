@@ -211,4 +211,9 @@ export const yearEndAPI = {
   createTransfer: (year) => api.post('/year-end-transfer', { year }),
 };
 
+// ==================== INVOICES ====================
+export const invoicesAPI = {
+  getInvoiceHtml: (carId) => api.get(`/invoices/${carId}`),
+};
+
 export default api;

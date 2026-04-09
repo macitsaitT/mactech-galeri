@@ -198,6 +198,7 @@ const defaultFormData = {
   status: 'Stokta',
   entry_date: new Date().toISOString().split('T')[0],
   inspection_date: '',
+  inspection_notification_days: 30,
   fuel_type: 'Dizel',
   gear: 'Otomatik',
   ownership: 'stock',
@@ -221,7 +222,14 @@ const defaultFormData = {
   district: '',
   expertise_score: 95,
   tramer_amount: '',
-  expertise_notes: ''
+  expertise_notes: '',
+  // Fatura bilgileri
+  is_invoiced: false,
+  invoice_number: '',
+  invoice_date: '',
+  invoice_seller_name: '',
+  invoice_seller_tax_id: '',
+  invoice_seller_address: ''
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
@@ -296,6 +304,15 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
     }
     if (formData.ownership === 'stock' && (!formData.purchase_price || parseNumber(formData.purchase_price) <= 0)) {
       newErrors.purchase_price = 'Stok araç için alış fiyatı gerekli';
+    }
+    
+    // Fatura validasyonu
+    if (formData.is_invoiced) {
+      if (!formData.invoice_number) newErrors.invoice_number = 'Fatura numarası gerekli';
+      if (!formData.invoice_date) newErrors.invoice_date = 'Fatura tarihi gerekli';
+      if (!formData.invoice_seller_name) newErrors.invoice_seller_name = 'Satıcı adı gerekli';
+      if (!formData.invoice_seller_tax_id) newErrors.invoice_seller_tax_id = 'TC/Vergi no gerekli';
+      if (!formData.invoice_seller_address) newErrors.invoice_seller_address = 'Satıcı adresi gerekli';
     }
 
     setErrors(newErrors);
@@ -534,9 +551,9 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                 </div>
               </div>
 
-              {/* Muayene Tarihi */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
+              {/* Muayene Tarihi & Bildirim */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium mb-2">Muayene Tarihi</label>
                   <input
                     type="date"
@@ -546,6 +563,29 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                     data-testid="car-inspection-date-input"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Kaç Gün Önce Bildirim?</label>
+                  <select
+                    value={formData.inspection_notification_days}
+                    onChange={(e) => handleChange('inspection_notification_days', parseInt(e.target.value))}
+                    className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
+                    disabled={!formData.inspection_date}
+                    data-testid="inspection-notification-days"
+                  >
+                    <option value={7}>7 gün önce</option>
+                    <option value={15}>15 gün önce</option>
+                    <option value={30}>30 gün önce</option>
+                    <option value={45}>45 gün önce</option>
+                    <option value={60}>60 gün önce</option>
+                  </select>
+                  {!formData.inspection_date && (
+                    <p className="text-xs text-muted-foreground mt-1">Önce muayene tarihi seçin</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Kasa Tipi */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Kasa Tipi</label>
                   <select
@@ -621,6 +661,91 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Fatura Bilgileri */}
+              <div className="p-3 sm:p-4 bg-primary/10 border border-primary/30 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="is_invoiced"
+                    checked={formData.is_invoiced}
+                    onChange={(e) => handleChange('is_invoiced', e.target.checked)}
+                    className="w-4 h-4 rounded border-border bg-background cursor-pointer"
+                    data-testid="is-invoiced-checkbox"
+                  />
+                  <label htmlFor="is_invoiced" className="text-sm font-semibold text-primary cursor-pointer">
+                    Faturalı Alım
+                  </label>
+                </div>
+                
+                {formData.is_invoiced && (
+                  <div className="space-y-3 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Fatura No *</label>
+                        <input
+                          type="text"
+                          value={formData.invoice_number}
+                          onChange={(e) => handleChange('invoice_number', e.target.value)}
+                          className={`w-full h-11 px-3 bg-background border rounded-lg outline-none text-sm ${errors.invoice_number ? 'border-destructive' : 'border-border focus:border-primary'}`}
+                          placeholder="FTR2024001"
+                          data-testid="invoice-number-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Fatura Tarihi *</label>
+                        <input
+                          type="date"
+                          value={formData.invoice_date}
+                          onChange={(e) => handleChange('invoice_date', e.target.value)}
+                          className={`w-full h-11 px-3 bg-background border rounded-lg outline-none text-sm ${errors.invoice_date ? 'border-destructive' : 'border-border focus:border-primary'}`}
+                          data-testid="invoice-date-input"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Satıcı Adı/Firma *</label>
+                        <input
+                          type="text"
+                          value={formData.invoice_seller_name}
+                          onChange={(e) => handleChange('invoice_seller_name', e.target.value)}
+                          className={`w-full h-11 px-3 bg-background border rounded-lg outline-none text-sm ${errors.invoice_seller_name ? 'border-destructive' : 'border-border focus:border-primary'}`}
+                          placeholder="Ahmet Yılmaz veya ABC Otomotiv Ltd."
+                          data-testid="invoice-seller-name-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">TC / Vergi No *</label>
+                        <input
+                          type="text"
+                          value={formData.invoice_seller_tax_id}
+                          onChange={(e) => handleChange('invoice_seller_tax_id', e.target.value)}
+                          className={`w-full h-11 px-3 bg-background border rounded-lg outline-none text-sm ${errors.invoice_seller_tax_id ? 'border-destructive' : 'border-border focus:border-primary'}`}
+                          placeholder="12345678901 veya 1234567890"
+                          data-testid="invoice-seller-tax-id-input"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Satıcı Adresi *</label>
+                      <textarea
+                        value={formData.invoice_seller_address}
+                        onChange={(e) => handleChange('invoice_seller_address', e.target.value)}
+                        className={`w-full h-20 p-3 bg-background border rounded-lg outline-none resize-none text-sm ${errors.invoice_seller_address ? 'border-destructive' : 'border-border focus:border-primary'}`}
+                        placeholder="Tam adres..."
+                        data-testid="invoice-seller-address-input"
+                      />
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      ℹ️ Fatura tutarı alış fiyatı ile aynı olacaktır. Faturayı PDF olarak görüntüleyebilir veya yazdırabilirsiniz.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Prices */}

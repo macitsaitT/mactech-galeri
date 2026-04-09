@@ -19,6 +19,7 @@ import FinancePage from './pages/FinancePage';
 import TrashPage from './pages/TrashPage';
 import SettingsPage from './pages/SettingsPage';
 import CalendarPage from './pages/CalendarPage';
+import InspectionPage from './pages/InspectionPage';
 import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
 import YearEndTransferPage from './pages/YearEndTransferPage';
@@ -46,6 +47,7 @@ const getViewTitle = (view) => {
     case 'trash': return 'Çöp Kutusu';
     case 'settings': return 'Ayarlar';
     case 'calendar': return 'Randevular';
+    case 'inspection': return 'Muayene Takibi';
     case 'users': return 'Kullanıcı Yönetimi';
     case 'year-end': return 'Yıl Sonu Devri';
     default: return 'Dashboard';
@@ -77,10 +79,10 @@ const AppContent = () => {
   useEffect(() => {
     if (isAuthenticated) {
       requestNotificationPermission();
-      startNotificationService(() => appointments);
+      startNotificationService(() => appointments, () => cars);
     }
     return () => stopNotificationService();
-  }, [isAuthenticated, appointments]);
+  }, [isAuthenticated, appointments, cars]);
 
   // Modal states
   const [carModal, setCarModal] = useState({ open: false, car: null });
@@ -406,6 +408,8 @@ const AppContent = () => {
           {activeView === 'settings' && <SettingsPage />}
           
           {activeView === 'calendar' && <CalendarPage />}
+          
+          {activeView === 'inspection' && <InspectionPage />}
           
           {activeView === 'users' && <UsersPage />}
           {activeView === 'permissions' && <PermissionsPage />}

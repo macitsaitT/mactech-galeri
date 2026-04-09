@@ -32,6 +32,62 @@ export const sendLocalNotification = (title, body, tag = 'default') => {
 // Track which notifications have been sent (to avoid duplicates)
 const sentNotifications = new Set();
 
+export const checkInspectionDates = (cars) => {
+  if (!cars || cars.length === 0) return;
+
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  cars.forEach(car => {
+    if (car.deleted || !car.inspection_date) return;
+
+    try {
+      const inspectionDate = new Date(car.inspection_date);
+      const notificationDays = car.inspection_notification_days || 30;
+      
+      // Kaç gün kaldı
+      const daysUntil = Math.ceil((inspectionDate - today) / (1000 * 60 * 60 * 24));
+      
+      // Bildirim günü geldi mi?
+      if (daysUntil > 0 && daysUntil <= notificationDays) {
+        const notifKey = `inspection-${car.id}-${todayStr}`;
+        if (sentNotifications.has(notifKey)) return;
+        
+        sentNotifications.add(notifKey);
+        sendLocalNotification(
+          '🔧 Muayene Tarihi Yaklaşıyor',
+          `${car.brand} ${car.model} (${car.plate || ''}) - ${daysUntil} gün kaldı`,
+          `inspection-${car.id}`
+        );
+      } else if (daysUntil === 0) {
+        // Bugün muayene günü
+        const notifKey = `inspection-today-${car.id}-${todayStr}`;
+        if (!sentNotifications.has(notifKey)) {
+          sentNotifications.add(notifKey);
+          sendLocalNotification(
+            '🚨 Muayene Tarihi Bugün!',
+            `${car.brand} ${car.model} (${car.plate || ''}) muayene tarihi bugün`,
+            `inspection-today-${car.id}`
+          );
+        }
+      } else if (daysUntil < 0) {
+        // Muayene tarihi geçmiş
+        const notifKey = `inspection-overdue-${car.id}-${todayStr}`;
+        if (!sentNotifications.has(notifKey)) {
+          sentNotifications.add(notifKey);
+          sendLocalNotification(
+            '⚠️ Muayene Tarihi Geçmiş!',
+            `${car.brand} ${car.model} (${car.plate || ''}) muayene ${Math.abs(daysUntil)} gün önce geçmiş`,
+            `inspection-overdue-${car.id}`
+          );
+        }
+      }
+    } catch (e) {
+      console.error('Inspection date check error:', e);
+    }
+  });
+};
+
 export const checkUpcomingAppointments = (appointments) => {
   if (!appointments || appointments.length === 0) return;
 
@@ -110,16 +166,22 @@ export const notifyEvent = (type, data) => {
 // Start periodic check (every 5 minutes)
 let checkInterval = null;
 
-export const startNotificationService = (getAppointments) => {
+export const startNotificationService = (getAppointments, getCars) => {
   // Initial check
   const appointments = getAppointments();
   if (appointments) checkUpcomingAppointments(appointments);
+  
+  const cars = getCars ? getCars() : null;
+  if (cars) checkInspectionDates(cars);
 
   // Periodic check
   if (checkInterval) clearInterval(checkInterval);
   checkInterval = setInterval(() => {
     const latest = getAppointments();
     if (latest) checkUpcomingAppointments(latest);
+    
+    const latestCars = getCars ? getCars() : null;
+    if (latestCars) checkInspectionDates(latestCars);
   }, 5 * 60 * 1000); // 5 minutes
 };
 

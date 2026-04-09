@@ -89,3 +89,48 @@ async def restore_car(car_id: str, current_user: dict = Depends(get_current_user
     await db.cars.update_one({"id": car_id}, {"$set": {"deleted": False, "deleted_at": None}})
     await db.transactions.update_many({"car_id": car_id, "org_id": org_id}, {"$set": {"deleted": False, "deleted_at": None}})
     return await db.cars.find_one({"id": car_id}, {"_id": 0})
+
+
+@router.get("/inspection-due")
+async def get_inspection_due_cars(current_user: dict = Depends(get_current_user)):
+    """
+    Muayene tarihi yaklaşan araçları getir
+    Her aracın kendi notification_days değerine göre kontrol yapılır
+    """
+    from datetime import timedelta
+    
+    org_id = current_user.get("org_id", current_user["user_id"])
+    
+    # Tüm araçları getir (silinmemiş ve muayene tarihi olan)
+    query = {
+        "org_id": org_id,
+        "deleted": False,
+        "inspection_date": {"$exists": True, "$ne": ""}
+    }
+    
+    cars = await db.cars.find(query, {"_id": 0}).to_list(1000)
+    
+    # Muayene tarihi yaklaşan araçları filtrele
+    due_cars = []
+    today = datetime.now(timezone.utc).date()
+    
+    for car in cars:
+        try:
+            inspection_date = datetime.fromisoformat(car["inspection_date"]).date()
+            notification_days = car.get("inspection_notification_days", 30)
+            
+            # Kaç gün kaldı
+            days_until = (inspection_date - today).days
+            
+            # Bildirim günü geldi mi veya geçti mi?
+            if 0 <= days_until <= notification_days:
+                car["days_until_inspection"] = days_until
+                due_cars.append(car)
+        except (ValueError, TypeError):
+            # Geçersiz tarih formatı, atla
+            continue
+    
+    # Tarihe göre sırala (en yakın önce)
+    due_cars.sort(key=lambda x: x["days_until_inspection"])
+    
+    return due_cars
