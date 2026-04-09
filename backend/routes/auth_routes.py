@@ -82,24 +82,144 @@ async def resend_verification(data: dict):
 @router.post("/auth/login")
 @limiter.limit("10/minute")
 async def login(request: Request, credentials: UserLogin):
+    """
+    Hybrid Login: MacTech SSO + Yerel DB
+    1. Önce MacTech SSO'dan dener
+    2. Başarısızsa yerel DB'den dener
+    """
+    from middleware.subscription_check import check_user_access
+    
     clean_email = validate_email(credentials.email)
+    password = credentials.password
+    
+    # 1. MacTech SSO ile dene
+    try:
+        mactech_sso_url = "https://www.mactech.tr/api/platform/sso/login"
+        
+        sso_response = http_requests.post(
+            mactech_sso_url,
+            json={"email": clean_email, "password": password, "app": "galeri"},
+            timeout=10
+        )
+        
+        if sso_response.status_code == 200:
+            sso_data = sso_response.json()
+            
+            if sso_data.get("success"):
+                # MacTech SSO başarılı
+                user_data = sso_data.get("user", {})
+                mactech_id = user_data.get("mactech_id")
+                galeri_access = user_data.get("galeri_access", {})
+                
+                # Kullanıcıyı bul veya oluştur
+                user = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0})
+                
+                now = datetime.now(timezone.utc).isoformat()
+                
+                if not user:
+                    user = await db.users.find_one({"email": clean_email}, {"_id": 0})
+                    
+                    if not user:
+                        # Yeni kullanıcı oluştur
+                        user_id = str(uuid.uuid4())
+                        user = {
+                            "id": user_id,
+                            "mactech_id": mactech_id,
+                            "email": clean_email,
+                            "password_hash": None,
+                            "company_name": user_data.get("full_name", "MACTech"),
+                            "phone": user_data.get("phone", ""),
+                            "address": "", "logo_url": "", "theme": "dark",
+                            "role": "admin", "org_id": user_id,
+                            "email_verified": True,
+                            "auth_provider": "mactech_sso",
+                            "subscription": galeri_access.get("subscription", "free"),
+                            "payment_status": galeri_access.get("payment_status", ""),
+                            "payment_frequency": galeri_access.get("payment_frequency", "monthly"),
+                            "trial_active": galeri_access.get("trial_active", False),
+                            "trial_start": galeri_access.get("trial_start"),
+                            "trial_end": galeri_access.get("trial_end"),
+                            "subscription_end_date": galeri_access.get("subscription_end_date"),
+                            "access_blocked": False,
+                            "created_at": now, "updated_at": now
+                        }
+                        await db.users.insert_one(user)
+                    else:
+                        # Güncelle
+                        await db.users.update_one({"id": user["id"]}, {"$set": {
+                            "mactech_id": mactech_id,
+                            "subscription": galeri_access.get("subscription", "free"),
+                            "payment_status": galeri_access.get("payment_status", ""),
+                            "payment_frequency": galeri_access.get("payment_frequency", "monthly"),
+                            "trial_active": galeri_access.get("trial_active", False),
+                            "trial_start": galeri_access.get("trial_start"),
+                            "trial_end": galeri_access.get("trial_end"),
+                            "subscription_end_date": galeri_access.get("subscription_end_date"),
+                            "updated_at": now
+                        }})
+                        user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+                else:
+                    # Güncelle
+                    await db.users.update_one({"mactech_id": mactech_id}, {"$set": {
+                        "subscription": galeri_access.get("subscription", user.get("subscription", "free")),
+                        "payment_status": galeri_access.get("payment_status", user.get("payment_status", "")),
+                        "payment_frequency": galeri_access.get("payment_frequency", "monthly"),
+                        "subscription_end_date": galeri_access.get("subscription_end_date"),
+                        "updated_at": now
+                    }})
+                    user = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0})
+                
+                # Erişim kontrolü
+                access_check = check_user_access(user)
+                if not access_check["has_access"]:
+                    raise HTTPException(status_code=403, detail={
+                        "error": "access_denied",
+                        "reason": access_check["reason"],
+                        "message": access_check["message"],
+                        "redirect_url": access_check.get("redirect_url"),
+                        "action": access_check.get("action")
+                    })
+                
+                token = create_token(user["id"], user["email"], user.get("org_id", user["id"]), user.get("role", "admin"))
+                await db.users.update_one({"id": user["id"]}, {"$set": {"last_login": now}})
+                
+                user_response = {k: v for k, v in user.items() if k not in ["password_hash", "verification_code"]}
+                return {"token": token, "user": user_response, "access_info": access_check, "auth_method": "mactech_sso"}
+    
+    except Exception as e:
+        print(f"MacTech SSO fallback: {e}")
+    
+    # 2. Yerel DB (fallback)
     user = await db.users.find_one({"email": clean_email})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    if not verify_password(credentials.password, user.get("password_hash", "")):
+    if not verify_password(password, user.get("password_hash", "")):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Erişim kontrolü
+    from middleware.subscription_check import check_user_access
+    access_check = check_user_access(user)
+    if not access_check["has_access"]:
+        raise HTTPException(status_code=403, detail={
+            "error": "access_denied",
+            "reason": access_check["reason"],
+            "message": access_check["message"],
+            "redirect_url": access_check.get("redirect_url"),
+            "action": access_check.get("action")
+        })
+    
     org_id = user.get("org_id", user["id"])
     role = user.get("role", "admin")
     token = create_token(user["id"], user["email"], org_id, role)
-    return {
-        "token": token,
-        "user": {
-            "id": user["id"], "email": user["email"],
-            "company_name": user.get("company_name", ""), "phone": user.get("phone", ""),
-            "address": user.get("address", ""), "logo_url": user.get("logo_url", ""),
-            "theme": user.get("theme", "dark"), "role": role, "org_id": org_id
-        }
+    
+    user_response = {
+        "id": user["id"], "email": user["email"],
+        "company_name": user.get("company_name", ""), "phone": user.get("phone", ""),
+        "address": user.get("address", ""), "logo_url": user.get("logo_url", ""),
+        "theme": user.get("theme", "dark"), "role": role, "org_id": org_id
     }
+    
+    return {"token": token, "user": user_response, "access_info": access_check, "auth_method": "local"}
 
 
 @router.get("/auth/me")

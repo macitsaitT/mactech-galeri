@@ -10,25 +10,28 @@ def check_user_access(user: dict) -> dict:
     Kullanıcının uygulamaya erişim yetkisi olup olmadığını kontrol eder
     
     Erişim Kuralları:
-    1. Pro + payment_status: "active" → ✅ Tam erişim
+    1. Pro + payment_status: "active" + subscription_end_date > now → ✅ Tam erişim (Aylık/Yıllık)
     2. Trial aktif + trial_end > now → ✅ Tam erişim
     3. Trial dolmuş → ❌ Erişim yok (trial_expired)
-    4. Pro + payment_status: "past_due" → ❌ Erişim yok (payment_required)
-    5. Free (trial yok) → ❌ Erişim yok (no_subscription)
+    4. Pro + subscription_end_date < now → ❌ Erişim yok (subscription_expired)
+    5. Pro + payment_status: "past_due" → ❌ Erişim yok (payment_required)
+    6. Free (trial yok) → ❌ Erişim yok (no_subscription)
     
     Returns:
         {
             "has_access": bool,
-            "reason": str,  # trial_expired, payment_required, no_subscription, active
+            "reason": str,
             "message": str,
-            "redirect_url": str (websiteye yönlendirme)
+            "redirect_url": str
         }
     """
     
     subscription = user.get("subscription", "free")
     payment_status = user.get("payment_status", "")
+    payment_frequency = user.get("payment_frequency", "monthly")  # monthly | yearly
     trial_active = user.get("trial_active", False)
     trial_end = user.get("trial_end")
+    subscription_end_date = user.get("subscription_end_date")  # Yıllık için bitiş tarihi
     access_blocked = user.get("access_blocked", False)
     access_blocked_reason = user.get("access_blocked_reason", "")
     
@@ -52,14 +55,54 @@ def check_user_access(user: dict) -> dict:
                 "redirect_url": "https://www.mactech.tr/pro",
                 "action": "show_subscription_cancelled"
             }
+        elif access_blocked_reason == "subscription_expired":
+            return {
+                "has_access": False,
+                "reason": "subscription_expired",
+                "message": f"{'Yıllık' if payment_frequency == 'yearly' else 'Aylık'} aboneliğiniz sona erdi. Yenilemek için ödeme yapın.",
+                "redirect_url": "https://www.mactech.tr/yenile",
+                "action": "show_subscription_expired"
+            }
     
-    # 1. Pro + Active Payment → Tam Erişim
+    # 1. Pro + Active Payment Kontrolü
     if subscription == "pro" and payment_status == "active":
+        # Yıllık abonelik varsa bitiş tarihini kontrol et
+        if subscription_end_date:
+            try:
+                end_date = datetime.fromisoformat(subscription_end_date.replace('Z', '+00:00'))
+                
+                if now < end_date:
+                    # Abonelik hala aktif
+                    days_left = (end_date - now).days
+                    
+                    return {
+                        "has_access": True,
+                        "reason": "pro_active",
+                        "message": f"{'Yıllık' if payment_frequency == 'yearly' else 'Pro'} plan aktif",
+                        "subscription_type": "pro",
+                        "payment_frequency": payment_frequency,
+                        "days_until_renewal": days_left,
+                        "subscription_end_date": subscription_end_date
+                    }
+                else:
+                    # Abonelik süresi dolmuş
+                    return {
+                        "has_access": False,
+                        "reason": "subscription_expired",
+                        "message": f"{'Yıllık' if payment_frequency == 'yearly' else 'Aylık'} aboneliğiniz sona erdi. Yenilemek için ödeme yapın.",
+                        "redirect_url": "https://www.mactech.tr/yenile",
+                        "action": "show_subscription_expired"
+                    }
+            except (ValueError, TypeError):
+                pass
+        
+        # Subscription end date yoksa (eski kullanıcılar) - aylık olarak kabul et
         return {
             "has_access": True,
             "reason": "pro_active",
             "message": "Pro plan aktif",
-            "subscription_type": "pro"
+            "subscription_type": "pro",
+            "payment_frequency": "monthly"
         }
     
     # 2. Trial Kontrolü

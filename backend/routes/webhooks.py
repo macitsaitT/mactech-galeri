@@ -150,29 +150,42 @@ async def handle_trial_started(user: dict, payload: dict, now: str):
 
 
 async def handle_subscription_created(user: dict, payload: dict, now: str):
-    """Pro plan satın alındı"""
+    """Pro plan satın alındı (Aylık veya Yıllık)"""
     
     mactech_id = payload["mactech_id"]
     started_at = payload.get("started_at", now)
+    payment_frequency = payload.get("payment_frequency", "monthly")  # monthly | yearly
+    subscription_end_date = payload.get("subscription_end_date")  # Yıllık için bitiş tarihi
     
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Subscription'ı güncelle
+    update_data = {
+        "subscription": "pro",
+        "payment_status": "active",
+        "payment_frequency": payment_frequency,
+        "trial_active": False,
+        "access_blocked": False,
+        "subscription_started_at": started_at,
+        "last_payment": now,
+        "updated_at": now
+    }
+    
+    # Yıllık abonelik ise bitiş tarihini kaydet
+    if subscription_end_date:
+        update_data["subscription_end_date"] = subscription_end_date
+    
     await db.users.update_one(
         {"mactech_id": mactech_id},
-        {"$set": {
-            "subscription": "pro",
-            "payment_status": "active",
-            "trial_active": False,
-            "access_blocked": False,
-            "subscription_started_at": started_at,
-            "last_payment": now,
-            "updated_at": now
-        }}
+        {"$set": update_data}
     )
     
-    return {"status": "success", "action": "subscription_activated", "mactech_id": mactech_id}
+    return {
+        "status": "success",
+        "action": "subscription_activated",
+        "payment_frequency": payment_frequency,
+        "mactech_id": mactech_id
+    }
 
 
 async def handle_payment_success(user: dict, payload: dict, now: str):
