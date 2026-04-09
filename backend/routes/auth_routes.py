@@ -104,9 +104,16 @@ async def login(request: Request, credentials: UserLogin):
 
 @router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
+    from middleware.subscription_check import check_user_access
+    
     user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0, "password_hash": 0, "verification_code": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Erişim durumu kontrolü ekle
+    access_info = check_user_access(user)
+    user["access_info"] = access_info
+    
     return user
 
 
@@ -354,8 +361,10 @@ async def reject_qr_login(data: dict, current_user: dict = Depends(get_current_u
 async def sso_login(data: dict):
     """
     MACTech ana platformundan SSO ile giriş
-    Ana site'den gelen sso_token ile kullanıcıyı doğrular
+    Ana site'den gelen sso_token ile kullanıcıyı doğrular ve erişim kontrolü yapar
     """
+    from middleware.subscription_check import check_user_access
+    
     sso_token = data.get("sso_token")
     
     if not sso_token:
@@ -363,7 +372,7 @@ async def sso_login(data: dict):
     
     try:
         # MACTech ana platformundan token'ı doğrula
-        verify_url = "https://mactech.tr/api/platform/sso/verify"
+        verify_url = "https://www.mactech.tr/api/platform/sso/verify"
         
         response = http_requests.post(
             verify_url,
@@ -380,31 +389,45 @@ async def sso_login(data: dict):
             raise HTTPException(status_code=401, detail="SSO token doğrulanamadı")
         
         # Kullanıcı bilgilerini al
-        mactech_id = sso_data.get("user", {}).get("mactech_id")
-        email = sso_data.get("user", {}).get("email")
-        full_name = sso_data.get("user", {}).get("full_name", "")
-        phone = sso_data.get("user", {}).get("phone", "")
+        user_info = sso_data.get("user", {})
+        mactech_id = user_info.get("mactech_id")
+        email = user_info.get("email")
+        full_name = user_info.get("full_name", "")
+        phone = user_info.get("phone", "")
+        apps = user_info.get("apps", {})
+        galeri_info = apps.get("galeri", {})
         
         if not mactech_id or not email:
             raise HTTPException(status_code=400, detail="SSO yanıtında kullanıcı bilgileri eksik")
         
         # Kullanıcıyı mactech_id ile bul
-        user = await db.users.find_one({"mactech_id": mactech_id})
+        user = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0})
+        
+        now = datetime.now(timezone.utc).isoformat()
         
         if not user:
             # Email ile de dene
-            user = await db.users.find_one({"email": email})
+            user = await db.users.find_one({"email": email}, {"_id": 0})
             
             if user:
-                # Mevcut kullanıcıya mactech_id ekle
+                # Mevcut kullanıcıya mactech_id ve subscription bilgilerini ekle
                 await db.users.update_one(
                     {"id": user["id"]},
-                    {"$set": {"mactech_id": mactech_id}}
+                    {"$set": {
+                        "mactech_id": mactech_id,
+                        "subscription": galeri_info.get("subscription", "free"),
+                        "payment_status": galeri_info.get("payment_status", ""),
+                        "trial_active": galeri_info.get("trial_active", False),
+                        "trial_start": galeri_info.get("trial_start"),
+                        "trial_end": galeri_info.get("trial_end"),
+                        "updated_at": now
+                    }}
                 )
+                # Güncellenmiş kullanıcıyı getir
+                user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
             else:
-                # Yeni kullanıcı oluştur
+                # Yeni kullanıcı oluştur - Webhook ile oluşturulmalıydı ama yoksa oluştur
                 user_id = str(uuid.uuid4())
-                now = datetime.now(timezone.utc).isoformat()
                 
                 user = {
                     "id": user_id,
@@ -418,13 +441,37 @@ async def sso_login(data: dict):
                     "theme": "dark",
                     "role": "admin",
                     "org_id": user_id,
-                    "email_verified": True,  # SSO ile gelen zaten doğrulanmış
+                    "email_verified": True,
                     "auth_provider": "sso",
+                    # Subscription bilgileri
+                    "subscription": galeri_info.get("subscription", "free"),
+                    "payment_status": galeri_info.get("payment_status", ""),
+                    "trial_active": galeri_info.get("trial_active", False),
+                    "trial_start": galeri_info.get("trial_start"),
+                    "trial_end": galeri_info.get("trial_end"),
+                    "access_blocked": False,
+                    # Timestamps
                     "created_at": now,
                     "updated_at": now
                 }
                 
                 await db.users.insert_one(user)
+        
+        # ERİŞİM KONTROLÜ - Trial/Subscription durumuna göre
+        access_check = check_user_access(user)
+        
+        if not access_check["has_access"]:
+            # Erişim yok - Detaylı hata mesajı ile döndür
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "access_denied",
+                    "reason": access_check["reason"],
+                    "message": access_check["message"],
+                    "redirect_url": access_check.get("redirect_url"),
+                    "action": access_check.get("action")
+                }
+            )
         
         # JWT token oluştur
         org_id = user.get("org_id", user["id"])
@@ -434,15 +481,16 @@ async def sso_login(data: dict):
         # Son giriş zamanını güncelle
         await db.users.update_one(
             {"id": user["id"]},
-            {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"last_login": now}}
         )
         
         # Hassas bilgileri çıkar
-        user_response = {k: v for k, v in user.items() if k not in ["_id", "password_hash", "verification_code"]}
+        user_response = {k: v for k, v in user.items() if k not in ["password_hash", "verification_code"]}
         
         return {
             "token": token,
             "user": user_response,
+            "access_info": access_check,  # Frontend için erişim bilgileri
             "message": "SSO ile giriş başarılı"
         }
         

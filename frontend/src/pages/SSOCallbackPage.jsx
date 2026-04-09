@@ -40,6 +40,11 @@ const SSOCallbackPage = () => {
           localStorage.setItem('crm_token', response.data.token);
           localStorage.setItem('crm_user', JSON.stringify(response.data.user));
           
+          // Access info varsa kaydet
+          if (response.data.access_info) {
+            localStorage.setItem('crm_access_info', JSON.stringify(response.data.access_info));
+          }
+          
           setStatus('success');
           
           // 1.5 saniye sonra dashboard'a yönlendir
@@ -52,11 +57,40 @@ const SSOCallbackPage = () => {
       } catch (error) {
         console.error('SSO login error:', error);
         setStatus('error');
-        setErrorMessage(
-          error.response?.data?.detail || 
-          error.message || 
-          'SSO girişi başarısız. Lütfen tekrar deneyin.'
-        );
+        
+        // Erişim engeli kontrolü (403 hatası)
+        if (error.response?.status === 403) {
+          const errorDetail = error.response.data.detail;
+          
+          if (errorDetail?.action === 'show_trial_expired') {
+            setErrorMessage('⏰ Deneme süreniz doldu. Pro plana geçerek devam edin!');
+            // Websiteye yönlendir
+            setTimeout(() => {
+              window.location.href = errorDetail.redirect_url || 'https://www.mactech.tr/pro';
+            }, 3000);
+          } else if (errorDetail?.action === 'show_payment_required') {
+            setErrorMessage('💳 Abonelik ödemeniz bekleniyor. Lütfen ödeme yapın.');
+            setTimeout(() => {
+              window.location.href = errorDetail.redirect_url || 'https://www.mactech.tr/odeme';
+            }, 3000);
+          } else if (errorDetail?.action === 'show_start_trial') {
+            setErrorMessage('🚀 14 günlük ücretsiz deneme başlatın veya Pro plana geçin!');
+            setTimeout(() => {
+              window.location.href = errorDetail.redirect_url || 'https://www.mactech.tr/uygulamalar/galeri';
+            }, 3000);
+          } else {
+            setErrorMessage(errorDetail?.message || 'Erişim reddedildi.');
+            setTimeout(() => {
+              window.location.href = errorDetail?.redirect_url || 'https://www.mactech.tr';
+            }, 3000);
+          }
+        } else {
+          setErrorMessage(
+            error.response?.data?.detail || 
+            error.message || 
+            'SSO girişi başarısız. Lütfen tekrar deneyin.'
+          );
+        }
       }
     };
 
