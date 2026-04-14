@@ -87,6 +87,15 @@ class CarBase(BaseModel):
     invoice_seller_name: str = ""
     invoice_seller_tax_id: str = ""  # TC/Vergi No
     invoice_seller_address: str = ""
+    # Araç Belgeleri
+    documents: dict = {
+        "ruhsat": [],
+        "muayene": [],
+        "sigorta": [],
+        "ekspertiz": [],
+        "vekaletname": [],
+        "diger": []
+    }
 
 
 class CarCreate(CarBase):

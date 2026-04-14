@@ -23,6 +23,7 @@ import InspectionPage from './pages/InspectionPage';
 import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
 import YearEndTransferPage from './pages/YearEndTransferPage';
+import CalculationsPage from './pages/CalculationsPage';
 
 // Modals
 import AddCarModal from './components/modals/AddCarModal';
@@ -414,6 +415,7 @@ const AppContent = () => {
           {activeView === 'users' && <UsersPage />}
           {activeView === 'permissions' && <PermissionsPage />}
           {activeView === 'year-end' && <YearEndTransferPage />}
+          {activeView === 'calculations' && <CalculationsPage />}
         </main>
       </div>
 

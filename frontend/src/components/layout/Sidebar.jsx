@@ -17,7 +17,8 @@ import {
   UserCog,
   Shield,
   CalendarClock,
-  Wrench
+  Wrench,
+  Calculator
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
@@ -32,6 +33,7 @@ const allMenuItems = [
   { id: 'customers', label: 'Müşteriler', icon: Users, roles: ['admin', 'satis', 'muhasebe'], perm: 'customers_view' },
   { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis'], perm: 'appointments_view' },
   { id: 'inspection', label: 'Muayene Takibi', icon: Wrench, roles: ['admin', 'satis'], perm: 'vehicles_view' },
+  { id: 'calculations', label: 'Hesaplama Araçları', icon: Calculator, roles: ['admin', 'muhasebe', 'satis'], perm: 'dashboard_view' },
   { id: 'permissions', label: 'Yetki Yönetimi', icon: Shield, roles: ['admin'] },
   { id: 'users', label: 'Kullanıcılar', icon: UserCog, roles: ['admin'] },
   { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'], perm: 'trash_view' },

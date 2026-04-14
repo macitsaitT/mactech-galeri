@@ -1,10 +1,131 @@
 import React, { useState, useEffect } from 'react';
-import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2 } from 'lucide-react';
+import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/helpers';
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
 import { fileAPI } from '../../services/api';
+
+// Document Category Component
+const DocumentCategory = ({ doc, docs, formData, handleChange }) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleDocUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const newDocs = [...docs];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // 50MB limit
+        if (file.size > 50 * 1024 * 1024) {
+          alert(`${file.name} çok büyük (max 50MB)`);
+          continue;
+        }
+        
+        try {
+          const res = await fileAPI.smartUpload(file);
+          newDocs.push({
+            path: res.data.path,
+            name: file.name,
+            uploadedAt: new Date().toISOString()
+          });
+        } catch (err) {
+          console.error('Upload failed:', err);
+          alert(`"${file.name}" yüklenemedi.`);
+        }
+      }
+      handleChange('documents', {
+        ...formData.documents,
+        [doc.id]: newDocs
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDocDelete = (index) => {
+    const newDocs = docs.filter((_, i) => i !== index);
+    handleChange('documents', {
+      ...formData.documents,
+      [doc.id]: newDocs
+    });
+  };
+
+  return (
+    <div className="p-4 bg-muted/30 border border-border rounded-xl">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{doc.icon}</span>
+          <h5 className="font-semibold text-sm">{doc.label}</h5>
+          {docs.length > 0 && (
+            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+              {docs.length} dosya
+            </span>
+          )}
+        </div>
+        <label className="cursor-pointer px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+          <Upload size={14} />
+          {uploading ? 'Yükleniyor...' : 'Yükle'}
+          <input
+            type="file"
+            multiple
+            accept="image/*,.pdf"
+            className="hidden"
+            onChange={(e) => handleDocUpload(e.target.files)}
+            disabled={uploading}
+          />
+        </label>
+      </div>
+      
+      {docs.length > 0 && (
+        <div className="space-y-2">
+          {docs.map((docFile, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border/50 group hover:border-primary/30 transition-colors"
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <FileText size={16} className="text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">{docFile.name}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(docFile.uploadedAt).toLocaleDateString('tr-TR')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <a
+                  href={docFile.path.startsWith('http') ? docFile.path : fileAPI.getUrl(docFile.path)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-primary hover:bg-primary/10 rounded transition-colors"
+                  title="Görüntüle"
+                >
+                  <Camera size={14} />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleDocDelete(index)}
+                  className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors"
+                  title="Sil"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {docs.length === 0 && (
+        <p className="text-xs text-muted-foreground text-center py-2">
+          Henüz belge yüklenmedi
+        </p>
+      )}
+    </div>
+  );
+};
 
 const PhotoUploadTab = ({ formData, handleChange }) => {
   const [uploading, setUploading] = useState(false);
@@ -229,7 +350,16 @@ const defaultFormData = {
   invoice_date: '',
   invoice_seller_name: '',
   invoice_seller_tax_id: '',
-  invoice_seller_address: ''
+  invoice_seller_address: '',
+  // Araç Belgeleri
+  documents: {
+    ruhsat: [],
+    muayene: [],
+    sigorta: [],
+    ekspertiz: [],
+    vekaletname: [],
+    diger: []
+  }
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
@@ -358,6 +488,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
     { id: 'general', label: 'Genel Bilgiler', icon: FileText },
     { id: 'expertise', label: 'Ekspertiz', icon: CheckCircle },
     { id: 'photos', label: 'Fotoğraflar', icon: Camera },
+    { id: 'documents', label: 'Belgeler', icon: FolderOpen },
     { id: 'ownership', label: 'Sahiplik / Konsinye', icon: Users },
   ];
 
@@ -372,7 +503,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         </DialogHeader>
 
         {/* Tabs - highly visible on mobile */}
-        <div className="grid grid-cols-4 gap-1 px-4 sm:px-6 mt-3 mb-0">
+        <div className="grid grid-cols-5 gap-1 px-4 sm:px-6 mt-3 mb-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -390,9 +521,10 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                 <span className="hidden sm:inline">{tab.label}</span>
                 <span className="sm:hidden text-[11px] leading-tight">{
                   tab.id === 'general' ? 'Genel' :
-                  tab.id === 'expertise' ? 'Ekspertiz' :
+                  tab.id === 'expertise' ? 'Eksper' :
                   tab.id === 'photos' ? 'Foto' :
-                  'Sahiplik'
+                  tab.id === 'documents' ? 'Belge' :
+                  'Sahip'
                 }</span>
               </button>
             );
@@ -863,6 +995,41 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
           {/* Photos Tab */}
           {activeTab === 'photos' && (
             <PhotoUploadTab formData={formData} handleChange={handleChange} />
+          )}
+
+          {/* Documents Tab */}
+          {activeTab === 'documents' && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px flex-1 bg-border" />
+                <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                  Araç Belgeleri
+                </h4>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              {[
+                { id: 'ruhsat', label: 'Ruhsat', icon: '📋' },
+                { id: 'muayene', label: 'Muayene Belgesi', icon: '✅' },
+                { id: 'sigorta', label: 'Sigorta Poliçesi', icon: '🛡️' },
+                { id: 'ekspertiz', label: 'Ekspertiz Raporu', icon: '📊' },
+                { id: 'vekaletname', label: 'Vekaletname', icon: '📝' },
+                { id: 'diger', label: 'Diğer Belgeler', icon: '📁' }
+              ].map((doc) => (
+                <DocumentCategory
+                  key={doc.id}
+                  doc={doc}
+                  docs={formData.documents?.[doc.id] || []}
+                  formData={formData}
+                  handleChange={handleChange}
+                />
+              ))}
+
+              <p className="text-xs text-muted-foreground bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                💡 <strong>İpucu:</strong> Her belge kategorisi için maksimum 50MB boyutunda dosya yükleyebilirsiniz. 
+                PDF ve görsel dosyalar desteklenmektedir.
+              </p>
+            </div>
           )}
 
           {/* Ownership Tab */}
