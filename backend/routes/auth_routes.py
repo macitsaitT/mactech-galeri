@@ -96,6 +96,7 @@ async def login(request: Request, credentials: UserLogin):
     password = credentials.password
     
     # 1. MacTech SSO ile dene
+    mactech_sso_success = False
     try:
         mactech_sso_url = "https://www.mactech.tr/api/platform/sso/login"  # www gerekli (DNS)
         
@@ -109,74 +110,70 @@ async def login(request: Request, credentials: UserLogin):
             sso_data = sso_response.json()
             
             # no_subscription hatası → CRM'de otomatik trial başlat
-            try:
-                if not sso_data.get("success") and sso_data.get("error") == "access_denied" and sso_data.get("reason") == "no_subscription":
-                    # Kullanıcı mactech.tr'de var ama galeri trial'ı yok
-                    # CRM'de otomatik oluştur ve 14 gün trial ver
+            if not sso_data.get("success") and sso_data.get("error") == "access_denied" and sso_data.get("reason") == "no_subscription":
+                # Kullanıcı mactech.tr'de var ama galeri trial'ı yok
+                # CRM'de otomatik oluştur ve 14 gün trial ver
+                
+                import hashlib
+                mactech_id = f"mt_{hashlib.md5(clean_email.encode()).hexdigest()[:12]}"
+                
+                user = await db.users.find_one({"email": clean_email}, {"_id": 0})
+                
+                trial_start_time = datetime.now(timezone.utc)
+                trial_end_time = trial_start_time + timedelta(days=14)
+                
+                if not user:
+                    # Yeni kullanıcı - otomatik trial başlat
+                    user_id = str(uuid.uuid4())
+                    now = datetime.now(timezone.utc).isoformat()
                     
-                    import hashlib
-                    mactech_id = f"mt_{hashlib.md5(clean_email.encode()).hexdigest()[:12]}"
-                    
-                    user = await db.users.find_one({"email": clean_email}, {"_id": 0})
-                    
-                    if not user:
-                        # Yeni kullanıcı - otomatik trial başlat
-                        user_id = str(uuid.uuid4())
-                        now = datetime.now(timezone.utc).isoformat()
-                        trial_start_time = datetime.now(timezone.utc)
-                        trial_end_time = trial_start_time + timedelta(days=14)
-                        
-                        user = {
-                            "id": user_id,
+                    user = {
+                        "id": user_id,
+                        "mactech_id": mactech_id,
+                        "email": clean_email,
+                        "password_hash": None,
+                        "company_name": clean_email.split('@')[0].title(),
+                        "phone": "",
+                        "address": "", "logo_url": "", "theme": "dark",
+                        "role": "admin", "org_id": user_id,
+                        "email_verified": True,
+                        "auth_provider": "mactech_sso",
+                        "subscription": "trial",
+                        "payment_status": "trial",
+                        "payment_frequency": "monthly",
+                        "trial_active": True,
+                        "trial_start": trial_start_time.isoformat(),
+                        "trial_end": trial_end_time.isoformat(),
+                        "subscription_end_date": None,
+                        "access_blocked": False,
+                        "created_at": now, "updated_at": now
+                    }
+                    await db.users.insert_one(user)
+                else:
+                    # Mevcut kullanıcı - trial güncelle
+                    await db.users.update_one(
+                        {"email": clean_email},
+                        {"$set": {
                             "mactech_id": mactech_id,
-                            "email": clean_email,
-                            "password_hash": None,
-                            "company_name": clean_email.split('@')[0].title(),
-                            "phone": "",
-                            "address": "", "logo_url": "", "theme": "dark",
-                            "role": "admin", "org_id": user_id,
-                            "email_verified": True,
-                            "auth_provider": "mactech_sso",
                             "subscription": "trial",
                             "payment_status": "trial",
-                            "payment_frequency": "monthly",
                             "trial_active": True,
                             "trial_start": trial_start_time.isoformat(),
                             "trial_end": trial_end_time.isoformat(),
-                            "subscription_end_date": None,
                             "access_blocked": False,
-                            "created_at": now, "updated_at": now
-                        }
-                        await db.users.insert_one(user)
-                    else:
-                        # Mevcut kullanıcı - trial güncelle
-                        trial_start_time = datetime.now(timezone.utc)
-                        trial_end_time = trial_start_time + timedelta(days=14)
-                        
-                        await db.users.update_one(
-                            {"email": clean_email},
-                            {"$set": {
-                                "mactech_id": mactech_id,
-                                "subscription": "trial",
-                                "payment_status": "trial",
-                                "trial_active": True,
-                                "trial_start": trial_start_time.isoformat(),
-                                "trial_end": trial_end_time.isoformat(),
-                                "access_blocked": False,
-                                "updated_at": datetime.now(timezone.utc).isoformat()
-                            }}
-                        )
-                        user = await db.users.find_one({"email": clean_email}, {"_id": 0})
-                    
-                    # JWT token oluştur ve giriş yap
-                    token = create_token(user["id"], user["email"], user.get("org_id", user["id"]), user.get("role", "admin"))
-                    await db.users.update_one({"id": user["id"]}, {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}})
-                    
-                    user_response = {k: v for k, v in user.items() if k not in ["password_hash", "verification_code"]}
-                    return {"token": token, "user": user_response, "message": "✨ İlk giriş - 14 günlük trial otomatik başlatıldı!"}
-            except Exception as trial_error:
-                logger.error(f"Trial creation error: {trial_error}")
-                raise HTTPException(status_code=500, detail=f"Trial oluşturulurken hata: {str(trial_error)}")
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    user = await db.users.find_one({"email": clean_email}, {"_id": 0})
+                
+                # JWT token oluştur ve GİRİŞ YAP
+                token = create_token(user["id"], user["email"], user.get("org_id", user["id"]), user.get("role", "admin"))
+                await db.users.update_one({"id": user["id"]}, {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}})
+                
+                user_response = {k: v for k, v in user.items() if k not in ["password_hash", "verification_code"]}
+                
+                # BURADAN ÇIKIŞ YAP - yerel login'e gitme!
+                return {"token": token, "user": user_response, "message": "✨ İlk giriş - 14 günlük trial otomatik başlatıldı!"}
             
             if sso_data.get("success"):
                 # MacTech SSO başarılı
@@ -260,12 +257,16 @@ async def login(request: Request, credentials: UserLogin):
                         }})
                         user = await db.users.find_one({"id": user["id"]}, {"_id": 0})
                 else:
-                    # Güncelle
+                    # Mevcut kullanıcı - MacTech bilgilerini TAM güncelle
                     await db.users.update_one({"mactech_id": mactech_id}, {"$set": {
-                        "subscription": galeri_access.get("subscription", user.get("subscription", "free")),
-                        "payment_status": galeri_access.get("payment_status", user.get("payment_status", "")),
+                        "subscription": galeri_access.get("subscription", "free"),
+                        "payment_status": galeri_access.get("payment_status", ""),
                         "payment_frequency": galeri_access.get("payment_frequency", "monthly"),
+                        "trial_active": galeri_access.get("trial_active", False),
+                        "trial_start": galeri_access.get("trial_start"),
+                        "trial_end": galeri_access.get("trial_end"),
                         "subscription_end_date": galeri_access.get("subscription_end_date"),
+                        "access_blocked": False,
                         "updated_at": now
                     }})
                     user = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0})
