@@ -8,10 +8,13 @@ import io
 
 from db import db
 from auth import get_current_user, JWT_SECRET, JWT_ALGORITHM
-from storage import put_object, get_object, APP_NAME
+from storage import put_object, get_object
 from security import validate_file_magic
 
 router = APIRouter()
+
+# App name for file paths
+APP_NAME = "mactechgaleri"
 
 # Chunked upload için geçici depolama
 chunk_storage = {}

@@ -18,7 +18,7 @@ class TestEmployeeFilterFeature:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup test data and authenticate"""
-        self.admin_email = "test-soldby@emergent.com"
+        self.admin_email = "admin@mactech.tr"
         self.admin_password = "password"
         self.admin_token = None
         self.created_user_id = None
@@ -228,7 +228,7 @@ class TestEmployeeRoleAccess:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup - login as admin first"""
-        self.admin_email = "test-soldby@emergent.com"
+        self.admin_email = "admin@mactech.tr"
         self.admin_password = "password"
         
         # Login as admin

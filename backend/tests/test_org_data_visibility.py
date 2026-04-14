@@ -12,12 +12,12 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://galeri.mactech.tr').rstrip('/')
 
 # Test credentials
-ADMIN_EMAIL = "test-soldby@emergent.com"
+ADMIN_EMAIL = "admin@mactech.tr"
 ADMIN_PASSWORD = "password"
-SATIS_EMAIL = "test-satis@emergent.com"
+SATIS_EMAIL = "satis@mactech.tr"
 SATIS_PASSWORD = "password"
 
 

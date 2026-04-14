@@ -10,10 +10,10 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://image-gallery-live.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://galeri.mactech.tr').rstrip('/')
 
 # Admin credentials
-ADMIN_EMAIL = "test-soldby@emergent.com"
+ADMIN_EMAIL = "admin@mactech.tr"
 ADMIN_PASSWORD = "password"
 
 @pytest.fixture(scope="module")

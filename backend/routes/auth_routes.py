@@ -267,7 +267,8 @@ async def google_auth(body: dict):
     # Exchange session_id with Emergent Auth
     try:
         resp = http_requests.get(
-            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            # Google OAuth session data endpoint (MacTech managed)
+            "https://api.mactech.tr/auth/v1/env/oauth/session-data",
             headers={"X-Session-ID": session_id},
             timeout=10
         )

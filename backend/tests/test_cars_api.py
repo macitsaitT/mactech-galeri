@@ -7,7 +7,7 @@ import requests
 import os
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://image-gallery-live.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://galeri.mactech.tr')
 
 # Test credentials
 TEST_EMAIL = "demo@aslanbasoto.com"

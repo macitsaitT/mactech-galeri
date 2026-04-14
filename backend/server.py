@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, Request
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from slowapi import Limiter
@@ -75,6 +76,11 @@ async def health():
 
 
 app.include_router(api_router)
+
+# Static file serving for uploads
+upload_dir = Path("/app/uploads")
+upload_dir.mkdir(exist_ok=True, parents=True)
+app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
 # Middleware (order matters: last added = first executed)
 app.add_middleware(SecurityHeadersMiddleware)
