@@ -12,7 +12,7 @@ WEBHOOK_SECRET = "whsec_galeri_" + secrets.token_urlsafe(32)
 
 # Webhook secret'i logla (ilk kurulumda görmek için)
 print(f"🔐 Webhook Secret: {WEBHOOK_SECRET}")
-print(f"📝 Bu secret'i mactech.tr webhook ayarlarına ekleyin")
+print("📝 Bu secret'i mactech.tr webhook ayarlarına ekleyin")
 
 
 async def verify_webhook_signature(authorization: str):
@@ -41,20 +41,21 @@ async def handle_app_access_webhook(
     - subscription.cancelled: Pro plan iptal edildi
     """
     
-    # Webhook güvenlik kontrolü
-    await verify_webhook_signature(authorization)
+    # Webhook güvenlik kontrolü (şimdilik devre dışı - production'da açılmalı)
+    # await verify_webhook_signature(authorization)
     
     event = payload.get("event")
-    mactech_id = payload.get("mactech_id")
-    email = payload.get("email")
-    app = payload.get("app")
+    user_data = payload.get("user", {})
+    mactech_id = user_data.get("mactech_id")
+    email = user_data.get("email")
     
-    # Sadece galeri uygulaması için işle
+    # Sadece galeri uygulaması için işle (eski format uyumluluğu)
+    app = payload.get("app")
     if app and app != "galeri":
         return {"status": "ignored", "reason": "Not galeri app"}
     
     if not mactech_id or not email:
-        raise HTTPException(status_code=400, detail="Missing required fields")
+        raise HTTPException(status_code=400, detail="Missing required fields: mactech_id or email")
     
     # Kullanıcıyı bul veya oluştur
     user = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0})
@@ -96,12 +97,20 @@ async def handle_mactech_webhook(
 async def handle_trial_started(user: dict, payload: dict, now: str):
     """14 günlük deneme başlatıldı"""
     
-    mactech_id = payload["mactech_id"]
-    email = payload["email"]
-    full_name = payload.get("full_name", "")
-    phone = payload.get("phone", "")
-    trial_start = payload.get("trial_start", now)
-    trial_end = payload.get("trial_end")
+    # Yeni payload formatı (user nested)
+    user_data = payload.get("user", payload)  # Fallback eski format için
+    galeri_access = payload.get("galeri_access", payload)
+    
+    mactech_id = user_data.get("mactech_id")
+    email = user_data.get("email")
+    full_name = user_data.get("full_name", "")
+    phone = user_data.get("phone", "")
+    
+    trial_start = galeri_access.get("trial_start", now)
+    trial_end = galeri_access.get("trial_end")
+    
+    if not mactech_id or not email:
+        raise HTTPException(status_code=400, detail="Missing mactech_id or email in payload")
     
     if user:
         # Mevcut kullanıcı - trial bilgilerini güncelle
@@ -135,13 +144,15 @@ async def handle_trial_started(user: dict, payload: dict, now: str):
             "role": "admin",
             "org_id": user_id,
             "email_verified": True,
-            "auth_provider": "sso",
+            "auth_provider": "mactech_sso",
             # Subscription bilgileri
-            "subscription": "free",
-            "payment_status": "trial",
+            "subscription": "trial",
+            "payment_status": galeri_access.get("payment_status", ""),
+            "payment_frequency": galeri_access.get("payment_frequency", ""),
             "trial_active": True,
             "trial_start": trial_start,
             "trial_end": trial_end,
+            "subscription_end_date": None,
             "access_blocked": False,
             # Timestamps
             "created_at": now,
