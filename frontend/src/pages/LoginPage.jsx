@@ -3,11 +3,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../context/AppContext';
 import { authAPI } from '../services/api';
 import { formatPhoneInput } from '../utils/helpers';
-import { Eye, EyeOff, Loader2, Mail, Phone, ArrowLeft, CheckCircle2, QrCode, Smartphone, Monitor, RefreshCw } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, ArrowLeft, CheckCircle2, QrCode, Smartphone, Monitor, RefreshCw } from 'lucide-react';
 
 const LoginPage = () => {
   const { login, register, setUser, setToken } = useApp();
-  const [mode, setMode] = useState('login'); // login, register, verify, qr
+  const [mode, setMode] = useState('login'); // login, verify, qr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -20,9 +20,7 @@ const LoginPage = () => {
 
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    companyName: 'MACTech',
-    phone: ''
+    password: ''
   });
 
   // QR Kod oluştur
@@ -112,35 +110,8 @@ const LoginPage = () => {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!formData.email || !formData.password) {
-      setError('E-posta ve şifre zorunludur.');
-      return;
-    }
-    if (formData.password.length < 8) {
-      setError('Şifre en az 8 karakter olmalıdır.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await register(formData.email, formData.password, formData.companyName, formData.phone);
-      if (response?.verification_code) {
-        setVerificationData({
-          email: formData.email,
-          code: '',
-          expectedCode: response.verification_code
-        });
-        setMode('verify');
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Kayıt başarısız. Lütfen tekrar deneyin.');
-    } finally {
-      setLoading(false);
-    }
+  const handleForgotPassword = () => {
+    window.open('https://mactech.tr/forgot-password', '_blank');
   };
 
   const handleVerifyEmail = async (e) => {
@@ -338,11 +309,11 @@ const LoginPage = () => {
           </div>
         )}
 
-        {/* Login / Register Form */}
+        {/* Login Form */}
         {mode !== 'verify' && mode !== 'qr' && (
           <div className="bg-card border border-border rounded-2xl p-8 shadow-xl animate-slide-up">
             <h2 className="font-heading font-semibold text-xl text-center mb-6">
-              {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
+              Giriş Yap
             </h2>
 
             {error && (
@@ -351,59 +322,25 @@ const LoginPage = () => {
               </div>
             )}
 
-            {/* QR Login Button - Sadece login modunda */}
-            {mode === 'login' && (
-              <>
-                <button
-                  onClick={generateQRSession}
-                  disabled={loading}
-                  className="w-full h-12 bg-primary/10 text-primary border border-primary/30 rounded-full font-medium flex items-center justify-center gap-3 hover:bg-primary/20 transition-all active:scale-95 mb-4"
-                  data-testid="qr-login-btn"
-                >
-                  <QrCode size={20} />
-                  QR Kod ile Giriş Yap
-                </button>
+            {/* QR Login Button */}
+            <button
+              onClick={generateQRSession}
+              disabled={loading}
+              className="w-full h-12 bg-primary/10 text-primary border border-primary/30 rounded-full font-medium flex items-center justify-center gap-3 hover:bg-primary/20 transition-all active:scale-95 mb-4"
+              data-testid="qr-login-btn"
+            >
+              <QrCode size={20} />
+              QR Kod ile Giriş Yap
+            </button>
 
-                {/* Divider */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex-1 h-px bg-border"></div>
-                  <span className="text-xs text-muted-foreground">veya</span>
-                  <div className="flex-1 h-px bg-border"></div>
-                </div>
-              </>
-            )}
+            {/* Divider */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 h-px bg-border"></div>
+              <span className="text-xs text-muted-foreground">veya</span>
+              <div className="flex-1 h-px bg-border"></div>
+            </div>
 
-            <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-4">
-              {mode === 'register' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Şirket Adı</label>
-                    <input
-                      type="text"
-                      value={formData.companyName}
-                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      className="w-full h-12 px-4 bg-background border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                      placeholder="Şirket adınız"
-                      data-testid="company-name-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground mb-2">
-                      <Phone size={14} /> Telefon Numarası <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: formatPhoneInput(e.target.value) })}
-                      className="w-full h-12 px-4 bg-background border border-border rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                      placeholder="0532 XXX XX XX"
-                      maxLength={14}
-                      required
-                      data-testid="phone-input"
-                    />
-                  </div>
-                </>
-              )}
+            <form onSubmit={handleLogin} className="space-y-4">
 
               <div>
                 <label className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground mb-2">
@@ -441,9 +378,6 @@ const LoginPage = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-                {mode === 'register' && (
-                  <p className="text-xs text-muted-foreground mt-1">En az 8 karakter</p>
-                )}
               </div>
 
               <button
@@ -455,18 +389,19 @@ const LoginPage = () => {
                 {loading ? (
                   <><Loader2 size={20} className="animate-spin" /><span>Bekleyin...</span></>
                 ) : (
-                  <span>{mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}</span>
+                  <span>Giriş Yap</span>
                 )}
               </button>
             </form>
 
+            {/* Şifremi Unuttum */}
             <div className="mt-6 text-center">
               <button
-                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
+                onClick={handleForgotPassword}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                data-testid="toggle-auth-mode"
+                data-testid="forgot-password-btn"
               >
-                {mode === 'login' ? 'Hesabınız yok mu? Kayıt olun' : 'Hesabınız var mı? Giriş yapın'}
+                Şifremi Unuttum
               </button>
             </div>
           </div>
