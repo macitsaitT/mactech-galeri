@@ -94,7 +94,7 @@ async def login(request: Request, credentials: UserLogin):
     
     # 1. MacTech SSO ile dene
     try:
-        mactech_sso_url = "https://www.mactech.tr/api/platform/sso/login"
+        mactech_sso_url = "https://www.mactech.tr/api/platform/sso/login"  # www gerekli (DNS)
         
         sso_response = http_requests.post(
             mactech_sso_url,
