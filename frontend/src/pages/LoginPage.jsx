@@ -97,7 +97,16 @@ const LoginPage = () => {
     try {
       await login(formData.email, formData.password);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+      const errorDetail = err.response?.data?.detail;
+      
+      // no_subscription hatası - kullanıcı mactech.tr'de var ama trial yok
+      if (errorDetail && typeof errorDetail === 'object' && errorDetail.reason === 'no_subscription') {
+        setError('MacTech.tr\'de hesabınız var ama Galeri trial\'ı başlatılmamış. İlk giriş için otomatik trial başlatılacak, lütfen tekrar deneyin.');
+      } else if (typeof errorDetail === 'string') {
+        setError(errorDetail);
+      } else {
+        setError('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+      }
     } finally {
       setLoading(false);
     }
