@@ -120,8 +120,29 @@ async def login(request: Request, credentials: UserLogin):
                     user = await db.users.find_one({"email": clean_email}, {"_id": 0})
                     
                     if not user:
-                        # Yeni kullanıcı oluştur
+                        # Yeni kullanıcı oluştur - İLK GİRİŞTE 14 GÜNLÜK TRİAL BAŞLAT
                         user_id = str(uuid.uuid4())
+                        
+                        # MacTech'ten trial/subscription bilgisi gelmediyse, otomatik 14 gün trial başlat
+                        has_mactech_subscription = galeri_access.get("subscription") and galeri_access.get("subscription") != "free"
+                        has_mactech_trial = galeri_access.get("trial_active", False)
+                        
+                        if not has_mactech_subscription and not has_mactech_trial:
+                            # MacTech'te abonelik/trial yok → CRM'de otomatik 14 gün trial başlat
+                            trial_start_time = datetime.now(timezone.utc)
+                            trial_end_time = trial_start_time + timedelta(days=14)
+                            
+                            trial_active = True
+                            trial_start = trial_start_time.isoformat()
+                            trial_end = trial_end_time.isoformat()
+                            subscription = "trial"
+                        else:
+                            # MacTech'ten gelen bilgileri kullan
+                            trial_active = galeri_access.get("trial_active", False)
+                            trial_start = galeri_access.get("trial_start")
+                            trial_end = galeri_access.get("trial_end")
+                            subscription = galeri_access.get("subscription", "free")
+                        
                         user = {
                             "id": user_id,
                             "mactech_id": mactech_id,
@@ -133,12 +154,12 @@ async def login(request: Request, credentials: UserLogin):
                             "role": "admin", "org_id": user_id,
                             "email_verified": True,
                             "auth_provider": "mactech_sso",
-                            "subscription": galeri_access.get("subscription", "free"),
+                            "subscription": subscription,
                             "payment_status": galeri_access.get("payment_status", ""),
                             "payment_frequency": galeri_access.get("payment_frequency", "monthly"),
-                            "trial_active": galeri_access.get("trial_active", False),
-                            "trial_start": galeri_access.get("trial_start"),
-                            "trial_end": galeri_access.get("trial_end"),
+                            "trial_active": trial_active,
+                            "trial_start": trial_start,
+                            "trial_end": trial_end,
                             "subscription_end_date": galeri_access.get("subscription_end_date"),
                             "access_blocked": False,
                             "created_at": now, "updated_at": now
