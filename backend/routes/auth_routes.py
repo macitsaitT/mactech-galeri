@@ -271,22 +271,12 @@ async def login(request: Request, credentials: UserLogin):
                     }})
                     user = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0})
                 
-                # Erişim kontrolü
-                access_check = check_user_access(user)
-                if not access_check["has_access"]:
-                    raise HTTPException(status_code=403, detail={
-                        "error": "access_denied",
-                        "reason": access_check["reason"],
-                        "message": access_check["message"],
-                        "redirect_url": access_check.get("redirect_url"),
-                        "action": access_check.get("action")
-                    })
-                
+                # JWT Token oluştur ve giriş yap (check_user_access kaldırıldı - MacTech SSO ile trial zaten kontrol edildi)
                 token = create_token(user["id"], user["email"], user.get("org_id", user["id"]), user.get("role", "admin"))
                 await db.users.update_one({"id": user["id"]}, {"$set": {"last_login": now}})
                 
                 user_response = {k: v for k, v in user.items() if k not in ["password_hash", "verification_code"]}
-                return {"token": token, "user": user_response, "access_info": access_check, "auth_method": "mactech_sso"}
+                return {"token": token, "user": user_response, "auth_method": "mactech_sso"}
     
     except Exception as e:
         print(f"MacTech SSO fallback: {e}")
