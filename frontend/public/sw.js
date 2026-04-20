@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aslanbasoto-v3';
+const CACHE_NAME = 'mactech-crm-v4-fixed'; // VERSION UPDATED - SW cache temizlenir
 const STATIC_ASSETS = [
   '/',
   '/index.html',
