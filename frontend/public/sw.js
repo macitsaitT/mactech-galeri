@@ -36,6 +36,14 @@ self.addEventListener('fetch', (event) => {
 
   // API calls - network only with offline fallback
   if (request.url.includes('/api/')) {
+  // API calls - network only with offline fallback
+  if (request.url.includes('/api/') || request.url.includes('/login') || request.url.includes('/auth')) {
+    // LOGIN VE API İSTEKLERİNİ BYPASS ET - SW MÜDAHALE ETMESIN
+    return; // Fetch event'i handle etme, browser'ın kendi network isteğini kullan
+  }
+
+  // Diğer API istekleri için network first
+  if (request.url.includes('/api/')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
