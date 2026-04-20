@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen } from 'lucide-react';
+import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen, ShoppingCart } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/helpers';
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
@@ -359,7 +359,12 @@ const defaultFormData = {
     ekspertiz: [],
     vekaletname: [],
     diger: []
-  }
+  },
+  // Satış Bilgileri (Düzenleme için)
+  employee_share: '',
+  sold_by: '',
+  muayene_tarihi: '',
+  sigorta_bitis_tarihi: ''
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
@@ -376,6 +381,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         km: formatNumberInput(editingCar.km),
         purchase_price: formatNumberInput(editingCar.purchase_price),
         sale_price: formatNumberInput(editingCar.sale_price),
+        employee_share: formatNumberInput(editingCar.employee_share || 0),
         expertise: editingCar.expertise || defaultFormData.expertise,
       });
     } else {
@@ -490,6 +496,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
     { id: 'photos', label: 'Fotoğraflar', icon: Camera },
     { id: 'documents', label: 'Belgeler', icon: FolderOpen },
     { id: 'ownership', label: 'Sahiplik / Konsinye', icon: Users },
+    ...(editingCar && editingCar.status === 'Satıldı' ? [{ id: 'sale_info', label: 'Satış Bilgileri', icon: ShoppingCart }] : []),
   ];
 
   return (
@@ -880,6 +887,36 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                 )}
               </div>
 
+              {/* Muayene ve Sigorta Tarihleri */}
+              <div className="p-3 sm:p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg space-y-3">
+                <h4 className="font-semibold text-sm text-blue-400">📅 Muayene ve Sigorta Takibi</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Muayene Bitiş Tarihi</label>
+                    <input
+                      type="date"
+                      value={formData.muayene_tarihi}
+                      onChange={(e) => handleChange('muayene_tarihi', e.target.value)}
+                      className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
+                      data-testid="muayene-tarihi-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Sigorta Bitiş Tarihi</label>
+                    <input
+                      type="date"
+                      value={formData.sigorta_bitis_tarihi}
+                      onChange={(e) => handleChange('sigorta_bitis_tarihi', e.target.value)}
+                      className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
+                      data-testid="sigorta-bitis-tarihi-input"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  💡 <strong>Bildirimler:</strong> Bitiş tarihlerinden önce otomatik bildirim alacaksınız.
+                </p>
+              </div>
+
               {/* Prices */}
               <div className="p-3 sm:p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -1124,6 +1161,52 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Sale Info Tab - Sadece satılmış araçlar için */}
+          {activeTab === 'sale_info' && editingCar && editingCar.status === 'Satıldı' && (
+            <div className="space-y-6 py-4">
+              <div className="bg-success/10 border border-success/30 rounded-xl p-4">
+                <h4 className="font-semibold text-success mb-1">✓ Araç Satıldı</h4>
+                <p className="text-sm text-muted-foreground">
+                  Satış Tarihi: {editingCar.sold_date ? new Date(editingCar.sold_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}
+                </p>
+                {editingCar.customer_name && (
+                  <p className="text-sm text-muted-foreground">
+                    Müşteri: {editingCar.customer_name}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Çalışan Payı (₺)</label>
+                  <input
+                    type="text"
+                    value={formData.employee_share}
+                    onChange={(e) => handleNumberChange('employee_share', e.target.value)}
+                    className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
+                    placeholder="0"
+                    data-testid="employee-share-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Satışı Yapan</label>
+                  <input
+                    type="text"
+                    value={formData.sold_by || ''}
+                    onChange={(e) => handleChange('sold_by', e.target.value)}
+                    className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
+                    placeholder="Çalışan adı"
+                    data-testid="sold-by-input"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">
+                💡 <strong>Not:</strong> Çalışan payı ve satışı yapan bilgileri güncellenebilir.
+              </div>
             </div>
           )}
         </form>

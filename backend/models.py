@@ -73,6 +73,9 @@ class CarBase(BaseModel):
     customer_id: Optional[str] = None
     customer_name: Optional[str] = None
     employee_share: float = 0
+    sold_by: str = ""  # Satışı yapan çalışan
+    muayene_tarihi: str = ""  # Muayene bitiş tarihi
+    sigorta_bitis_tarihi: str = ""  # Sigorta bitiş tarihi
     insurance_start: str = ""
     insurance_end: str = ""
     province: str = ""

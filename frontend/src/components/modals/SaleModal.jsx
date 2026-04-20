@@ -72,6 +72,12 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
       return;
     }
 
+    // Müşteri seçimi kontrolü
+    if (!formData.customer_id) {
+      alert('Lütfen bir müşteri seçin veya yeni müşteri ekleyin.');
+      return;
+    }
+
     setLoading(true);
     try {
       await onConfirmSale({
@@ -82,9 +88,22 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         customerId: formData.customer_id,
         saleDate: formData.sale_date
       });
+      
+      // Başarılı satış sonrası form temizle ve modal'ı kapat
+      setFormData({
+        price: '',
+        employee_share: '',
+        employee_name: '',
+        customer_id: '',
+        sale_date: new Date().toISOString().split('T')[0]
+      });
+      setShowNewCustomer(false);
+      setNewCustomerName('');
+      setNewCustomerPhone('');
       onClose();
     } catch (error) {
       console.error('Error confirming sale:', error);
+      alert('Satış kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
