@@ -189,62 +189,69 @@ const AppContent = () => {
       return;
     }
 
-    // Update car status
-    await patchCar(carId, {
-      status: 'Satıldı',
-      sale_price: price,
-      sold_date: saleDate,
-      employee_share: employeeShare,
-      customer_id: customerId || ''
-    });
-
-    const deposit = car.deposit_amount || 0;
-    const finalIncome = price - deposit;
-
-    // Add sale income transaction
-    if (finalIncome > 0) {
-      await addTransaction({
-        type: 'income',
-        category: 'Araç Satışı',
-        amount: finalIncome,
-        date: saleDate,
-        description: `Satış - ${car.plate?.toUpperCase()} ${car.brand} ${car.model}${deposit > 0 ? ' (Kalan Tutar)' : ''}`,
-        car_id: carId
+    try {
+      // Update car status with sold_by info
+      await patchCar(carId, {
+        status: 'Satıldı',
+        sale_price: price,
+        sold_date: saleDate,
+        employee_share: employeeShare,
+        sold_by: employeeName || '',
+        customer_id: customerId || ''
       });
-    }
 
-    // Add employee share expense
-    if (employeeShare > 0) {
-      const empLabel = employeeName ? ` (${employeeName})` : '';
-      await addTransaction({
-        type: 'expense',
-        category: 'Çalışan Payı',
-        amount: employeeShare,
-        date: saleDate,
-        description: `Çalışan Payı${empLabel} - ${car.plate?.toUpperCase()}`,
-        car_id: carId,
-        employee_name: employeeName || null
-      });
-    }
+      const deposit = car.deposit_amount || 0;
+      const finalIncome = price - deposit;
 
-    // Add owner payment for consignment
-    if (car.ownership === 'consignment' && car.purchase_price > 0) {
-      await addTransaction({
-        type: 'expense',
-        category: 'Araç Sahibine Ödeme',
-        amount: car.purchase_price,
-        date: saleDate,
-        description: `Araç Sahibine Ödeme - ${car.plate?.toUpperCase()} - ${car.owner_name || 'Konsinye'}`,
-        car_id: carId
-      });
-    }
+      // Add sale income transaction
+      if (finalIncome > 0) {
+        await addTransaction({
+          type: 'income',
+          category: 'Araç Satışı',
+          amount: finalIncome,
+          date: saleDate,
+          description: `Satış - ${car.plate?.toUpperCase()} ${car.brand} ${car.model}${deposit > 0 ? ' (Kalan Tutar)' : ''}`,
+          car_id: carId
+        });
+      }
 
-    // Update customer type if selected
-    if (customerId) {
-      await updateCustomer(customerId, { type: 'Satış Yapıldı' });
-    }
+      // Add employee share expense
+      if (employeeShare > 0) {
+        const empLabel = employeeName ? ` (${employeeName})` : '';
+        await addTransaction({
+          type: 'expense',
+          category: 'Çalışan Payı',
+          amount: employeeShare,
+          date: saleDate,
+          description: `Çalışan Payı${empLabel} - ${car.plate?.toUpperCase()}`,
+          car_id: carId,
+          employee_name: employeeName || null
+        });
+      }
 
-    setSaleModal({ open: false, car: null });
+      // Add owner payment for consignment ONLY
+      // NOT: Stok araçlar için alış gideri satış sırasında DEĞİL, araç eklenirken kaydedilir
+      if (car.ownership === 'consignment' && car.purchase_price > 0) {
+        await addTransaction({
+          type: 'expense',
+          category: 'Araç Sahibine Ödeme',
+          amount: car.purchase_price,
+          date: saleDate,
+          description: `Araç Sahibine Ödeme - ${car.plate?.toUpperCase()} - ${car.owner_name || 'Konsinye'}`,
+          car_id: carId
+        });
+      }
+
+      // Update customer type if selected
+      if (customerId) {
+        await updateCustomer(customerId, { type: 'Satış Yapıldı' });
+      }
+
+      setSaleModal({ open: false, car: null });
+    } catch (error) {
+      console.error('Satış hatası:', error);
+      alert('Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+    }
   };
 
   // Deposit handler
