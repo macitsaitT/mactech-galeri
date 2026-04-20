@@ -34,6 +34,7 @@ from routes.year_end import router as year_end_router
 from routes.invoices import router as invoices_router
 from routes.webhooks import router as webhooks_router
 from routes.notifications import router as notifications_router
+from routes.features import router as features_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ api_router.include_router(year_end_router)
 api_router.include_router(invoices_router)
 api_router.include_router(webhooks_router)
 api_router.include_router(notifications_router)
+api_router.include_router(features_router)
 
 
 @api_router.get("/")
