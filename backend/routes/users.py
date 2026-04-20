@@ -90,12 +90,25 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         raise HTTPException(status_code=400, detail="Bu email zaten kayitli")
     org_id = current_user.get("org_id", current_user["user_id"])
     user_id = str(uuid.uuid4())
+    
+    # Admin kullanıcısının abonelik bilgilerini al
+    admin = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+    
     user_doc = {
         "id": user_id, "email": clean_email, "password_hash": hash_password(user.password),
         "company_name": user.company_name, "phone": user.phone,
         "address": "", "logo_url": "", "theme": "dark",
         "role": user.role, "org_id": org_id, "email_verified": True,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        # Admin'in abonelik bilgilerini kopyala (aynı organizasyonda)
+        "subscription": admin.get("subscription", "free"),
+        "payment_status": admin.get("payment_status", "none"),
+        "trial_active": admin.get("trial_active", False),
+        "trial_start": admin.get("trial_start"),
+        "trial_end": admin.get("trial_end"),
+        "subscription_end_date": admin.get("subscription_end_date"),
+        "access_blocked": False,
+        "auth_provider": "local"
     }
     await db.users.insert_one(user_doc)
     return {"id": user_id, "email": clean_email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
