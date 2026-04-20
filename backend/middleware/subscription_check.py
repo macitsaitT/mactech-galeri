@@ -7,6 +7,18 @@ from datetime import datetime, timezone
 
 def check_user_access(user: dict) -> dict:
     """
+    Kullanıcının sisteme erişim yetkisini kontrol et.
+    ÖNEMLİ: Erişim kontrolü geçici olarak devre dışı bırakıldı.
+    """
+    # GEÇİCİ: Tüm kullanıcılara erişim ver
+    return {
+        "has_access": True,
+        "reason": "access_granted",
+        "message": "Erişim izni verildi",
+        "subscription_type": user.get("subscription", "free"),
+        "is_trial": user.get("trial_active", False)
+    }
+    """
     Kullanıcının uygulamaya erişim yetkisi olup olmadığını kontrol eder
     
     Erişim Kuralları:
