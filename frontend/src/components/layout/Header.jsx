@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Menu, Bell, Clock, Calendar, X } from 'lucide-react';
+import NotificationCenter from '../NotificationCenter';
 
 const Header = ({ title, onMenuClick, appointments = [] }) => {
   const [now, setNow] = useState(new Date());
@@ -72,14 +73,18 @@ const Header = ({ title, onMenuClick, appointments = [] }) => {
           </div>
         </div>
 
-        {/* Notifications */}
+        {/* Bildirim Merkezi (Yeni Sistem) */}
+        <NotificationCenter />
+
+        {/* Randevu Bildirimleri (Eski Sistem - Kalsın) */}
         <div className="relative" ref={panelRef}>
           <button
             onClick={() => setShowNotifs(!showNotifs)}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50 relative"
             data-testid="notifications-btn"
+            title="Randevu Bildirimleri"
           >
-            <Bell size={20} />
+            <Calendar size={20} />
             {unreadCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-1">
                 {unreadCount}

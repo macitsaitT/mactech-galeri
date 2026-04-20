@@ -19,3 +19,8 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
 print(f"[DB] MongoDB connection initialized")
+
+
+# Helper function for routes
+async def get_database():
+    return db

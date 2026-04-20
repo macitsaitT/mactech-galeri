@@ -216,4 +216,15 @@ export const invoicesAPI = {
   getInvoiceHtml: (carId) => api.get(`/invoices/${carId}`),
 };
 
+// ==================== NOTIFICATIONS ====================
+export const notificationsAPI = {
+  getNotifications: (unreadOnly = false) => api.get('/notifications', { params: { unread_only: unreadOnly } }),
+  markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
+  createReminder: (data) => api.post('/notifications/reminders', data),
+  getCarReminders: (carId) => api.get(`/notifications/reminders/${carId}`),
+  deleteReminder: (reminderId) => api.delete(`/notifications/reminders/${reminderId}`),
+  checkAndCreate: () => api.post('/notifications/check-and-create'),
+  generateICS: (carId, eventType) => api.get(`/notifications/generate-ics/${carId}`, { params: { event_type: eventType } })
+};
+
 export default api;
