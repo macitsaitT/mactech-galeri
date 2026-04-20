@@ -1,12 +1,20 @@
-# Aslanbaş Oto - Galeri CRM PRD
+# MACTech Oto Galeri CRM - PRD
 
 ## Project Overview
-- **Project Name:** Aslanbaş Oto Galeri CRM
-- **Version:** 5.4.0
+- **Project Name:** MACTech Oto Galeri CRM
+- **Version:** 5.5.0
 - **Last Updated:** 2026-02-20
-- **Status:** MVP Complete - Google Auth Active, Notifications Active
+- **Status:** MVP Complete - Comprehensive Car Catalog Active
 
 ## Implementation Status
+
+### v5.5.0 - Kapsamlı Araç Veritabanı (2026-02-20)
+- [x] `carData.js` → JSON tabanlı modüler yapıya taşındı
+- [x] `/app/frontend/src/data/catalog/modelEngines.json` (48 marka, 551 model, 1965 motor)
+- [x] `/app/frontend/src/data/catalog/modelPackages.json` (48 marka, 2298 paket varyantı)
+- [x] Tüm popüler Türkiye pazarı markaları: VW, BMW, Mercedes, Audi, Toyota, Hyundai, Kia, Renault, Fiat, Ford, Peugeot, Opel, Skoda, Seat, Cupra, Dacia, Honda, Nissan, Volvo, Mazda, Citroen, DS, Porsche, Land Rover, Jeep, Tesla, Togg, Lexus, Mini, Alfa Romeo, Jaguar, Mitsubishi, Suzuki, MG, Subaru, Chery, BYD, Isuzu, SsangYong, Chevrolet, Tata, Geely, Ferrari, Lamborghini, Bentley, Maserati, McLaren, Aston Martin
+- [x] Motor/Paket listeleri donanım paketi + motor hacmi + beygir gücü içerir (örn: "1.5 eTSI 150HP", "R-Line", "GTI Clubsport")
+- [x] `AddCarModal` dinamik filtreleme (getEnginesForModel, getPackagesForModel) JSON verisiyle otomatik çalışır
 
 ### v5.4.0 - Google Social Login & Bildirim Sistemi Aktif
 - [x] Google Social Login: Emergent Auth entegrasyonu (POST /api/auth/google)
