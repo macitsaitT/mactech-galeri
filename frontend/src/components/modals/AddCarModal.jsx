@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen, ShoppingCart } from 'lucide-react';
+import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen, ShoppingCart, X as XIcon } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/helpers';
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
-import { fileAPI } from '../../services/api';
+import { fileAPI, notificationsAPI } from '../../services/api';
 
 // Document Category Component
 const DocumentCategory = ({ doc, docs, formData, handleChange }) => {
@@ -364,7 +364,10 @@ const defaultFormData = {
   employee_share: '',
   sold_by: '',
   muayene_tarihi: '',
-  sigorta_bitis_tarihi: ''
+  sigorta_bitis_tarihi: '',
+  // Hatırlatmalar
+  muayene_reminders: [],
+  sigorta_reminders: []
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
@@ -384,6 +387,25 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         employee_share: formatNumberInput(editingCar.employee_share || 0),
         expertise: editingCar.expertise || defaultFormData.expertise,
       });
+      
+      // Mevcut hatırlatmaları yükle
+      if (editingCar.id) {
+        notificationsAPI.getCarReminders(editingCar.id).then(res => {
+          const reminders = res.data.reminders || [];
+          const muayeneReminders = reminders
+            .filter(r => r.reminder_type === 'muayene')
+            .map(r => ({ id: r.id, date: r.remind_date, time: r.remind_time }));
+          const sigortaReminders = reminders
+            .filter(r => r.reminder_type === 'sigorta')
+            .map(r => ({ id: r.id, date: r.remind_date, time: r.remind_time }));
+          
+          setFormData(prev => ({
+            ...prev,
+            muayene_reminders: muayeneReminders,
+            sigorta_reminders: sigortaReminders
+          }));
+        }).catch(err => console.error('Hatırlatmalar yüklenemedi:', err));
+      }
     } else {
       setFormData(defaultFormData);
     }
@@ -469,13 +491,55 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         km: formData.km?.replace(/[^\d]/g, '') || '0',
         purchase_price: parseNumber(formData.purchase_price),
         sale_price: parseNumber(formData.sale_price),
+        employee_share: parseNumber(formData.employee_share),
         tramer_amount: parseNumber(formData.tramer_amount),
         commission_rate: parseInt(formData.commission_rate) || (formData.ownership === 'consignment' ? 5 : 0),
         year: parseInt(formData.year) || new Date().getFullYear(),
         expertise_score: parseInt(formData.expertise_score) || 0,
       };
       
-      await onSave(submitData);
+      const savedCar = await onSave(submitData);
+      
+      // Hatırlatmaları backend'e kaydet
+      const carId = savedCar?.id || editingCar?.id;
+      if (carId) {
+        // Muayene hatırlatmalarını kaydet
+        if (formData.muayene_reminders && formData.muayene_reminders.length > 0) {
+          for (const reminder of formData.muayene_reminders) {
+            if (reminder.date && reminder.time) {
+              try {
+                await notificationsAPI.createReminder({
+                  car_id: carId,
+                  reminder_type: 'muayene',
+                  remind_date: reminder.date,
+                  remind_time: reminder.time
+                });
+              } catch (err) {
+                console.error('Hatırlatma kaydedilemedi:', err);
+              }
+            }
+          }
+        }
+        
+        // Sigorta hatırlatmalarını kaydet
+        if (formData.sigorta_reminders && formData.sigorta_reminders.length > 0) {
+          for (const reminder of formData.sigorta_reminders) {
+            if (reminder.date && reminder.time) {
+              try {
+                await notificationsAPI.createReminder({
+                  car_id: carId,
+                  reminder_type: 'sigorta',
+                  remind_date: reminder.date,
+                  remind_time: reminder.time
+                });
+              } catch (err) {
+                console.error('Hatırlatma kaydedilemedi:', err);
+              }
+            }
+          }
+        }
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error saving car:', error);
@@ -888,8 +952,10 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
               </div>
 
               {/* Muayene ve Sigorta Tarihleri */}
-              <div className="p-3 sm:p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg space-y-3">
+              <div className="p-3 sm:p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg space-y-4">
                 <h4 className="font-semibold text-sm text-blue-400">📅 Muayene ve Sigorta Takibi</h4>
+                
+                {/* Tarih Seçimi */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium mb-2">Muayene Bitiş Tarihi</label>
@@ -912,8 +978,143 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                     />
                   </div>
                 </div>
+
+                {/* Muayene Hatırlatmaları */}
+                {formData.muayene_tarihi && (
+                  <div className="border border-blue-500/20 rounded-lg p-3 bg-background/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-xs font-semibold text-blue-400">Muayene Hatırlatmaları</h5>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newReminder = {
+                            id: `rem_${Date.now()}`,
+                            date: '',
+                            time: '09:00'
+                          };
+                          handleChange('muayene_reminders', [...(formData.muayene_reminders || []), newReminder]);
+                        }}
+                        className="text-xs px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded transition-colors"
+                      >
+                        + Hatırlatma Ekle
+                      </button>
+                    </div>
+                    
+                    {formData.muayene_reminders && formData.muayene_reminders.length > 0 ? (
+                      <div className="space-y-2">
+                        {formData.muayene_reminders.map((reminder, index) => (
+                          <div key={reminder.id} className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={reminder.date}
+                              onChange={(e) => {
+                                const updated = [...formData.muayene_reminders];
+                                updated[index].date = e.target.value;
+                                handleChange('muayene_reminders', updated);
+                              }}
+                              className="flex-1 h-9 px-2 bg-background border border-border rounded text-xs"
+                              placeholder="Tarih"
+                            />
+                            <input
+                              type="time"
+                              value={reminder.time}
+                              onChange={(e) => {
+                                const updated = [...formData.muayene_reminders];
+                                updated[index].time = e.target.value;
+                                handleChange('muayene_reminders', updated);
+                              }}
+                              className="w-24 h-9 px-2 bg-background border border-border rounded text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = formData.muayene_reminders.filter((_, i) => i !== index);
+                                handleChange('muayene_reminders', updated);
+                              }}
+                              className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-2">
+                        Henüz hatırlatma eklenmedi
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Sigorta Hatırlatmaları */}
+                {formData.sigorta_bitis_tarihi && (
+                  <div className="border border-blue-500/20 rounded-lg p-3 bg-background/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-xs font-semibold text-blue-400">Sigorta Hatırlatmaları</h5>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newReminder = {
+                            id: `rem_${Date.now()}`,
+                            date: '',
+                            time: '09:00'
+                          };
+                          handleChange('sigorta_reminders', [...(formData.sigorta_reminders || []), newReminder]);
+                        }}
+                        className="text-xs px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded transition-colors"
+                      >
+                        + Hatırlatma Ekle
+                      </button>
+                    </div>
+                    
+                    {formData.sigorta_reminders && formData.sigorta_reminders.length > 0 ? (
+                      <div className="space-y-2">
+                        {formData.sigorta_reminders.map((reminder, index) => (
+                          <div key={reminder.id} className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={reminder.date}
+                              onChange={(e) => {
+                                const updated = [...formData.sigorta_reminders];
+                                updated[index].date = e.target.value;
+                                handleChange('sigorta_reminders', updated);
+                              }}
+                              className="flex-1 h-9 px-2 bg-background border border-border rounded text-xs"
+                              placeholder="Tarih"
+                            />
+                            <input
+                              type="time"
+                              value={reminder.time}
+                              onChange={(e) => {
+                                const updated = [...formData.sigorta_reminders];
+                                updated[index].time = e.target.value;
+                                handleChange('sigorta_reminders', updated);
+                              }}
+                              className="w-24 h-9 px-2 bg-background border border-border rounded text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = formData.sigorta_reminders.filter((_, i) => i !== index);
+                                handleChange('sigorta_reminders', updated);
+                              }}
+                              className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-2">
+                        Henüz hatırlatma eklenmedi
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <p className="text-xs text-muted-foreground">
-                  💡 <strong>Bildirimler:</strong> Bitiş tarihlerinden önce otomatik bildirim alacaksınız.
+                  💡 <strong>Not:</strong> Belirlediğiniz tarih ve saatte bildirim alacaksınız.
                 </p>
               </div>
 
