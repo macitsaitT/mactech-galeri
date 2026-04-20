@@ -93,24 +93,86 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         saleDate: formData.sale_date
       });
       
-      // Başarılı satış sonrası form temizle ve modal'ı kapat
-      setFormData({
-        price: '',
-        employee_share: '',
-        employee_name: '',
-        customer_id: '',
-        sale_date: new Date().toISOString().split('T')[0]
+      // Satış tamamlandı - WhatsApp mesajı için bilgileri sakla
+      const selectedCustomer = activeCustomers.find(c => c.id === formData.customer_id);
+      setCompletedSaleData({
+        customer: selectedCustomer,
+        car: car,
+        price: parseNumber(formData.price)
       });
-      setShowNewCustomer(false);
-      setNewCustomerName('');
-      setNewCustomerPhone('');
-      onClose();
+      setSaleCompleted(true);
+      
     } catch (error) {
       console.error('Error confirming sale:', error);
       alert('Satış kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // WhatsApp mesajı gönder
+  const handleSendWhatsApp = () => {
+    if (!completedSaleData) return;
+    
+    const { customer, car: soldCar } = completedSaleData;
+    
+    // Güvenli şekilde company_name al
+    const companyName = user?.company_name || 'ASLANBAŞ YAPI ENERJİ GIDA TARIM HAYVANCILIK A.Ş.';
+    
+    // Mesaj şablonu
+    const message = `Sayın ${customer?.name || 'Değerli Müşterimiz'},
+
+${soldCar?.plate?.toUpperCase() || 'Aracınız'} plakalı aracınızı ${companyName} bünyesinden temin etmiş olmanızdan dolayı teşekkürlerimizi sunarız.
+
+Satış sonrası süreçte de müşteri memnuniyeti önceliğimiz olup, aracınızla ilgili her türlü talep, görüş ve destek ihtiyacınızda tarafımızla iletişime geçebileceğinizi bilgilerinize arz ederiz.
+
+Aracınızı iyi günlerde kullanmanızı temenni eder, güvenli ve konforlu sürüşler dileriz.
+
+Saygılarımızla,
+${companyName}`;
+
+    // Telefon numarasını temizle (sadece rakamlar)
+    const phone = customer?.phone?.replace(/\D/g, '') || '';
+    
+    if (!phone) {
+      alert('Müşterinin telefon numarası kayıtlı değil.');
+      return;
+    }
+
+    // Türkiye için: 0 ile başlıyorsa kaldır, 90 ekle
+    let formattedPhone = phone;
+    if (phone.startsWith('0')) {
+      formattedPhone = '90' + phone.substring(1);
+    } else if (!phone.startsWith('90')) {
+      formattedPhone = '90' + phone;
+    }
+
+    // WhatsApp Web linki oluştur
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    
+    // Yeni sekmede aç
+    window.open(whatsappUrl, '_blank');
+    
+    // Modal'ı kapat
+    setTimeout(() => {
+      handleCloseModal();
+    }, 500);
+  };
+
+  const handleCloseModal = () => {
+    setFormData({
+      price: '',
+      employee_share: '',
+      employee_name: '',
+      customer_id: '',
+      sale_date: new Date().toISOString().split('T')[0]
+    });
+    setShowNewCustomer(false);
+    setNewCustomerName('');
+    setNewCustomerPhone('');
+    setSaleCompleted(false);
+    setCompletedSaleData(null);
+    onClose();
   };
 
   if (!car) return null;
