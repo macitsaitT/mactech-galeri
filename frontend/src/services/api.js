@@ -227,13 +227,4 @@ export const notificationsAPI = {
   generateICS: (carId, eventType) => api.get(`/notifications/generate-ics/${carId}`, { params: { event_type: eventType } })
 };
 
-// ==================== FEATURES ====================
-export const featuresAPI = {
-  getFeatures: () => api.get('/features'),
-  createFeature: (data) => api.post('/features', data),
-  updateFeature: (id, data) => api.put(`/features/${id}`, data),
-  deleteFeature: (id) => api.delete(`/features/${id}`),
-  initDefaults: () => api.post('/features/init-defaults')
-};
-
 export default api;

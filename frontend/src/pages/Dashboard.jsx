@@ -1,15 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
 import { 
   Car, TrendingUp, Wallet, Package, ShoppingCart, CreditCard, FileText, Calendar,
-  BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter, Sparkles, Eye
+  BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { featuresAPI, fileAPI } from '../services/api';
 
 const CHART_COLORS = ['#d4a030', '#22c55e', '#ef4444', '#3b82f6', '#a855f7'];
 const PIE_COLORS = ['#d4a030', '#f59e0b', '#22c55e', '#3b82f6'];
