@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, MessageCircle } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatCurrency, formatPhoneInput } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import { usersAPI } from '../../services/api';
@@ -11,7 +11,7 @@ import {
 } from '../ui/dialog';
 
 const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
-  const { customers, addCustomer } = useApp();
+  const { customers, addCustomer, user } = useApp();
   const [formData, setFormData] = useState({
     price: '',
     employee_share: '',
@@ -25,6 +25,8 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
   const [newCustomerPhone, setNewCustomerPhone] = useState('');
   const [employees, setEmployees] = useState([]);
   const [showEmployeeList, setShowEmployeeList] = useState(false);
+  const [saleCompleted, setSaleCompleted] = useState(false);
+  const [completedSaleData, setCompletedSaleData] = useState(null);
 
   React.useEffect(() => {
     if (car && isOpen) {
@@ -36,6 +38,8 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         sale_date: new Date().toISOString().split('T')[0]
       });
       setShowEmployeeList(false);
+      setSaleCompleted(false);
+      setCompletedSaleData(null);
       // Fetch employees
       usersAPI.getEmployees().then(res => setEmployees(res.data || [])).catch(() => {});
     }
@@ -120,16 +124,56 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
   const netProfit = remaining - employeeShare - ownerPayment - (car.ownership === 'stock' ? (car.purchase_price || 0) : 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleCloseModal}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShoppingCart size={24} className="text-success" />
-            Satış Onayla
+            <ShoppingCart size={24} className={saleCompleted ? "text-success" : "text-primary"} />
+            {saleCompleted ? 'Satış Tamamlandı!' : 'Satış Onayla'}
           </DialogTitle>
         </DialogHeader>
 
-        {isSold ? (
+        {saleCompleted ? (
+          // Satış başarılı - WhatsApp mesajı ekranı
+          <div className="space-y-6 py-4">
+            <div className="bg-success/10 border border-success/30 rounded-xl p-6 text-center">
+              <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingCart size={32} className="text-success" />
+              </div>
+              <h3 className="text-xl font-semibold text-success mb-2">
+                Satış Başarıyla Tamamlandı!
+              </h3>
+              <p className="text-muted-foreground">
+                {car.plate?.toUpperCase()} plakalı araç başarıyla satıldı.
+              </p>
+            </div>
+
+            {completedSaleData?.customer && (
+              <div className="space-y-4">
+                <h4 className="font-semibold text-sm">Müşteriye Teşekkür Mesajı Gönder</h4>
+                <button
+                  onClick={handleSendWhatsApp}
+                  className="w-full h-12 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                >
+                  <MessageCircle size={20} />
+                  WhatsApp ile Teşekkür Mesajı Gönder
+                </button>
+                <p className="text-xs text-muted-foreground text-center">
+                  {completedSaleData.customer.name} adlı müşteriye teşekkür mesajı gönderilecek
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCloseModal}
+                className="flex-1 h-11 bg-muted hover:bg-muted/80 rounded-lg font-medium transition-colors"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
+        ) : isSold ? (
           <div className="py-8 text-center">
             <p className="text-destructive font-semibold mb-2">Bu araç zaten satılmış!</p>
             <p className="text-sm text-muted-foreground">Satış kaydını geri almak için Gelir & Gider sayfasından iptal edin.</p>
