@@ -132,8 +132,23 @@ const Dashboard = ({ onOpenReport }) => {
   // ---- STATS ----
   const totalIncome = filteredTx.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
   const totalExpense = filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
-  const netProfit = totalIncome - totalExpense;
   const soldCount = filteredSoldCars.length;
+
+  // ✅ Net Kâr: SADECE satılan araçlardan elde edilen kâr.
+  // İşletme giderleri (kira, maaş, fatura vb.) buraya yansımaz; kart eksiye düşmez.
+  // Formül: her satılan araç için (sale_price - alış_maliyeti - aracın_kendi_giderleri)
+  const netProfit = useMemo(() => {
+    return filteredSoldCars.reduce((sum, car) => {
+      const salePrice = Number(car.sale_price || 0);
+      const purchaseCost = car.ownership === 'stock' ? Number(car.purchase_price || 0) : 0;
+      // Araca bağlı giderler (boya, lastik, bakım vb.) — genel işletme giderleri değil
+      const vehicleExpenses = activeTransactions
+        .filter(t => t.car_id === car.id && t.type === 'expense' && t.category !== 'Kapora İadesi')
+        .reduce((s, t) => s + (t.amount || 0), 0);
+      const profit = salePrice - purchaseCost - vehicleExpenses;
+      return sum + Math.max(0, profit); // ✅ Zararlı satış kartı eksiye düşürmesin
+    }, 0);
+  }, [filteredSoldCars, activeTransactions]);
 
   // All-time cash
   const allTimeIncome = activeTransactions.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
@@ -395,7 +410,7 @@ const Dashboard = ({ onOpenReport }) => {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />
         <StatCard title="TOPLAM GİDER" value={formatCurrency(totalExpense)} icon={ArrowDownRight} color="destructive" />
-        <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color={netProfit >= 0 ? 'success' : 'destructive'} />
+        <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color="success" />
         <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : undefined} />
         <StatCard title="STOK / KONSİNYE" value={`${stockCars.length} / ${consignmentCars.length}`} icon={Package} color="default" subtitle={`${depositCars.length} kapora`} />
         <StatCard title="KASA DURUMU" value={formatCurrency(kasaDurumu)} icon={Wallet} color={kasaDurumu >= 0 ? 'warning' : 'destructive'} subtitle="Tüm zamanlar" />
