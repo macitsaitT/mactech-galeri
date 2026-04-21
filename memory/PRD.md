@@ -2,19 +2,26 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.5.0
+- **Version:** 5.6.0
 - **Last Updated:** 2026-02-20
-- **Status:** MVP Complete - Comprehensive Car Catalog Active
+- **Status:** MVP Complete - Comprehensive Catalog + Sale Flow Hardening
 
 ## Implementation Status
 
+### v5.6.0 - Satış Akışı Sağlamlaştırma + Tam Katalog (2026-02-20)
+- [x] **Bug Fix (P0):** Satış fiyatı `EditTransactionModal` ile düzenlenince `cars.sale_price` ve `sold_date` de otomatik senkronize ediliyor (backend `update_transaction`). Artık Dashboard ve raporlarda güncel fiyat gözüküyor.
+- [x] **Bug Fix (P0):** `SaleModal` özetinde aracın **birikmiş giderleri** (boya, lastik, bakım vb.) artık listeleniyor. Toplam net kar hesabından otomatik düşülüyor. "Detayları gör" ile kalemler açılabiliyor.
+- [x] **Bug Fix (P0):** Özete **Alış Maliyeti** (stok araçlar için `purchase_price`) satırı eklendi — kar hesabı şeffaflaştı.
+- [x] **Data (P1):** Katalog 48 → **73 marka** / 551 → **741 model** / 1965 → **2543 motor** / 2298 → **2929 paket** varyantına çıkarıldı.
+- [x] Yeni eklenen markalar: Polestar, Zeekr, Lynk & Co, Leapmotor, Skywell, Hongqi, Nio, Karsan (Türk yerli), BMC, Ineos, DFSK, JAC.
+- [x] Önceden boş olan 13 marka dolduruldu: Cadillac, Daewoo, Daihatsu, Infiniti, Iveco, Lada, Lancia, Lincoln, Lotus, Rolls-Royce, Rover, Saab, Smart.
+- [x] Mevcut markalarda 30+ eksik model eklendi (Mercedes SLC/X/AMG One, Ford F-150/Edge/Escape, Volvo V70/XC70/S80, Renault Laguna/Grand Scenic, Hyundai Getz/ix35 vb.).
+- [x] **Vites filtreleme:** `getGearsForSelection(brand, engine)` ile elektrik motor seçilince sadece elektrikli + otomatik; DSG/PDK/S-Tronic/Powershift/EDC marka-spesifik filtreleniyor.
+
 ### v5.5.0 - Kapsamlı Araç Veritabanı (2026-02-20)
 - [x] `carData.js` → JSON tabanlı modüler yapıya taşındı
-- [x] `/app/frontend/src/data/catalog/modelEngines.json` (48 marka, 551 model, 1965 motor)
-- [x] `/app/frontend/src/data/catalog/modelPackages.json` (48 marka, 2298 paket varyantı)
-- [x] Tüm popüler Türkiye pazarı markaları: VW, BMW, Mercedes, Audi, Toyota, Hyundai, Kia, Renault, Fiat, Ford, Peugeot, Opel, Skoda, Seat, Cupra, Dacia, Honda, Nissan, Volvo, Mazda, Citroen, DS, Porsche, Land Rover, Jeep, Tesla, Togg, Lexus, Mini, Alfa Romeo, Jaguar, Mitsubishi, Suzuki, MG, Subaru, Chery, BYD, Isuzu, SsangYong, Chevrolet, Tata, Geely, Ferrari, Lamborghini, Bentley, Maserati, McLaren, Aston Martin
-- [x] Motor/Paket listeleri donanım paketi + motor hacmi + beygir gücü içerir (örn: "1.5 eTSI 150HP", "R-Line", "GTI Clubsport")
-- [x] `AddCarModal` dinamik filtreleme (getEnginesForModel, getPackagesForModel) JSON verisiyle otomatik çalışır
+- [x] `/app/frontend/src/data/catalog/modelEngines.json` + `modelPackages.json`
+- [x] `AddCarModal` dinamik filtreleme JSON verisiyle otomatik çalışır
 
 ### v5.4.0 - Google Social Login & Bildirim Sistemi Aktif
 - [x] Google Social Login: Emergent Auth entegrasyonu (POST /api/auth/google)

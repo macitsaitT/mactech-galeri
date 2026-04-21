@@ -4,14 +4,14 @@ import modelEnginesData from './catalog/modelEngines.json';
 import modelPackagesData from './catalog/modelPackages.json';
 
 export const carBrands = [
-  'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'BYD', 'Cadillac', 'Chery', 
-  'Chevrolet', 'Citroen', 'Cupra', 'Dacia', 'Daewoo', 'Daihatsu', 'DS Automobiles',
-  'Ferrari', 'Fiat', 'Ford', 'Geely', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu',
-  'Iveco', 'Jaguar', 'Jeep', 'Kia', 'Lada', 'Lamborghini', 'Lancia', 'Land Rover',
-  'Lexus', 'Lincoln', 'Lotus', 'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz',
-  'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 'Renault',
-  'Rolls-Royce', 'Rover', 'Saab', 'Seat', 'Skoda', 'Smart', 'SsangYong', 'Subaru',
-  'Suzuki', 'Tata', 'Tesla', 'Togg', 'Toyota', 'Volkswagen', 'Volvo'
+  'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'BMC', 'BYD', 'Cadillac', 'Chery',
+  'Chevrolet', 'Citroen', 'Cupra', 'Dacia', 'Daewoo', 'Daihatsu', 'DFSK', 'DS Automobiles',
+  'Ferrari', 'Fiat', 'Ford', 'Geely', 'Honda', 'Hongqi', 'Hyundai', 'Ineos', 'Infiniti', 'Isuzu',
+  'Iveco', 'JAC', 'Jaguar', 'Jeep', 'Karsan', 'Kia', 'Lada', 'Lamborghini', 'Lancia', 'Land Rover',
+  'Leapmotor', 'Lexus', 'Lincoln', 'Lotus', 'Lynk & Co', 'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz',
+  'MG', 'Mini', 'Mitsubishi', 'Nio', 'Nissan', 'Opel', 'Peugeot', 'Polestar', 'Porsche', 'Renault',
+  'Rolls-Royce', 'Rover', 'Saab', 'Seat', 'Skoda', 'Skywell', 'Smart', 'SsangYong', 'Subaru',
+  'Suzuki', 'Tata', 'Tesla', 'Togg', 'Toyota', 'Volkswagen', 'Volvo', 'Zeekr'
 ];
 
 export const carModels = {
@@ -144,7 +144,34 @@ export const carModels = {
   'Volvo': [
     'C30', 'C40', 'C70', 'EX30', 'EX90', 'S40', 'S60', 'S80', 'S90',
     'V40', 'V50', 'V60', 'V70', 'V90', 'XC40', 'XC60', 'XC70', 'XC90'
-  ]
+  ],
+  // ✅ Yeni eklenen markalar
+  'Polestar': ['Polestar 1', 'Polestar 2', 'Polestar 3', 'Polestar 4', 'Polestar 5'],
+  'Zeekr': ['001', '007', '7X', 'X', '009'],
+  'Lynk & Co': ['01', '02', '03', '05', '06', '09'],
+  'Leapmotor': ['T03', 'C10', 'C11', 'C16'],
+  'Skywell': ['ET5', 'BE11'],
+  'Hongqi': ['H5', 'H9', 'HS5', 'HS7', 'E-HS9'],
+  'Nio': ['ET5', 'ET7', 'ES6', 'ES8', 'EC6', 'EC7'],
+  'Karsan': ['Jest', 'Atak', 'Star', 'e-Jest', 'e-Atak', 'Jest Electric'],
+  'BMC': ['Tugra', 'Levend', 'Fatih'],
+  'Ineos': ['Grenadier', 'Quartermaster'],
+  'DFSK': ['Glory 330', 'Glory 500', 'Glory 580', 'K01', 'Seres 3'],
+  'JAC': ['J7', 'JS3', 'JS4', 'JS8', 'iEV7', 'T8'],
+  // Eksik markalar - tam model listesi eklendi
+  'Cadillac': ['ATS', 'CT4', 'CT5', 'CT6', 'Escalade', 'Lyriq', 'XT4', 'XT5', 'XT6'],
+  'Daewoo': ['Lanos', 'Leganza', 'Matiz', 'Nubira', 'Tacuma', 'Tico'],
+  'Daihatsu': ['Charade', 'Copen', 'Cuore', 'Hijet', 'Materia', 'Sirion', 'Terios', 'YRV'],
+  'Infiniti': ['Q30', 'Q50', 'Q60', 'Q70', 'QX30', 'QX50', 'QX55', 'QX60', 'QX70', 'QX80'],
+  'Iveco': ['Daily', 'Daily Van', 'Daily Blue Power', 'Daily Electric', 'Eurocargo', 'S-Way'],
+  'Lada': ['Granta', 'Kalina', 'Largus', 'Niva', 'Priora', 'Samara', 'Vesta', 'XRAY'],
+  'Lancia': ['Delta', 'Musa', 'Phedra', 'Thema', 'Thesis', 'Voyager', 'Y', 'Ypsilon'],
+  'Lincoln': ['Aviator', 'Continental', 'Corsair', 'MKC', 'MKT', 'MKX', 'MKZ', 'Nautilus', 'Navigator'],
+  'Lotus': ['Elan', 'Elise', 'Emira', 'Eletre', 'Emeya', 'Europa', 'Evora', 'Exige', 'Evija'],
+  'Rolls-Royce': ['Cullinan', 'Dawn', 'Ghost', 'Phantom', 'Spectre', 'Wraith'],
+  'Rover': ['25', '45', '75', '100', '200', '400', '600', '800', 'MG ZR', 'Streetwise'],
+  'Saab': ['9-3', '9-4X', '9-5', '9-7X', '900', '9000'],
+  'Smart': ['EQ forfour', 'EQ fortwo', 'forfour', 'fortwo', 'Roadster', '#1', '#3']
 };
 
 // Motor Hacimleri
@@ -374,4 +401,28 @@ export const getPackagesForModel = (brand, model) => {
     return packageTypes[brand];
   }
   return packageTypes['Genel'] || [];
+};
+
+// ✅ Yardımcı fonksiyon: Seçime göre uygun vites tiplerini getir
+// - Elektrik motor seçildiyse → yalnızca elektrik vitesi + Otomatik
+// - Marka-spesifik vitesleri (DSG=VW grubu, PDK=Porsche, S-Tronic=Audi/VW, Powershift=Ford, EDC=Renault/Dacia)
+//   yalnızca ilgili markalarda göster
+export const getGearsForSelection = (brand, engine) => {
+  const isElectric = typeof engine === 'string' && /elektrik/i.test(engine);
+  if (isElectric) {
+    return ['Otomatik', 'Elektrikli (Tek Vites)'];
+  }
+
+  const vwGroup = ['Volkswagen', 'Audi', 'Skoda', 'Seat', 'Cupra', 'Porsche', 'Bentley', 'Lamborghini'];
+  const renaultGroup = ['Renault', 'Dacia', 'Nissan'];
+
+  return gearTypes.filter(g => {
+    if (g === 'Elektrikli (Tek Vites)') return false; // elektrik olmayan motor → gizle
+    if (g === 'DSG (Çift Kavrama)' || g === 'S-Tronic') return vwGroup.includes(brand);
+    if (g === 'PDK') return brand === 'Porsche';
+    if (g === 'Powershift') return brand === 'Ford';
+    if (g === 'EDC') return renaultGroup.includes(brand);
+    if (g === 'Tiptronic') return ['Audi', 'Porsche', 'Volkswagen'].includes(brand);
+    return true;
+  });
 };

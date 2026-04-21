@@ -1,649 +1,4173 @@
 {
   "Volkswagen": {
-    "Polo": ["1.0 MPI 80HP", "1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP", "1.6 TDI 95HP", "2.0 TSI (GTI) 207HP"],
-    "Golf": ["1.0 eTSI 110HP", "1.5 eTSI 130HP", "1.5 eTSI 150HP", "1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TSI (GTI) 245HP", "2.0 TSI (GTI Clubsport) 300HP", "2.0 TSI (R) 320HP", "2.0 TDI 115HP", "2.0 TDI 150HP", "2.0 TDI (GTD) 200HP", "1.4 eHybrid (GTE) 245HP"],
-    "e-Golf": ["Elektrik 136HP"],
-    "Passat": ["1.5 eTSI 150HP", "2.0 TSI 204HP", "2.0 TSI 265HP", "2.0 TDI 122HP", "2.0 TDI 150HP", "2.0 TDI 193HP", "1.4 eHybrid (GTE) 272HP"],
-    "Arteon": ["1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TSI (R) 320HP", "2.0 TDI 150HP", "2.0 TDI 200HP", "1.4 eHybrid 218HP"],
-    "T-Cross": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP", "1.6 TDI 95HP"],
-    "T-Roc": ["1.0 TSI 110HP", "1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TSI (R) 300HP", "2.0 TDI 115HP", "2.0 TDI 150HP"],
-    "Taigo": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP"],
-    "Tiguan": ["1.5 eTSI 150HP", "2.0 TSI 204HP", "2.0 TSI 265HP", "2.0 TDI 150HP", "2.0 TDI 193HP", "1.4 eHybrid 245HP"],
-    "Touareg": ["3.0 V6 TSI 340HP", "3.0 V6 TDI 231HP", "3.0 V6 TDI 286HP", "3.0 eHybrid 381HP", "3.0 eHybrid (R) 462HP"],
-    "Amarok": ["2.0 TDI 170HP", "2.0 TDI 205HP", "3.0 V6 TDI 240HP", "3.0 V6 TDI (Aventura) 250HP"],
-    "Caddy": ["1.5 TSI 114HP", "2.0 TDI 102HP", "2.0 TDI 122HP"],
-    "California": ["2.0 TDI 150HP", "2.0 TDI 204HP"],
-    "Caravelle": ["2.0 TDI 150HP", "2.0 TDI 199HP", "2.0 TSI 204HP"],
-    "Multivan": ["1.5 TSI 136HP", "2.0 TSI 204HP", "2.0 TDI 150HP", "1.4 eHybrid 218HP"],
-    "Transporter": ["2.0 TDI 90HP", "2.0 TDI 110HP", "2.0 TDI 150HP", "2.0 TDI 204HP"],
-    "Crafter": ["2.0 TDI 102HP", "2.0 TDI 140HP", "2.0 TDI 177HP"],
-    "Touran": ["1.5 TSI 150HP", "2.0 TDI 115HP", "2.0 TDI 150HP"],
-    "Sharan": ["1.4 TSI 150HP", "2.0 TDI 150HP", "2.0 TDI 184HP"],
-    "ID.3": ["Elektrik (Pro) 204HP", "Elektrik (Pro S) 204HP", "Elektrik (Pro Performance) 204HP", "Elektrik (GTX) 326HP"],
-    "ID.4": ["Elektrik (Pure) 170HP", "Elektrik (Pro) 204HP", "Elektrik (Pro 4Motion) 265HP", "Elektrik (GTX) 340HP"],
-    "ID.5": ["Elektrik (Pro) 204HP", "Elektrik (Pro 4Motion) 265HP", "Elektrik (GTX) 340HP"],
-    "ID.7": ["Elektrik (Pro) 286HP", "Elektrik (Pro S) 286HP", "Elektrik (GTX) 340HP"],
-    "ID. Buzz": ["Elektrik (Pro) 204HP", "Elektrik (GTX) 340HP"],
-    "Jetta": ["1.4 TSI 150HP", "1.6 TDI 105HP"],
-    "Bora": ["1.6 8V", "1.6 16V", "1.8T 150HP", "1.9 TDI"],
-    "Scirocco": ["1.4 TSI 122HP", "1.4 TSI 160HP", "2.0 TSI 180HP", "2.0 TSI (R) 280HP", "2.0 TDI 140HP"],
-    "CC": ["1.4 TSI 160HP", "2.0 TSI 210HP", "2.0 TDI 140HP", "2.0 TDI 177HP", "3.6 FSI 300HP"],
-    "Beetle": ["1.2 TSI 105HP", "1.4 TSI 150HP", "2.0 TSI 220HP", "2.0 TDI 150HP"],
-    "Up": ["1.0 MPI 60HP", "1.0 TSI 90HP", "1.0 TSI (GTI) 115HP"]
+    "Polo": [
+      "1.0 MPI 80HP",
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP",
+      "1.6 TDI 95HP",
+      "2.0 TSI (GTI) 207HP"
+    ],
+    "Golf": [
+      "1.0 eTSI 110HP",
+      "1.5 eTSI 130HP",
+      "1.5 eTSI 150HP",
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TSI (GTI) 245HP",
+      "2.0 TSI (GTI Clubsport) 300HP",
+      "2.0 TSI (R) 320HP",
+      "2.0 TDI 115HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI (GTD) 200HP",
+      "1.4 eHybrid (GTE) 245HP"
+    ],
+    "e-Golf": [
+      "Elektrik 136HP"
+    ],
+    "Passat": [
+      "1.5 eTSI 150HP",
+      "2.0 TSI 204HP",
+      "2.0 TSI 265HP",
+      "2.0 TDI 122HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 193HP",
+      "1.4 eHybrid (GTE) 272HP"
+    ],
+    "Arteon": [
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TSI (R) 320HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 200HP",
+      "1.4 eHybrid 218HP"
+    ],
+    "T-Cross": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP",
+      "1.6 TDI 95HP"
+    ],
+    "T-Roc": [
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TSI (R) 300HP",
+      "2.0 TDI 115HP",
+      "2.0 TDI 150HP"
+    ],
+    "Taigo": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP"
+    ],
+    "Tiguan": [
+      "1.5 eTSI 150HP",
+      "2.0 TSI 204HP",
+      "2.0 TSI 265HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 193HP",
+      "1.4 eHybrid 245HP"
+    ],
+    "Touareg": [
+      "3.0 V6 TSI 340HP",
+      "3.0 V6 TDI 231HP",
+      "3.0 V6 TDI 286HP",
+      "3.0 eHybrid 381HP",
+      "3.0 eHybrid (R) 462HP"
+    ],
+    "Amarok": [
+      "2.0 TDI 170HP",
+      "2.0 TDI 205HP",
+      "3.0 V6 TDI 240HP",
+      "3.0 V6 TDI (Aventura) 250HP"
+    ],
+    "Caddy": [
+      "1.5 TSI 114HP",
+      "2.0 TDI 102HP",
+      "2.0 TDI 122HP"
+    ],
+    "California": [
+      "2.0 TDI 150HP",
+      "2.0 TDI 204HP"
+    ],
+    "Caravelle": [
+      "2.0 TDI 150HP",
+      "2.0 TDI 199HP",
+      "2.0 TSI 204HP"
+    ],
+    "Multivan": [
+      "1.5 TSI 136HP",
+      "2.0 TSI 204HP",
+      "2.0 TDI 150HP",
+      "1.4 eHybrid 218HP"
+    ],
+    "Transporter": [
+      "2.0 TDI 90HP",
+      "2.0 TDI 110HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 204HP"
+    ],
+    "Crafter": [
+      "2.0 TDI 102HP",
+      "2.0 TDI 140HP",
+      "2.0 TDI 177HP"
+    ],
+    "Touran": [
+      "1.5 TSI 150HP",
+      "2.0 TDI 115HP",
+      "2.0 TDI 150HP"
+    ],
+    "Sharan": [
+      "1.4 TSI 150HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 184HP"
+    ],
+    "ID.3": [
+      "Elektrik (Pro) 204HP",
+      "Elektrik (Pro S) 204HP",
+      "Elektrik (Pro Performance) 204HP",
+      "Elektrik (GTX) 326HP"
+    ],
+    "ID.4": [
+      "Elektrik (Pure) 170HP",
+      "Elektrik (Pro) 204HP",
+      "Elektrik (Pro 4Motion) 265HP",
+      "Elektrik (GTX) 340HP"
+    ],
+    "ID.5": [
+      "Elektrik (Pro) 204HP",
+      "Elektrik (Pro 4Motion) 265HP",
+      "Elektrik (GTX) 340HP"
+    ],
+    "ID.7": [
+      "Elektrik (Pro) 286HP",
+      "Elektrik (Pro S) 286HP",
+      "Elektrik (GTX) 340HP"
+    ],
+    "ID. Buzz": [
+      "Elektrik (Pro) 204HP",
+      "Elektrik (GTX) 340HP"
+    ],
+    "Jetta": [
+      "1.4 TSI 150HP",
+      "1.6 TDI 105HP"
+    ],
+    "Bora": [
+      "1.6 8V",
+      "1.6 16V",
+      "1.8T 150HP",
+      "1.9 TDI"
+    ],
+    "Scirocco": [
+      "1.4 TSI 122HP",
+      "1.4 TSI 160HP",
+      "2.0 TSI 180HP",
+      "2.0 TSI (R) 280HP",
+      "2.0 TDI 140HP"
+    ],
+    "CC": [
+      "1.4 TSI 160HP",
+      "2.0 TSI 210HP",
+      "2.0 TDI 140HP",
+      "2.0 TDI 177HP",
+      "3.6 FSI 300HP"
+    ],
+    "Beetle": [
+      "1.2 TSI 105HP",
+      "1.4 TSI 150HP",
+      "2.0 TSI 220HP",
+      "2.0 TDI 150HP"
+    ],
+    "Up": [
+      "1.0 MPI 60HP",
+      "1.0 TSI 90HP",
+      "1.0 TSI (GTI) 115HP"
+    ]
   },
   "BMW": {
-    "1 Serisi": ["116i 1.5 122HP", "118i 1.5 136HP", "118i 1.5 140HP", "120i 2.0 178HP", "M135i xDrive 2.0 306HP", "116d 1.5 116HP", "118d 2.0 150HP", "120d xDrive 2.0 190HP"],
-    "2 Serisi": ["218i 1.5 136HP", "220i 2.0 184HP", "220i 2.0 190HP", "M240i xDrive 3.0 374HP", "218d 2.0 150HP", "220d 2.0 190HP"],
-    "2 Serisi Active Tourer": ["218i 1.5 136HP", "220i 2.0 170HP", "223i 2.0 218HP", "218d 2.0 150HP", "220d xDrive 2.0 190HP", "225e xDrive (PHEV) 245HP", "230e xDrive (PHEV) 326HP"],
-    "2 Serisi Gran Coupe": ["218i 1.5 140HP", "220i 2.0 178HP", "M235i xDrive 2.0 306HP", "218d 2.0 150HP", "220d xDrive 2.0 190HP"],
-    "3 Serisi": ["318i 2.0 156HP", "320i 2.0 184HP", "330i 2.0 245HP", "M340i xDrive 3.0 374HP", "318d 2.0 150HP", "320d 2.0 190HP", "330d xDrive 3.0 286HP", "330e (PHEV) 292HP"],
-    "4 Serisi": ["420i 2.0 184HP", "430i 2.0 245HP", "M440i xDrive 3.0 374HP", "420d 2.0 190HP", "M4 Competition 3.0 510HP"],
-    "5 Serisi": ["520i 2.0 190HP", "530i 2.0 252HP", "540i xDrive 3.0 333HP", "M550i xDrive 4.4 530HP", "520d 2.0 190HP", "520d 2.0 197HP", "530d xDrive 3.0 286HP", "530e (PHEV) 299HP", "550e xDrive (PHEV) 489HP"],
-    "6 Serisi": ["630i 2.0 258HP", "640i 3.0 340HP", "640d xDrive 3.0 313HP"],
-    "7 Serisi": ["740i xDrive 3.0 381HP", "750e xDrive (PHEV) 490HP", "760i xDrive 4.4 V8 544HP", "740d xDrive 3.0 299HP", "M760e xDrive (PHEV) 571HP"],
-    "8 Serisi": ["840i 3.0 340HP", "M850i xDrive 4.4 530HP", "840d xDrive 3.0 340HP", "M8 Competition 4.4 625HP"],
-    "i3": ["Elektrik 170HP", "Elektrik (S) 184HP"],
-    "i4": ["eDrive35 286HP", "eDrive40 340HP", "M50 xDrive 544HP"],
-    "i5": ["eDrive40 340HP", "M60 xDrive 601HP"],
-    "i7": ["xDrive60 544HP", "M70 xDrive 660HP"],
-    "iX": ["xDrive40 326HP", "xDrive50 523HP", "M60 619HP"],
-    "iX1": ["eDrive20 204HP", "xDrive30 313HP"],
-    "iX3": ["Elektrik (M Sport) 286HP"],
-    "M2": ["3.0 Biturbo 460HP", "3.0 Biturbo (CS) 550HP"],
-    "M3": ["3.0 Biturbo 480HP", "3.0 Biturbo (Competition) 510HP", "3.0 Biturbo (CS) 550HP"],
-    "M4": ["3.0 Biturbo 480HP", "3.0 Biturbo (Competition) 510HP", "3.0 Biturbo (CSL) 550HP"],
-    "M5": ["4.4 V8 Biturbo 600HP", "4.4 V8 (Competition) 625HP", "4.4 V8 PHEV 727HP"],
-    "M8": ["4.4 V8 Biturbo 600HP", "4.4 V8 (Competition) 625HP"],
-    "X1": ["sDrive18i 1.5 136HP", "sDrive20i 2.0 170HP", "xDrive23i 2.0 218HP", "sDrive18d 2.0 150HP", "xDrive23d 2.0 211HP", "xDrive25e (PHEV) 245HP"],
-    "X2": ["sDrive18i 1.5 140HP", "sDrive20i 2.0 178HP", "M35i xDrive 2.0 306HP", "sDrive18d 2.0 150HP", "xDrive25e (PHEV) 245HP"],
-    "X3": ["xDrive20i 2.0 184HP", "xDrive30i 2.0 245HP", "M40i 3.0 360HP", "xDrive20d 2.0 190HP", "xDrive30d 3.0 286HP", "xDrive30e (PHEV) 292HP", "M Competition 3.0 510HP"],
-    "X4": ["xDrive20i 2.0 184HP", "xDrive30i 2.0 245HP", "M40i 3.0 360HP", "xDrive20d 2.0 190HP", "xDrive30d 3.0 286HP", "M Competition 3.0 510HP"],
-    "X5": ["xDrive40i 3.0 381HP", "M60i 4.4 V8 530HP", "xDrive30d 3.0 298HP", "xDrive40d 3.0 352HP", "xDrive50e (PHEV) 490HP", "M Competition 4.4 V8 625HP"],
-    "X6": ["xDrive40i 3.0 381HP", "M60i 4.4 V8 530HP", "xDrive30d 3.0 298HP", "xDrive40d 3.0 352HP", "M Competition 4.4 V8 625HP"],
-    "X7": ["xDrive40i 3.0 381HP", "M60i 4.4 V8 530HP", "xDrive40d 3.0 352HP"],
-    "XM": ["4.4 V8 PHEV 653HP", "4.4 V8 (Label) 748HP"],
-    "Z4": ["sDrive20i 2.0 197HP", "sDrive30i 2.0 258HP", "M40i 3.0 340HP"]
+    "1 Serisi": [
+      "116i 1.5 122HP",
+      "118i 1.5 136HP",
+      "118i 1.5 140HP",
+      "120i 2.0 178HP",
+      "M135i xDrive 2.0 306HP",
+      "116d 1.5 116HP",
+      "118d 2.0 150HP",
+      "120d xDrive 2.0 190HP"
+    ],
+    "2 Serisi": [
+      "218i 1.5 136HP",
+      "220i 2.0 184HP",
+      "220i 2.0 190HP",
+      "M240i xDrive 3.0 374HP",
+      "218d 2.0 150HP",
+      "220d 2.0 190HP"
+    ],
+    "2 Serisi Active Tourer": [
+      "218i 1.5 136HP",
+      "220i 2.0 170HP",
+      "223i 2.0 218HP",
+      "218d 2.0 150HP",
+      "220d xDrive 2.0 190HP",
+      "225e xDrive (PHEV) 245HP",
+      "230e xDrive (PHEV) 326HP"
+    ],
+    "2 Serisi Gran Coupe": [
+      "218i 1.5 140HP",
+      "220i 2.0 178HP",
+      "M235i xDrive 2.0 306HP",
+      "218d 2.0 150HP",
+      "220d xDrive 2.0 190HP"
+    ],
+    "3 Serisi": [
+      "318i 2.0 156HP",
+      "320i 2.0 184HP",
+      "330i 2.0 245HP",
+      "M340i xDrive 3.0 374HP",
+      "318d 2.0 150HP",
+      "320d 2.0 190HP",
+      "330d xDrive 3.0 286HP",
+      "330e (PHEV) 292HP"
+    ],
+    "4 Serisi": [
+      "420i 2.0 184HP",
+      "430i 2.0 245HP",
+      "M440i xDrive 3.0 374HP",
+      "420d 2.0 190HP",
+      "M4 Competition 3.0 510HP"
+    ],
+    "5 Serisi": [
+      "520i 2.0 190HP",
+      "530i 2.0 252HP",
+      "540i xDrive 3.0 333HP",
+      "M550i xDrive 4.4 530HP",
+      "520d 2.0 190HP",
+      "520d 2.0 197HP",
+      "530d xDrive 3.0 286HP",
+      "530e (PHEV) 299HP",
+      "550e xDrive (PHEV) 489HP"
+    ],
+    "6 Serisi": [
+      "630i 2.0 258HP",
+      "640i 3.0 340HP",
+      "640d xDrive 3.0 313HP"
+    ],
+    "7 Serisi": [
+      "740i xDrive 3.0 381HP",
+      "750e xDrive (PHEV) 490HP",
+      "760i xDrive 4.4 V8 544HP",
+      "740d xDrive 3.0 299HP",
+      "M760e xDrive (PHEV) 571HP"
+    ],
+    "8 Serisi": [
+      "840i 3.0 340HP",
+      "M850i xDrive 4.4 530HP",
+      "840d xDrive 3.0 340HP",
+      "M8 Competition 4.4 625HP"
+    ],
+    "i3": [
+      "Elektrik 170HP",
+      "Elektrik (S) 184HP"
+    ],
+    "i4": [
+      "eDrive35 286HP",
+      "eDrive40 340HP",
+      "M50 xDrive 544HP"
+    ],
+    "i5": [
+      "eDrive40 340HP",
+      "M60 xDrive 601HP"
+    ],
+    "i7": [
+      "xDrive60 544HP",
+      "M70 xDrive 660HP"
+    ],
+    "iX": [
+      "xDrive40 326HP",
+      "xDrive50 523HP",
+      "M60 619HP"
+    ],
+    "iX1": [
+      "eDrive20 204HP",
+      "xDrive30 313HP"
+    ],
+    "iX3": [
+      "Elektrik (M Sport) 286HP"
+    ],
+    "M2": [
+      "3.0 Biturbo 460HP",
+      "3.0 Biturbo (CS) 550HP"
+    ],
+    "M3": [
+      "3.0 Biturbo 480HP",
+      "3.0 Biturbo (Competition) 510HP",
+      "3.0 Biturbo (CS) 550HP"
+    ],
+    "M4": [
+      "3.0 Biturbo 480HP",
+      "3.0 Biturbo (Competition) 510HP",
+      "3.0 Biturbo (CSL) 550HP"
+    ],
+    "M5": [
+      "4.4 V8 Biturbo 600HP",
+      "4.4 V8 (Competition) 625HP",
+      "4.4 V8 PHEV 727HP"
+    ],
+    "M8": [
+      "4.4 V8 Biturbo 600HP",
+      "4.4 V8 (Competition) 625HP"
+    ],
+    "X1": [
+      "sDrive18i 1.5 136HP",
+      "sDrive20i 2.0 170HP",
+      "xDrive23i 2.0 218HP",
+      "sDrive18d 2.0 150HP",
+      "xDrive23d 2.0 211HP",
+      "xDrive25e (PHEV) 245HP"
+    ],
+    "X2": [
+      "sDrive18i 1.5 140HP",
+      "sDrive20i 2.0 178HP",
+      "M35i xDrive 2.0 306HP",
+      "sDrive18d 2.0 150HP",
+      "xDrive25e (PHEV) 245HP"
+    ],
+    "X3": [
+      "xDrive20i 2.0 184HP",
+      "xDrive30i 2.0 245HP",
+      "M40i 3.0 360HP",
+      "xDrive20d 2.0 190HP",
+      "xDrive30d 3.0 286HP",
+      "xDrive30e (PHEV) 292HP",
+      "M Competition 3.0 510HP"
+    ],
+    "X4": [
+      "xDrive20i 2.0 184HP",
+      "xDrive30i 2.0 245HP",
+      "M40i 3.0 360HP",
+      "xDrive20d 2.0 190HP",
+      "xDrive30d 3.0 286HP",
+      "M Competition 3.0 510HP"
+    ],
+    "X5": [
+      "xDrive40i 3.0 381HP",
+      "M60i 4.4 V8 530HP",
+      "xDrive30d 3.0 298HP",
+      "xDrive40d 3.0 352HP",
+      "xDrive50e (PHEV) 490HP",
+      "M Competition 4.4 V8 625HP"
+    ],
+    "X6": [
+      "xDrive40i 3.0 381HP",
+      "M60i 4.4 V8 530HP",
+      "xDrive30d 3.0 298HP",
+      "xDrive40d 3.0 352HP",
+      "M Competition 4.4 V8 625HP"
+    ],
+    "X7": [
+      "xDrive40i 3.0 381HP",
+      "M60i 4.4 V8 530HP",
+      "xDrive40d 3.0 352HP"
+    ],
+    "XM": [
+      "4.4 V8 PHEV 653HP",
+      "4.4 V8 (Label) 748HP"
+    ],
+    "Z4": [
+      "sDrive20i 2.0 197HP",
+      "sDrive30i 2.0 258HP",
+      "M40i 3.0 340HP"
+    ]
   },
   "Mercedes-Benz": {
-    "A Serisi": ["A 160 1.3 109HP", "A 180 1.3 136HP", "A 200 1.3 163HP", "A 220 2.0 190HP", "A 250 2.0 224HP", "A 45 S AMG 2.0 421HP", "A 180 d 2.0 116HP", "A 200 d 2.0 150HP", "A 220 d 2.0 190HP", "A 250 e (PHEV) 218HP"],
-    "B Serisi": ["B 180 1.3 136HP", "B 200 1.3 163HP", "B 220 2.0 190HP", "B 180 d 2.0 116HP", "B 200 d 2.0 150HP", "B 250 e (PHEV) 218HP"],
-    "C Serisi": ["C 180 1.5 170HP", "C 200 1.5 204HP", "C 300 2.0 258HP", "C 43 AMG 2.0 408HP", "C 63 S E Performance (PHEV) 680HP", "C 200 d 2.0 163HP", "C 220 d 2.0 200HP", "C 300 d 2.0 265HP", "C 300 e (PHEV) 313HP"],
-    "CLA": ["CLA 180 1.3 136HP", "CLA 200 1.3 163HP", "CLA 250 2.0 224HP", "CLA 35 AMG 2.0 306HP", "CLA 45 S AMG 2.0 421HP", "CLA 180 d 2.0 116HP", "CLA 200 d 2.0 150HP", "CLA 250 e (PHEV) 218HP"],
-    "CLA Shooting Brake": ["CLA 180 1.3 136HP", "CLA 200 1.3 163HP", "CLA 250 2.0 224HP", "CLA 35 AMG 2.0 306HP", "CLA 200 d 2.0 150HP", "CLA 220 d 2.0 190HP"],
-    "CLS": ["CLS 300 2.0 258HP", "CLS 450 3.0 367HP", "CLS 53 AMG 3.0 435HP", "CLS 300 d 2.0 265HP", "CLS 400 d 3.0 330HP"],
-    "E Serisi": ["E 200 2.0 204HP", "E 300 2.0 258HP", "E 450 3.0 381HP", "E 53 AMG 3.0 435HP", "E 63 S AMG 4.0 V8 612HP", "E 220 d 2.0 194HP", "E 300 d 2.0 265HP", "E 400 d 3.0 330HP", "E 300 e (PHEV) 320HP", "E 300 de (PHEV Dizel) 306HP"],
-    "S Serisi": ["S 450 3.0 367HP", "S 500 3.0 435HP", "S 580 4.0 V8 510HP", "S 63 AMG E Performance (PHEV) 802HP", "S 350 d 3.0 286HP", "S 400 d 3.0 330HP", "S 580 e (PHEV) 510HP"],
-    "G Serisi": ["G 400 d 3.0 330HP", "G 500 4.0 V8 421HP", "G 63 AMG 4.0 V8 585HP"],
-    "GLA": ["GLA 180 1.3 136HP", "GLA 200 1.3 163HP", "GLA 250 2.0 224HP", "GLA 35 AMG 2.0 306HP", "GLA 45 S AMG 2.0 421HP", "GLA 180 d 2.0 116HP", "GLA 200 d 2.0 150HP", "GLA 220 d 2.0 190HP", "GLA 250 e (PHEV) 218HP"],
-    "GLB": ["GLB 180 1.3 136HP", "GLB 200 1.3 163HP", "GLB 250 2.0 224HP", "GLB 35 AMG 2.0 306HP", "GLB 180 d 2.0 116HP", "GLB 200 d 2.0 150HP", "GLB 220 d 2.0 190HP"],
-    "GLC": ["GLC 200 2.0 204HP", "GLC 300 2.0 258HP", "GLC 43 AMG 2.0 421HP", "GLC 63 S AMG (PHEV) 680HP", "GLC 200 d 2.0 163HP", "GLC 220 d 2.0 197HP", "GLC 300 d 2.0 265HP", "GLC 300 e (PHEV) 313HP"],
-    "GLC Coupe": ["GLC 200 2.0 204HP", "GLC 300 2.0 258HP", "GLC 43 AMG 2.0 421HP", "GLC 63 S AMG (PHEV) 680HP", "GLC 220 d 2.0 197HP", "GLC 300 d 2.0 265HP", "GLC 300 e (PHEV) 313HP"],
-    "GLE": ["GLE 450 3.0 381HP", "GLE 580 4.0 V8 510HP", "GLE 53 AMG 3.0 435HP", "GLE 63 S AMG 4.0 V8 612HP", "GLE 300 d 2.0 269HP", "GLE 350 de (PHEV Dizel) 333HP", "GLE 400 d 3.0 330HP", "GLE 450 d 3.0 367HP", "GLE 450 e (PHEV) 381HP"],
-    "GLE Coupe": ["GLE 450 3.0 381HP", "GLE 53 AMG 3.0 435HP", "GLE 63 S AMG 4.0 V8 612HP", "GLE 400 d 3.0 330HP"],
-    "GLS": ["GLS 450 3.0 381HP", "GLS 580 4.0 V8 510HP", "GLS 63 AMG 4.0 V8 612HP", "GLS 400 d 3.0 330HP"],
-    "EQA": ["EQA 250 190HP", "EQA 300 4MATIC 228HP", "EQA 350 4MATIC 292HP"],
-    "EQB": ["EQB 250 190HP", "EQB 300 4MATIC 228HP", "EQB 350 4MATIC 292HP"],
-    "EQC": ["EQC 400 4MATIC 408HP"],
-    "EQE": ["EQE 300 245HP", "EQE 350+ 292HP", "EQE 350 4MATIC 292HP", "EQE 500 4MATIC 408HP", "EQE 53 AMG 4MATIC+ 626HP"],
-    "EQE SUV": ["EQE 350+ 292HP", "EQE 350 4MATIC 292HP", "EQE 500 4MATIC 408HP", "EQE 53 AMG 4MATIC+ 626HP"],
-    "EQS": ["EQS 450+ 333HP", "EQS 450 4MATIC 360HP", "EQS 580 4MATIC 523HP", "EQS 53 AMG 4MATIC+ 658HP"],
-    "EQS SUV": ["EQS 450+ 360HP", "EQS 450 4MATIC 360HP", "EQS 580 4MATIC 544HP"],
-    "EQV": ["EQV 300 204HP"],
-    "V Serisi": ["V 220 d 2.0 163HP", "V 250 d 2.0 190HP", "V 300 d 2.0 237HP"],
-    "Vito": ["Vito 110 CDI 102HP", "Vito 114 CDI 136HP", "Vito 116 CDI 163HP", "Vito 119 CDI 190HP"],
-    "Sprinter": ["Sprinter 314 CDI 143HP", "Sprinter 316 CDI 163HP", "Sprinter 319 CDI 190HP"],
-    "Citan": ["Citan 110 1.3 102HP", "Citan 113 1.3 131HP", "Citan 110 CDI 1.5 95HP", "Citan 112 CDI 1.5 116HP"],
-    "AMG GT": ["4.0 V8 476HP", "4.0 V8 (S) 522HP", "4.0 V8 (R) 585HP", "4.0 V8 PHEV (63 S E Performance) 843HP"],
-    "SL": ["SL 43 AMG 2.0 381HP", "SL 55 AMG 4.0 V8 476HP", "SL 63 AMG 4.0 V8 585HP"],
-    "GT": ["GT 43 AMG 3.0 367HP", "GT 53 AMG 3.0 435HP", "GT 63 S AMG 4.0 V8 639HP", "GT 63 S E Performance (PHEV) 843HP"],
-    "Maybach S Serisi": ["S 580 4.0 V8 510HP", "S 680 6.0 V12 612HP"]
+    "A Serisi": [
+      "A 160 1.3 109HP",
+      "A 180 1.3 136HP",
+      "A 200 1.3 163HP",
+      "A 220 2.0 190HP",
+      "A 250 2.0 224HP",
+      "A 45 S AMG 2.0 421HP",
+      "A 180 d 2.0 116HP",
+      "A 200 d 2.0 150HP",
+      "A 220 d 2.0 190HP",
+      "A 250 e (PHEV) 218HP"
+    ],
+    "B Serisi": [
+      "B 180 1.3 136HP",
+      "B 200 1.3 163HP",
+      "B 220 2.0 190HP",
+      "B 180 d 2.0 116HP",
+      "B 200 d 2.0 150HP",
+      "B 250 e (PHEV) 218HP"
+    ],
+    "C Serisi": [
+      "C 180 1.5 170HP",
+      "C 200 1.5 204HP",
+      "C 300 2.0 258HP",
+      "C 43 AMG 2.0 408HP",
+      "C 63 S E Performance (PHEV) 680HP",
+      "C 200 d 2.0 163HP",
+      "C 220 d 2.0 200HP",
+      "C 300 d 2.0 265HP",
+      "C 300 e (PHEV) 313HP"
+    ],
+    "CLA": [
+      "CLA 180 1.3 136HP",
+      "CLA 200 1.3 163HP",
+      "CLA 250 2.0 224HP",
+      "CLA 35 AMG 2.0 306HP",
+      "CLA 45 S AMG 2.0 421HP",
+      "CLA 180 d 2.0 116HP",
+      "CLA 200 d 2.0 150HP",
+      "CLA 250 e (PHEV) 218HP"
+    ],
+    "CLA Shooting Brake": [
+      "CLA 180 1.3 136HP",
+      "CLA 200 1.3 163HP",
+      "CLA 250 2.0 224HP",
+      "CLA 35 AMG 2.0 306HP",
+      "CLA 200 d 2.0 150HP",
+      "CLA 220 d 2.0 190HP"
+    ],
+    "CLS": [
+      "CLS 300 2.0 258HP",
+      "CLS 450 3.0 367HP",
+      "CLS 53 AMG 3.0 435HP",
+      "CLS 300 d 2.0 265HP",
+      "CLS 400 d 3.0 330HP"
+    ],
+    "E Serisi": [
+      "E 200 2.0 204HP",
+      "E 300 2.0 258HP",
+      "E 450 3.0 381HP",
+      "E 53 AMG 3.0 435HP",
+      "E 63 S AMG 4.0 V8 612HP",
+      "E 220 d 2.0 194HP",
+      "E 300 d 2.0 265HP",
+      "E 400 d 3.0 330HP",
+      "E 300 e (PHEV) 320HP",
+      "E 300 de (PHEV Dizel) 306HP"
+    ],
+    "S Serisi": [
+      "S 450 3.0 367HP",
+      "S 500 3.0 435HP",
+      "S 580 4.0 V8 510HP",
+      "S 63 AMG E Performance (PHEV) 802HP",
+      "S 350 d 3.0 286HP",
+      "S 400 d 3.0 330HP",
+      "S 580 e (PHEV) 510HP"
+    ],
+    "G Serisi": [
+      "G 400 d 3.0 330HP",
+      "G 500 4.0 V8 421HP",
+      "G 63 AMG 4.0 V8 585HP"
+    ],
+    "GLA": [
+      "GLA 180 1.3 136HP",
+      "GLA 200 1.3 163HP",
+      "GLA 250 2.0 224HP",
+      "GLA 35 AMG 2.0 306HP",
+      "GLA 45 S AMG 2.0 421HP",
+      "GLA 180 d 2.0 116HP",
+      "GLA 200 d 2.0 150HP",
+      "GLA 220 d 2.0 190HP",
+      "GLA 250 e (PHEV) 218HP"
+    ],
+    "GLB": [
+      "GLB 180 1.3 136HP",
+      "GLB 200 1.3 163HP",
+      "GLB 250 2.0 224HP",
+      "GLB 35 AMG 2.0 306HP",
+      "GLB 180 d 2.0 116HP",
+      "GLB 200 d 2.0 150HP",
+      "GLB 220 d 2.0 190HP"
+    ],
+    "GLC": [
+      "GLC 200 2.0 204HP",
+      "GLC 300 2.0 258HP",
+      "GLC 43 AMG 2.0 421HP",
+      "GLC 63 S AMG (PHEV) 680HP",
+      "GLC 200 d 2.0 163HP",
+      "GLC 220 d 2.0 197HP",
+      "GLC 300 d 2.0 265HP",
+      "GLC 300 e (PHEV) 313HP"
+    ],
+    "GLC Coupe": [
+      "GLC 200 2.0 204HP",
+      "GLC 300 2.0 258HP",
+      "GLC 43 AMG 2.0 421HP",
+      "GLC 63 S AMG (PHEV) 680HP",
+      "GLC 220 d 2.0 197HP",
+      "GLC 300 d 2.0 265HP",
+      "GLC 300 e (PHEV) 313HP"
+    ],
+    "GLE": [
+      "GLE 450 3.0 381HP",
+      "GLE 580 4.0 V8 510HP",
+      "GLE 53 AMG 3.0 435HP",
+      "GLE 63 S AMG 4.0 V8 612HP",
+      "GLE 300 d 2.0 269HP",
+      "GLE 350 de (PHEV Dizel) 333HP",
+      "GLE 400 d 3.0 330HP",
+      "GLE 450 d 3.0 367HP",
+      "GLE 450 e (PHEV) 381HP"
+    ],
+    "GLE Coupe": [
+      "GLE 450 3.0 381HP",
+      "GLE 53 AMG 3.0 435HP",
+      "GLE 63 S AMG 4.0 V8 612HP",
+      "GLE 400 d 3.0 330HP"
+    ],
+    "GLS": [
+      "GLS 450 3.0 381HP",
+      "GLS 580 4.0 V8 510HP",
+      "GLS 63 AMG 4.0 V8 612HP",
+      "GLS 400 d 3.0 330HP"
+    ],
+    "EQA": [
+      "EQA 250 190HP",
+      "EQA 300 4MATIC 228HP",
+      "EQA 350 4MATIC 292HP"
+    ],
+    "EQB": [
+      "EQB 250 190HP",
+      "EQB 300 4MATIC 228HP",
+      "EQB 350 4MATIC 292HP"
+    ],
+    "EQC": [
+      "EQC 400 4MATIC 408HP"
+    ],
+    "EQE": [
+      "EQE 300 245HP",
+      "EQE 350+ 292HP",
+      "EQE 350 4MATIC 292HP",
+      "EQE 500 4MATIC 408HP",
+      "EQE 53 AMG 4MATIC+ 626HP"
+    ],
+    "EQE SUV": [
+      "EQE 350+ 292HP",
+      "EQE 350 4MATIC 292HP",
+      "EQE 500 4MATIC 408HP",
+      "EQE 53 AMG 4MATIC+ 626HP"
+    ],
+    "EQS": [
+      "EQS 450+ 333HP",
+      "EQS 450 4MATIC 360HP",
+      "EQS 580 4MATIC 523HP",
+      "EQS 53 AMG 4MATIC+ 658HP"
+    ],
+    "EQS SUV": [
+      "EQS 450+ 360HP",
+      "EQS 450 4MATIC 360HP",
+      "EQS 580 4MATIC 544HP"
+    ],
+    "EQV": [
+      "EQV 300 204HP"
+    ],
+    "V Serisi": [
+      "V 220 d 2.0 163HP",
+      "V 250 d 2.0 190HP",
+      "V 300 d 2.0 237HP"
+    ],
+    "Vito": [
+      "Vito 110 CDI 102HP",
+      "Vito 114 CDI 136HP",
+      "Vito 116 CDI 163HP",
+      "Vito 119 CDI 190HP"
+    ],
+    "Sprinter": [
+      "Sprinter 314 CDI 143HP",
+      "Sprinter 316 CDI 163HP",
+      "Sprinter 319 CDI 190HP"
+    ],
+    "Citan": [
+      "Citan 110 1.3 102HP",
+      "Citan 113 1.3 131HP",
+      "Citan 110 CDI 1.5 95HP",
+      "Citan 112 CDI 1.5 116HP"
+    ],
+    "AMG GT": [
+      "4.0 V8 476HP",
+      "4.0 V8 (S) 522HP",
+      "4.0 V8 (R) 585HP",
+      "4.0 V8 PHEV (63 S E Performance) 843HP"
+    ],
+    "SL": [
+      "SL 43 AMG 2.0 381HP",
+      "SL 55 AMG 4.0 V8 476HP",
+      "SL 63 AMG 4.0 V8 585HP"
+    ],
+    "GT": [
+      "GT 43 AMG 3.0 367HP",
+      "GT 53 AMG 3.0 435HP",
+      "GT 63 S AMG 4.0 V8 639HP",
+      "GT 63 S E Performance (PHEV) 843HP"
+    ],
+    "Maybach S Serisi": [
+      "S 580 4.0 V8 510HP",
+      "S 680 6.0 V12 612HP"
+    ],
+    "SLC": [
+      "SLC 180 1.6 156HP",
+      "SLC 200 2.0 184HP",
+      "SLC 300 2.0 245HP",
+      "SLC 43 AMG 3.0 V6 367HP",
+      "SLC 250 d 2.1 204HP"
+    ],
+    "X Serisi": [
+      "X 220 d 2.3 163HP",
+      "X 250 d 2.3 190HP",
+      "X 350 d 4MATIC 3.0 V6 258HP"
+    ],
+    "AMG One": [
+      "1.6 V6 Turbo Hybrid F1 1063HP"
+    ]
   },
   "Audi": {
-    "A1": ["25 TFSI 1.0 95HP", "30 TFSI 1.0 110HP", "35 TFSI 1.5 150HP", "40 TFSI 2.0 207HP"],
-    "A3": ["30 TFSI 1.0 110HP", "35 TFSI 1.5 150HP", "40 TFSI 2.0 190HP", "S3 2.0 310HP", "RS3 2.5 400HP", "30 TDI 2.0 116HP", "35 TDI 2.0 150HP", "40 TDI 2.0 200HP", "40 TFSI e (PHEV) 204HP", "45 TFSI e (PHEV) 245HP"],
-    "A4": ["35 TFSI 2.0 150HP", "40 TFSI 2.0 204HP", "45 TFSI 2.0 265HP", "S4 3.0 TFSI 354HP", "RS4 2.9 V6 450HP", "30 TDI 2.0 136HP", "35 TDI 2.0 163HP", "40 TDI 2.0 204HP", "45 TDI 3.0 231HP"],
-    "A5": ["35 TFSI 2.0 150HP", "40 TFSI 2.0 204HP", "45 TFSI 2.0 265HP", "S5 3.0 TFSI 354HP", "RS5 2.9 V6 450HP", "35 TDI 2.0 163HP", "40 TDI 2.0 204HP", "45 TDI 3.0 231HP"],
-    "A6": ["40 TFSI 2.0 204HP", "45 TFSI 2.0 265HP", "55 TFSI 3.0 340HP", "S6 3.0 TFSI 450HP", "RS6 4.0 V8 630HP", "40 TDI 2.0 204HP", "45 TDI 3.0 231HP", "50 TDI 3.0 286HP", "55 TFSI e (PHEV) 367HP", "60 TFSI e (PHEV) 462HP"],
-    "A7": ["45 TFSI 2.0 265HP", "55 TFSI 3.0 340HP", "S7 3.0 TFSI 450HP", "RS7 4.0 V8 630HP", "40 TDI 2.0 204HP", "45 TDI 3.0 231HP", "50 TDI 3.0 286HP", "55 TFSI e (PHEV) 367HP"],
-    "A8": ["50 TDI 3.0 286HP", "55 TFSI 3.0 340HP", "60 TFSI 4.0 V8 460HP", "S8 4.0 V8 571HP", "60 TFSI e (PHEV) 462HP"],
-    "Q2": ["30 TFSI 1.0 110HP", "35 TFSI 1.5 150HP", "40 TFSI 2.0 190HP", "SQ2 2.0 300HP", "30 TDI 2.0 116HP", "35 TDI 2.0 150HP"],
-    "Q3": ["35 TFSI 1.5 150HP", "40 TFSI 2.0 190HP", "45 TFSI 2.0 245HP", "RS Q3 2.5 400HP", "35 TDI 2.0 150HP", "40 TDI 2.0 200HP", "45 TFSI e (PHEV) 245HP"],
-    "Q4 e-tron": ["35 e-tron 170HP", "40 e-tron 204HP", "45 e-tron quattro 265HP", "50 e-tron quattro 299HP", "SQ4 e-tron 340HP"],
-    "Q5": ["40 TFSI 2.0 204HP", "45 TFSI 2.0 265HP", "55 TFSI 3.0 367HP", "SQ5 3.0 TFSI 354HP", "40 TDI 2.0 204HP", "50 TFSI e (PHEV) 299HP", "55 TFSI e (PHEV) 367HP"],
-    "Q7": ["45 TDI 3.0 231HP", "50 TDI 3.0 286HP", "55 TFSI 3.0 340HP", "SQ7 4.0 V8 507HP", "55 TFSI e (PHEV) 381HP", "60 TFSI e (PHEV) 462HP"],
-    "Q8": ["45 TDI 3.0 231HP", "50 TDI 3.0 286HP", "55 TFSI 3.0 340HP", "SQ8 4.0 V8 507HP", "RS Q8 4.0 V8 600HP", "60 TFSI e (PHEV) 462HP"],
-    "Q8 e-tron": ["50 e-tron quattro 340HP", "55 e-tron quattro 408HP", "SQ8 e-tron 503HP"],
-    "e-tron": ["50 quattro 313HP", "55 quattro 408HP"],
-    "e-tron GT": ["quattro 476HP", "RS 598HP"],
-    "RS3": ["2.5 TFSI 400HP"],
-    "RS4": ["2.9 V6 TFSI 450HP"],
-    "RS5": ["2.9 V6 TFSI 450HP"],
-    "RS6": ["4.0 V8 TFSI 600HP", "4.0 V8 TFSI (Performance) 630HP"],
-    "RS7": ["4.0 V8 TFSI 600HP", "4.0 V8 TFSI (Performance) 630HP"],
-    "RS Q3": ["2.5 TFSI 400HP"],
-    "RS Q8": ["4.0 V8 TFSI 600HP"],
-    "S3": ["2.0 TFSI 310HP"],
-    "S4": ["3.0 V6 TFSI 354HP"],
-    "S5": ["3.0 V6 TFSI 354HP"],
-    "S6": ["3.0 V6 TFSI 450HP"],
-    "S7": ["3.0 V6 TFSI 450HP"],
-    "S8": ["4.0 V8 TFSI 571HP"],
-    "SQ5": ["3.0 V6 TFSI 354HP"],
-    "SQ7": ["4.0 V8 TFSI 507HP"],
-    "SQ8": ["4.0 V8 TFSI 507HP"],
-    "TT": ["40 TFSI 2.0 197HP", "45 TFSI 2.0 245HP"],
-    "TT RS": ["2.5 TFSI 400HP"],
-    "TTS": ["2.0 TFSI 320HP"],
-    "R8": ["5.2 V10 FSI 570HP", "5.2 V10 FSI (Performance) 620HP"]
+    "A1": [
+      "25 TFSI 1.0 95HP",
+      "30 TFSI 1.0 110HP",
+      "35 TFSI 1.5 150HP",
+      "40 TFSI 2.0 207HP"
+    ],
+    "A3": [
+      "30 TFSI 1.0 110HP",
+      "35 TFSI 1.5 150HP",
+      "40 TFSI 2.0 190HP",
+      "S3 2.0 310HP",
+      "RS3 2.5 400HP",
+      "30 TDI 2.0 116HP",
+      "35 TDI 2.0 150HP",
+      "40 TDI 2.0 200HP",
+      "40 TFSI e (PHEV) 204HP",
+      "45 TFSI e (PHEV) 245HP"
+    ],
+    "A4": [
+      "35 TFSI 2.0 150HP",
+      "40 TFSI 2.0 204HP",
+      "45 TFSI 2.0 265HP",
+      "S4 3.0 TFSI 354HP",
+      "RS4 2.9 V6 450HP",
+      "30 TDI 2.0 136HP",
+      "35 TDI 2.0 163HP",
+      "40 TDI 2.0 204HP",
+      "45 TDI 3.0 231HP"
+    ],
+    "A5": [
+      "35 TFSI 2.0 150HP",
+      "40 TFSI 2.0 204HP",
+      "45 TFSI 2.0 265HP",
+      "S5 3.0 TFSI 354HP",
+      "RS5 2.9 V6 450HP",
+      "35 TDI 2.0 163HP",
+      "40 TDI 2.0 204HP",
+      "45 TDI 3.0 231HP"
+    ],
+    "A6": [
+      "40 TFSI 2.0 204HP",
+      "45 TFSI 2.0 265HP",
+      "55 TFSI 3.0 340HP",
+      "S6 3.0 TFSI 450HP",
+      "RS6 4.0 V8 630HP",
+      "40 TDI 2.0 204HP",
+      "45 TDI 3.0 231HP",
+      "50 TDI 3.0 286HP",
+      "55 TFSI e (PHEV) 367HP",
+      "60 TFSI e (PHEV) 462HP"
+    ],
+    "A7": [
+      "45 TFSI 2.0 265HP",
+      "55 TFSI 3.0 340HP",
+      "S7 3.0 TFSI 450HP",
+      "RS7 4.0 V8 630HP",
+      "40 TDI 2.0 204HP",
+      "45 TDI 3.0 231HP",
+      "50 TDI 3.0 286HP",
+      "55 TFSI e (PHEV) 367HP"
+    ],
+    "A8": [
+      "50 TDI 3.0 286HP",
+      "55 TFSI 3.0 340HP",
+      "60 TFSI 4.0 V8 460HP",
+      "S8 4.0 V8 571HP",
+      "60 TFSI e (PHEV) 462HP"
+    ],
+    "Q2": [
+      "30 TFSI 1.0 110HP",
+      "35 TFSI 1.5 150HP",
+      "40 TFSI 2.0 190HP",
+      "SQ2 2.0 300HP",
+      "30 TDI 2.0 116HP",
+      "35 TDI 2.0 150HP"
+    ],
+    "Q3": [
+      "35 TFSI 1.5 150HP",
+      "40 TFSI 2.0 190HP",
+      "45 TFSI 2.0 245HP",
+      "RS Q3 2.5 400HP",
+      "35 TDI 2.0 150HP",
+      "40 TDI 2.0 200HP",
+      "45 TFSI e (PHEV) 245HP"
+    ],
+    "Q4 e-tron": [
+      "35 e-tron 170HP",
+      "40 e-tron 204HP",
+      "45 e-tron quattro 265HP",
+      "50 e-tron quattro 299HP",
+      "SQ4 e-tron 340HP"
+    ],
+    "Q5": [
+      "40 TFSI 2.0 204HP",
+      "45 TFSI 2.0 265HP",
+      "55 TFSI 3.0 367HP",
+      "SQ5 3.0 TFSI 354HP",
+      "40 TDI 2.0 204HP",
+      "50 TFSI e (PHEV) 299HP",
+      "55 TFSI e (PHEV) 367HP"
+    ],
+    "Q7": [
+      "45 TDI 3.0 231HP",
+      "50 TDI 3.0 286HP",
+      "55 TFSI 3.0 340HP",
+      "SQ7 4.0 V8 507HP",
+      "55 TFSI e (PHEV) 381HP",
+      "60 TFSI e (PHEV) 462HP"
+    ],
+    "Q8": [
+      "45 TDI 3.0 231HP",
+      "50 TDI 3.0 286HP",
+      "55 TFSI 3.0 340HP",
+      "SQ8 4.0 V8 507HP",
+      "RS Q8 4.0 V8 600HP",
+      "60 TFSI e (PHEV) 462HP"
+    ],
+    "Q8 e-tron": [
+      "50 e-tron quattro 340HP",
+      "55 e-tron quattro 408HP",
+      "SQ8 e-tron 503HP"
+    ],
+    "e-tron": [
+      "50 quattro 313HP",
+      "55 quattro 408HP"
+    ],
+    "e-tron GT": [
+      "quattro 476HP",
+      "RS 598HP"
+    ],
+    "RS3": [
+      "2.5 TFSI 400HP"
+    ],
+    "RS4": [
+      "2.9 V6 TFSI 450HP"
+    ],
+    "RS5": [
+      "2.9 V6 TFSI 450HP"
+    ],
+    "RS6": [
+      "4.0 V8 TFSI 600HP",
+      "4.0 V8 TFSI (Performance) 630HP"
+    ],
+    "RS7": [
+      "4.0 V8 TFSI 600HP",
+      "4.0 V8 TFSI (Performance) 630HP"
+    ],
+    "RS Q3": [
+      "2.5 TFSI 400HP"
+    ],
+    "RS Q8": [
+      "4.0 V8 TFSI 600HP"
+    ],
+    "S3": [
+      "2.0 TFSI 310HP"
+    ],
+    "S4": [
+      "3.0 V6 TFSI 354HP"
+    ],
+    "S5": [
+      "3.0 V6 TFSI 354HP"
+    ],
+    "S6": [
+      "3.0 V6 TFSI 450HP"
+    ],
+    "S7": [
+      "3.0 V6 TFSI 450HP"
+    ],
+    "S8": [
+      "4.0 V8 TFSI 571HP"
+    ],
+    "SQ5": [
+      "3.0 V6 TFSI 354HP"
+    ],
+    "SQ7": [
+      "4.0 V8 TFSI 507HP"
+    ],
+    "SQ8": [
+      "4.0 V8 TFSI 507HP"
+    ],
+    "TT": [
+      "40 TFSI 2.0 197HP",
+      "45 TFSI 2.0 245HP"
+    ],
+    "TT RS": [
+      "2.5 TFSI 400HP"
+    ],
+    "TTS": [
+      "2.0 TFSI 320HP"
+    ],
+    "R8": [
+      "5.2 V10 FSI 570HP",
+      "5.2 V10 FSI (Performance) 620HP"
+    ]
   },
   "Toyota": {
-    "Yaris": ["1.0 VVT-i 72HP", "1.5 Dual VVT-iE 111HP", "1.5 Hybrid 116HP", "GR Yaris 1.6 Turbo 261HP"],
-    "Yaris Cross": ["1.5 VVT-i 125HP", "1.5 Hybrid 116HP"],
-    "Aygo": ["1.0 VVT-i 72HP"],
-    "Aygo X": ["1.0 VVT-i 72HP", "1.5 Hybrid 116HP"],
-    "Corolla": ["1.2 Turbo 116HP", "1.5 125HP", "1.8 Hybrid 140HP", "2.0 Hybrid 196HP", "GR Corolla 1.6 Turbo 300HP"],
-    "Corolla Cross": ["1.8 Hybrid 140HP", "2.0 Hybrid 197HP"],
-    "C-HR": ["1.2 Turbo 116HP", "1.8 Hybrid 140HP", "2.0 Hybrid 196HP", "2.0 Plug-in Hybrid 223HP"],
-    "RAV4": ["2.0 Dual VVT-i 175HP", "2.5 Hybrid 222HP", "2.5 Plug-in Hybrid 306HP"],
-    "Camry": ["2.5 Hybrid 218HP"],
-    "Avensis": ["1.6 D-4D 112HP", "1.8 VVT-i 147HP", "2.0 D-4D 143HP", "2.2 D-4D 177HP"],
-    "Auris": ["1.33 Dual VVT-i 99HP", "1.6 Valvematic 132HP", "1.4 D-4D 90HP", "1.8 Hybrid 136HP"],
-    "Verso": ["1.6 132HP", "1.8 VVT-i 147HP", "2.0 D-4D 124HP", "2.2 D-4D 150HP"],
-    "Prius": ["1.8 Hybrid 122HP", "2.0 Hybrid 196HP", "2.0 Plug-in Hybrid 223HP"],
-    "Supra": ["2.0 BMW Turbo 258HP", "3.0 BMW Turbo 340HP", "3.0 BMW Turbo 387HP"],
-    "GR86": ["2.4 Boxer 234HP"],
-    "Land Cruiser": ["2.8 D-4D 204HP", "2.8 D-4D 230HP", "3.3 V6 D-4D 305HP", "3.5 V6 Twin-Turbo 409HP"],
-    "Hilux": ["2.4 D-4D 150HP", "2.8 D-4D 204HP"],
-    "bZ4X": ["Elektrik FWD 204HP", "Elektrik AWD 218HP"],
-    "Highlander": ["2.5 Hybrid 248HP"],
-    "Proace": ["1.5 D 100HP", "1.5 D 120HP", "2.0 D 140HP", "2.0 D 180HP", "Elektrik 136HP"],
-    "Proace Verso": ["2.0 D 140HP", "2.0 D 180HP", "Elektrik 136HP"],
-    "Proace City": ["1.2 Turbo 110HP", "1.5 D 75HP", "1.5 D 100HP"],
-    "Mirai": ["Hidrojen 182HP"]
+    "Yaris": [
+      "1.0 VVT-i 72HP",
+      "1.5 Dual VVT-iE 111HP",
+      "1.5 Hybrid 116HP",
+      "GR Yaris 1.6 Turbo 261HP"
+    ],
+    "Yaris Cross": [
+      "1.5 VVT-i 125HP",
+      "1.5 Hybrid 116HP"
+    ],
+    "Aygo": [
+      "1.0 VVT-i 72HP"
+    ],
+    "Aygo X": [
+      "1.0 VVT-i 72HP",
+      "1.5 Hybrid 116HP"
+    ],
+    "Corolla": [
+      "1.2 Turbo 116HP",
+      "1.5 125HP",
+      "1.8 Hybrid 140HP",
+      "2.0 Hybrid 196HP",
+      "GR Corolla 1.6 Turbo 300HP"
+    ],
+    "Corolla Cross": [
+      "1.8 Hybrid 140HP",
+      "2.0 Hybrid 197HP"
+    ],
+    "C-HR": [
+      "1.2 Turbo 116HP",
+      "1.8 Hybrid 140HP",
+      "2.0 Hybrid 196HP",
+      "2.0 Plug-in Hybrid 223HP"
+    ],
+    "RAV4": [
+      "2.0 Dual VVT-i 175HP",
+      "2.5 Hybrid 222HP",
+      "2.5 Plug-in Hybrid 306HP"
+    ],
+    "Camry": [
+      "2.5 Hybrid 218HP"
+    ],
+    "Avensis": [
+      "1.6 D-4D 112HP",
+      "1.8 VVT-i 147HP",
+      "2.0 D-4D 143HP",
+      "2.2 D-4D 177HP"
+    ],
+    "Auris": [
+      "1.33 Dual VVT-i 99HP",
+      "1.6 Valvematic 132HP",
+      "1.4 D-4D 90HP",
+      "1.8 Hybrid 136HP"
+    ],
+    "Verso": [
+      "1.6 132HP",
+      "1.8 VVT-i 147HP",
+      "2.0 D-4D 124HP",
+      "2.2 D-4D 150HP"
+    ],
+    "Prius": [
+      "1.8 Hybrid 122HP",
+      "2.0 Hybrid 196HP",
+      "2.0 Plug-in Hybrid 223HP"
+    ],
+    "Supra": [
+      "2.0 BMW Turbo 258HP",
+      "3.0 BMW Turbo 340HP",
+      "3.0 BMW Turbo 387HP"
+    ],
+    "GR86": [
+      "2.4 Boxer 234HP"
+    ],
+    "Land Cruiser": [
+      "2.8 D-4D 204HP",
+      "2.8 D-4D 230HP",
+      "3.3 V6 D-4D 305HP",
+      "3.5 V6 Twin-Turbo 409HP"
+    ],
+    "Hilux": [
+      "2.4 D-4D 150HP",
+      "2.8 D-4D 204HP"
+    ],
+    "bZ4X": [
+      "Elektrik FWD 204HP",
+      "Elektrik AWD 218HP"
+    ],
+    "Highlander": [
+      "2.5 Hybrid 248HP"
+    ],
+    "Proace": [
+      "1.5 D 100HP",
+      "1.5 D 120HP",
+      "2.0 D 140HP",
+      "2.0 D 180HP",
+      "Elektrik 136HP"
+    ],
+    "Proace Verso": [
+      "2.0 D 140HP",
+      "2.0 D 180HP",
+      "Elektrik 136HP"
+    ],
+    "Proace City": [
+      "1.2 Turbo 110HP",
+      "1.5 D 75HP",
+      "1.5 D 100HP"
+    ],
+    "Mirai": [
+      "Hidrojen 182HP"
+    ]
   },
   "Hyundai": {
-    "i10": ["1.0 MPI 67HP", "1.2 MPI 84HP", "1.0 Turbo (N Line) 100HP"],
-    "i20": ["1.0 T-GDI 100HP", "1.0 T-GDI 120HP", "1.2 MPI 84HP", "i20 N 1.6 T-GDI 204HP"],
-    "i30": ["1.0 T-GDI 120HP", "1.5 T-GDI 160HP", "1.6 CRDI 115HP", "N Line 1.5 T-GDI 160HP", "i30 N 2.0 T-GDI 280HP"],
-    "i40": ["1.6 GDI 135HP", "2.0 GDI 177HP", "1.7 CRDI 116HP", "1.7 CRDI 141HP"],
-    "Accent": ["1.4 MPI 100HP", "1.6 MPI 124HP", "1.6 CRDI 128HP"],
-    "Elantra": ["1.6 MPI 126HP", "1.6 Hybrid 141HP"],
-    "Bayon": ["1.0 T-GDI 100HP", "1.0 T-GDI 120HP", "1.2 MPI 84HP", "1.4 MPI 100HP"],
-    "Kona": ["1.0 T-GDI 120HP", "1.6 T-GDI 198HP", "1.6 Hybrid 141HP", "N Line 1.6 T-GDI 198HP"],
-    "Kona Electric": ["Elektrik Standard Range 156HP", "Elektrik Long Range 218HP"],
-    "Tucson": ["1.6 T-GDI 150HP", "1.6 T-GDI 180HP", "1.6 T-GDI Mild Hybrid 180HP", "1.6 T-GDI Hybrid 230HP", "1.6 T-GDI PHEV 265HP", "N Line 1.6 T-GDI 230HP"],
-    "Santa Fe": ["1.6 T-GDI Hybrid 230HP", "1.6 T-GDI PHEV 265HP", "2.2 CRDI 202HP", "2.5 T-GDI 281HP"],
-    "Ioniq": ["1.6 Hybrid 141HP", "1.6 Plug-in Hybrid 141HP", "Elektrik 136HP"],
-    "Ioniq 5": ["Elektrik Standard Range 170HP", "Elektrik Long Range RWD 228HP", "Elektrik Long Range AWD 325HP", "Ioniq 5 N 650HP"],
-    "Ioniq 6": ["Elektrik Standard Range 151HP", "Elektrik Long Range RWD 228HP", "Elektrik Long Range AWD 325HP"],
-    "Staria": ["2.2 CRDI 177HP", "3.5 V6 272HP"],
-    "Venue": ["1.0 T-GDI 120HP", "1.2 MPI 84HP"],
-    "Nexo": ["Hidrojen 163HP"]
+    "i10": [
+      "1.0 MPI 67HP",
+      "1.2 MPI 84HP",
+      "1.0 Turbo (N Line) 100HP"
+    ],
+    "i20": [
+      "1.0 T-GDI 100HP",
+      "1.0 T-GDI 120HP",
+      "1.2 MPI 84HP",
+      "i20 N 1.6 T-GDI 204HP"
+    ],
+    "i30": [
+      "1.0 T-GDI 120HP",
+      "1.5 T-GDI 160HP",
+      "1.6 CRDI 115HP",
+      "N Line 1.5 T-GDI 160HP",
+      "i30 N 2.0 T-GDI 280HP"
+    ],
+    "i40": [
+      "1.6 GDI 135HP",
+      "2.0 GDI 177HP",
+      "1.7 CRDI 116HP",
+      "1.7 CRDI 141HP"
+    ],
+    "Accent": [
+      "1.4 MPI 100HP",
+      "1.6 MPI 124HP",
+      "1.6 CRDI 128HP"
+    ],
+    "Elantra": [
+      "1.6 MPI 126HP",
+      "1.6 Hybrid 141HP"
+    ],
+    "Bayon": [
+      "1.0 T-GDI 100HP",
+      "1.0 T-GDI 120HP",
+      "1.2 MPI 84HP",
+      "1.4 MPI 100HP"
+    ],
+    "Kona": [
+      "1.0 T-GDI 120HP",
+      "1.6 T-GDI 198HP",
+      "1.6 Hybrid 141HP",
+      "N Line 1.6 T-GDI 198HP"
+    ],
+    "Kona Electric": [
+      "Elektrik Standard Range 156HP",
+      "Elektrik Long Range 218HP"
+    ],
+    "Tucson": [
+      "1.6 T-GDI 150HP",
+      "1.6 T-GDI 180HP",
+      "1.6 T-GDI Mild Hybrid 180HP",
+      "1.6 T-GDI Hybrid 230HP",
+      "1.6 T-GDI PHEV 265HP",
+      "N Line 1.6 T-GDI 230HP"
+    ],
+    "Santa Fe": [
+      "1.6 T-GDI Hybrid 230HP",
+      "1.6 T-GDI PHEV 265HP",
+      "2.2 CRDI 202HP",
+      "2.5 T-GDI 281HP"
+    ],
+    "Ioniq": [
+      "1.6 Hybrid 141HP",
+      "1.6 Plug-in Hybrid 141HP",
+      "Elektrik 136HP"
+    ],
+    "Ioniq 5": [
+      "Elektrik Standard Range 170HP",
+      "Elektrik Long Range RWD 228HP",
+      "Elektrik Long Range AWD 325HP",
+      "Ioniq 5 N 650HP"
+    ],
+    "Ioniq 6": [
+      "Elektrik Standard Range 151HP",
+      "Elektrik Long Range RWD 228HP",
+      "Elektrik Long Range AWD 325HP"
+    ],
+    "Staria": [
+      "2.2 CRDI 177HP",
+      "3.5 V6 272HP"
+    ],
+    "Venue": [
+      "1.0 T-GDI 120HP",
+      "1.2 MPI 84HP"
+    ],
+    "Nexo": [
+      "Hidrojen 163HP"
+    ],
+    "Getz": [
+      "1.1 66HP",
+      "1.4 97HP",
+      "1.6 105HP",
+      "1.5 CRDI 82HP",
+      "1.5 CRDI 110HP"
+    ],
+    "ix20": [
+      "1.4 90HP",
+      "1.6 125HP",
+      "1.4 CRDI 77HP",
+      "1.6 CRDI 115HP"
+    ],
+    "ix35": [
+      "2.0 163HP",
+      "2.4 174HP",
+      "1.6 GDI 135HP",
+      "1.7 CRDI 115HP",
+      "2.0 CRDI 136HP",
+      "2.0 CRDI 184HP"
+    ]
   },
   "Kia": {
-    "Picanto": ["1.0 MPI 67HP", "1.2 MPI 84HP", "1.0 T-GDI (GT-Line) 100HP"],
-    "Rio": ["1.0 T-GDI 100HP", "1.0 T-GDI 120HP", "1.2 MPI 84HP", "1.25 MPI 84HP"],
-    "Stonic": ["1.0 T-GDI 100HP", "1.0 T-GDI 120HP", "1.4 MPI 100HP"],
-    "Ceed": ["1.0 T-GDI 120HP", "1.5 T-GDI 160HP", "1.6 CRDI 136HP", "Ceed GT 1.6 T-GDI 204HP"],
-    "ProCeed": ["1.5 T-GDI 160HP", "1.6 T-GDI 204HP", "1.6 CRDI 136HP"],
-    "XCeed": ["1.0 T-GDI 120HP", "1.5 T-GDI 160HP", "1.6 CRDI 136HP", "1.6 PHEV 141HP"],
-    "Sportage": ["1.6 T-GDI 150HP", "1.6 T-GDI 180HP", "1.6 T-GDI Mild Hybrid 180HP", "1.6 T-GDI Hybrid 230HP", "1.6 T-GDI PHEV 265HP", "2.0 CRDI 186HP"],
-    "Sorento": ["1.6 T-GDI Hybrid 230HP", "1.6 T-GDI PHEV 265HP", "2.2 CRDI 202HP"],
-    "Niro": ["1.6 Hybrid 141HP", "1.6 Plug-in Hybrid 183HP", "Elektrik 204HP"],
-    "EV6": ["Elektrik Standard Range 170HP", "Elektrik Long Range RWD 229HP", "Elektrik Long Range AWD 325HP", "EV6 GT 585HP"],
-    "EV9": ["Elektrik Long Range RWD 204HP", "Elektrik Long Range AWD 385HP"],
-    "Seltos": ["1.0 T-GDI 120HP", "1.6 GDI 123HP"],
-    "Carens": ["1.4 T-GDI 140HP", "1.5 MPI 115HP"],
-    "Carnival": ["2.2 CRDI 202HP", "3.5 GDI V6 272HP", "1.6 T-GDI Hybrid 230HP"],
-    "Stinger": ["2.0 T-GDI 247HP", "3.3 T-GDI V6 366HP"],
-    "Optima": ["1.6 T-GDI 180HP", "2.0 CVVL 165HP", "1.7 CRDI 141HP", "2.0 Hybrid 205HP"]
+    "Picanto": [
+      "1.0 MPI 67HP",
+      "1.2 MPI 84HP",
+      "1.0 T-GDI (GT-Line) 100HP"
+    ],
+    "Rio": [
+      "1.0 T-GDI 100HP",
+      "1.0 T-GDI 120HP",
+      "1.2 MPI 84HP",
+      "1.25 MPI 84HP"
+    ],
+    "Stonic": [
+      "1.0 T-GDI 100HP",
+      "1.0 T-GDI 120HP",
+      "1.4 MPI 100HP"
+    ],
+    "Ceed": [
+      "1.0 T-GDI 120HP",
+      "1.5 T-GDI 160HP",
+      "1.6 CRDI 136HP",
+      "Ceed GT 1.6 T-GDI 204HP"
+    ],
+    "ProCeed": [
+      "1.5 T-GDI 160HP",
+      "1.6 T-GDI 204HP",
+      "1.6 CRDI 136HP"
+    ],
+    "XCeed": [
+      "1.0 T-GDI 120HP",
+      "1.5 T-GDI 160HP",
+      "1.6 CRDI 136HP",
+      "1.6 PHEV 141HP"
+    ],
+    "Sportage": [
+      "1.6 T-GDI 150HP",
+      "1.6 T-GDI 180HP",
+      "1.6 T-GDI Mild Hybrid 180HP",
+      "1.6 T-GDI Hybrid 230HP",
+      "1.6 T-GDI PHEV 265HP",
+      "2.0 CRDI 186HP"
+    ],
+    "Sorento": [
+      "1.6 T-GDI Hybrid 230HP",
+      "1.6 T-GDI PHEV 265HP",
+      "2.2 CRDI 202HP"
+    ],
+    "Niro": [
+      "1.6 Hybrid 141HP",
+      "1.6 Plug-in Hybrid 183HP",
+      "Elektrik 204HP"
+    ],
+    "EV6": [
+      "Elektrik Standard Range 170HP",
+      "Elektrik Long Range RWD 229HP",
+      "Elektrik Long Range AWD 325HP",
+      "EV6 GT 585HP"
+    ],
+    "EV9": [
+      "Elektrik Long Range RWD 204HP",
+      "Elektrik Long Range AWD 385HP"
+    ],
+    "Seltos": [
+      "1.0 T-GDI 120HP",
+      "1.6 GDI 123HP"
+    ],
+    "Carens": [
+      "1.4 T-GDI 140HP",
+      "1.5 MPI 115HP"
+    ],
+    "Carnival": [
+      "2.2 CRDI 202HP",
+      "3.5 GDI V6 272HP",
+      "1.6 T-GDI Hybrid 230HP"
+    ],
+    "Stinger": [
+      "2.0 T-GDI 247HP",
+      "3.3 T-GDI V6 366HP"
+    ],
+    "Optima": [
+      "1.6 T-GDI 180HP",
+      "2.0 CVVL 165HP",
+      "1.7 CRDI 141HP",
+      "2.0 Hybrid 205HP"
+    ],
+    "Cerato": [
+      "1.6 128HP",
+      "2.0 158HP",
+      "1.6 CRDI 136HP"
+    ],
+    "Soul": [
+      "1.6 140HP",
+      "2.0 147HP",
+      "1.6 CRDI 128HP",
+      "Elektrik 204HP"
+    ],
+    "Venga": [
+      "1.4 90HP",
+      "1.6 125HP",
+      "1.4 CRDI 90HP",
+      "1.6 CRDI 128HP"
+    ]
   },
   "Renault": {
-    "Clio": ["0.9 TCe 90HP", "1.0 SCe 65HP", "1.0 SCe 75HP", "1.0 TCe 90HP", "1.0 TCe 100HP", "1.2 TCe 100HP", "1.3 TCe 130HP", "1.5 dCi 75HP", "1.5 dCi 90HP", "1.5 Blue dCi 85HP", "1.5 Blue dCi 100HP", "1.6 E-Tech Hybrid 140HP", "1.6 E-Tech Hybrid 145HP"],
-    "Captur": ["1.0 TCe 100HP", "1.3 TCe 140HP", "1.3 TCe 160HP", "1.5 Blue dCi 95HP", "1.5 Blue dCi 115HP", "1.6 E-Tech Hybrid 145HP", "1.6 E-Tech Plug-in Hybrid 160HP"],
-    "Megane": ["1.3 TCe 140HP", "1.3 TCe 160HP", "1.5 Blue dCi 115HP", "1.6 E-Tech Plug-in Hybrid 160HP", "Megane RS 1.8 TCe 300HP"],
-    "Megane E-Tech": ["Elektrik EV40 130HP", "Elektrik EV60 220HP"],
-    "Austral": ["1.2 TCe Mild Hybrid 140HP", "1.3 TCe Mild Hybrid 158HP", "1.2 E-Tech Hybrid 200HP"],
-    "Arkana": ["1.3 TCe Mild Hybrid 140HP", "1.3 TCe Mild Hybrid 160HP", "1.6 E-Tech Hybrid 145HP"],
-    "Kadjar": ["1.2 TCe 130HP", "1.3 TCe 140HP", "1.3 TCe 160HP", "1.5 Blue dCi 115HP", "1.6 dCi 130HP", "1.7 Blue dCi 150HP"],
-    "Koleos": ["2.0 Blue dCi 190HP"],
-    "Talisman": ["1.3 TCe 160HP", "1.6 dCi 130HP", "1.6 dCi 160HP", "1.8 TCe 225HP", "1.7 Blue dCi 150HP", "2.0 Blue dCi 190HP"],
-    "Taliant": ["1.0 SCe 90HP", "1.0 TCe 90HP", "1.0 TCe 100HP"],
-    "Symbol": ["0.9 TCe 90HP", "1.2 16V 75HP", "1.5 dCi 75HP", "1.5 dCi 90HP"],
-    "Fluence": ["1.6 16V 110HP", "1.5 dCi 90HP", "1.5 dCi 110HP"],
-    "Kangoo": ["1.3 TCe 100HP", "1.3 TCe 130HP", "1.5 Blue dCi 75HP", "1.5 Blue dCi 95HP", "1.5 Blue dCi 115HP", "Elektrik 122HP"],
-    "Zoe": ["Elektrik R110 109HP", "Elektrik R135 135HP"],
-    "Scenic": ["1.2 TCe 115HP", "1.3 TCe 140HP", "1.5 dCi 95HP", "1.5 dCi 110HP", "1.7 Blue dCi 120HP", "1.7 Blue dCi 150HP"],
-    "Rafale": ["1.2 E-Tech Hybrid 200HP", "1.2 E-Tech 4x4 PHEV 300HP"],
-    "Espace": ["1.2 E-Tech Hybrid 200HP"],
-    "Express": ["1.3 TCe 100HP", "1.5 Blue dCi 75HP", "1.5 Blue dCi 95HP"],
-    "Master": ["2.3 dCi 135HP", "2.3 dCi 150HP", "2.3 dCi 180HP"],
-    "Trafic": ["2.0 dCi 110HP", "2.0 dCi 130HP", "2.0 dCi 150HP", "2.0 dCi 170HP"],
-    "Twingo": ["1.0 SCe 65HP", "1.0 SCe 75HP", "Elektrik 82HP"]
+    "Clio": [
+      "0.9 TCe 90HP",
+      "1.0 SCe 65HP",
+      "1.0 SCe 75HP",
+      "1.0 TCe 90HP",
+      "1.0 TCe 100HP",
+      "1.2 TCe 100HP",
+      "1.3 TCe 130HP",
+      "1.5 dCi 75HP",
+      "1.5 dCi 90HP",
+      "1.5 Blue dCi 85HP",
+      "1.5 Blue dCi 100HP",
+      "1.6 E-Tech Hybrid 140HP",
+      "1.6 E-Tech Hybrid 145HP"
+    ],
+    "Captur": [
+      "1.0 TCe 100HP",
+      "1.3 TCe 140HP",
+      "1.3 TCe 160HP",
+      "1.5 Blue dCi 95HP",
+      "1.5 Blue dCi 115HP",
+      "1.6 E-Tech Hybrid 145HP",
+      "1.6 E-Tech Plug-in Hybrid 160HP"
+    ],
+    "Megane": [
+      "1.3 TCe 140HP",
+      "1.3 TCe 160HP",
+      "1.5 Blue dCi 115HP",
+      "1.6 E-Tech Plug-in Hybrid 160HP",
+      "Megane RS 1.8 TCe 300HP"
+    ],
+    "Megane E-Tech": [
+      "Elektrik EV40 130HP",
+      "Elektrik EV60 220HP"
+    ],
+    "Austral": [
+      "1.2 TCe Mild Hybrid 140HP",
+      "1.3 TCe Mild Hybrid 158HP",
+      "1.2 E-Tech Hybrid 200HP"
+    ],
+    "Arkana": [
+      "1.3 TCe Mild Hybrid 140HP",
+      "1.3 TCe Mild Hybrid 160HP",
+      "1.6 E-Tech Hybrid 145HP"
+    ],
+    "Kadjar": [
+      "1.2 TCe 130HP",
+      "1.3 TCe 140HP",
+      "1.3 TCe 160HP",
+      "1.5 Blue dCi 115HP",
+      "1.6 dCi 130HP",
+      "1.7 Blue dCi 150HP"
+    ],
+    "Koleos": [
+      "2.0 Blue dCi 190HP"
+    ],
+    "Talisman": [
+      "1.3 TCe 160HP",
+      "1.6 dCi 130HP",
+      "1.6 dCi 160HP",
+      "1.8 TCe 225HP",
+      "1.7 Blue dCi 150HP",
+      "2.0 Blue dCi 190HP"
+    ],
+    "Taliant": [
+      "1.0 SCe 90HP",
+      "1.0 TCe 90HP",
+      "1.0 TCe 100HP"
+    ],
+    "Symbol": [
+      "0.9 TCe 90HP",
+      "1.2 16V 75HP",
+      "1.5 dCi 75HP",
+      "1.5 dCi 90HP"
+    ],
+    "Fluence": [
+      "1.6 16V 110HP",
+      "2.0 16V 140HP",
+      "1.5 dCi 90HP",
+      "1.5 dCi 110HP",
+      "Elektrik (ZE) 95HP"
+    ],
+    "Kangoo": [
+      "1.3 TCe 100HP",
+      "1.3 TCe 130HP",
+      "1.5 Blue dCi 75HP",
+      "1.5 Blue dCi 95HP",
+      "1.5 Blue dCi 115HP",
+      "Elektrik 122HP"
+    ],
+    "Zoe": [
+      "Elektrik R110 109HP",
+      "Elektrik R135 135HP"
+    ],
+    "Scenic": [
+      "1.2 TCe 115HP",
+      "1.3 TCe 140HP",
+      "1.5 dCi 95HP",
+      "1.5 dCi 110HP",
+      "1.7 Blue dCi 120HP",
+      "1.7 Blue dCi 150HP"
+    ],
+    "Rafale": [
+      "1.2 E-Tech Hybrid 200HP",
+      "1.2 E-Tech 4x4 PHEV 300HP"
+    ],
+    "Espace": [
+      "1.2 E-Tech Hybrid 200HP"
+    ],
+    "Express": [
+      "1.3 TCe 100HP",
+      "1.5 Blue dCi 75HP",
+      "1.5 Blue dCi 95HP"
+    ],
+    "Master": [
+      "2.3 dCi 135HP",
+      "2.3 dCi 150HP",
+      "2.3 dCi 180HP"
+    ],
+    "Trafic": [
+      "2.0 dCi 110HP",
+      "2.0 dCi 130HP",
+      "2.0 dCi 150HP",
+      "2.0 dCi 170HP"
+    ],
+    "Twingo": [
+      "1.0 SCe 65HP",
+      "1.0 SCe 75HP",
+      "Elektrik 82HP"
+    ],
+    "Grand Scenic": [
+      "1.2 TCe 115HP",
+      "1.3 TCe 140HP",
+      "1.5 dCi 110HP",
+      "1.6 dCi 130HP",
+      "1.7 Blue dCi 150HP"
+    ],
+    "Laguna": [
+      "1.6 16V 110HP",
+      "2.0 16V 140HP",
+      "2.0 TCe 170HP",
+      "1.5 dCi 110HP",
+      "2.0 dCi 150HP",
+      "2.0 dCi 175HP",
+      "3.0 V6 dCi 235HP"
+    ],
+    "Latitude": [
+      "2.0 16V 140HP",
+      "2.5 V6 182HP",
+      "3.5 V6 241HP",
+      "1.5 dCi 110HP",
+      "2.0 dCi 150HP",
+      "2.0 dCi 175HP"
+    ],
+    "Modus": [
+      "1.2 16V 75HP",
+      "1.4 16V 98HP",
+      "1.6 16V 112HP",
+      "1.5 dCi 65HP",
+      "1.5 dCi 85HP",
+      "1.5 dCi 105HP"
+    ]
   },
   "Fiat": {
-    "Egea": ["1.3 MultiJet 95HP", "1.4 Fire 95HP", "1.4 Fire 120HP", "1.6 MultiJet 120HP", "1.6 E-Torq 110HP", "1.0 T200 100HP"],
-    "Tipo": ["1.0 T200 100HP", "1.4 Fire 95HP", "1.3 MultiJet 95HP", "1.6 MultiJet 120HP", "1.5 Hybrid 130HP"],
-    "500": ["0.9 TwinAir 85HP", "1.0 Hybrid 70HP", "1.2 Fire 69HP", "Abarth 1.4 135HP", "Abarth 1.4 165HP", "500e Elektrik 95HP", "500e Elektrik 118HP"],
-    "500C": ["0.9 TwinAir 85HP", "1.0 Hybrid 70HP", "1.2 Fire 69HP", "500Ce Elektrik 118HP"],
-    "500X": ["1.0 T3 120HP", "1.3 T4 150HP", "1.5 Hybrid 130HP", "1.3 MultiJet 95HP", "1.6 MultiJet 120HP"],
-    "500L": ["1.4 Fire 95HP", "1.3 MultiJet 95HP", "1.6 MultiJet 120HP"],
-    "Panda": ["0.9 TwinAir 85HP", "1.0 Hybrid 70HP", "1.2 Fire 69HP", "1.3 MultiJet 95HP", "Panda 4x4 0.9 TwinAir 85HP"],
-    "Punto": ["1.2 Fire 69HP", "1.4 Fire 77HP", "1.3 MultiJet 75HP", "1.3 MultiJet 85HP"],
-    "Doblo": ["1.3 MultiJet 90HP", "1.6 MultiJet 105HP", "1.6 MultiJet 120HP", "1.5 Diesel (2023+) 100HP", "1.5 Diesel (2023+) 130HP"],
-    "Fiorino": ["1.3 MultiJet 75HP", "1.3 MultiJet 80HP", "1.3 MultiJet 95HP", "1.4 Fire 77HP"],
-    "Linea": ["1.3 MultiJet 75HP", "1.3 MultiJet 90HP", "1.4 Fire 77HP", "1.4 T-Jet 120HP"],
-    "Ducato": ["2.3 MultiJet 130HP", "2.3 MultiJet 140HP", "2.3 MultiJet 160HP", "2.3 MultiJet 180HP"],
-    "Scudo": ["2.0 HDI 120HP", "2.0 HDI 165HP", "2.0 HDI 180HP"],
-    "124 Spider": ["1.4 Multiair 140HP", "1.4 Multiair (Abarth) 170HP"]
+    "Egea": [
+      "1.3 MultiJet 95HP",
+      "1.4 Fire 95HP",
+      "1.4 Fire 120HP",
+      "1.6 MultiJet 120HP",
+      "1.6 E-Torq 110HP",
+      "1.0 T200 100HP"
+    ],
+    "Tipo": [
+      "1.0 T200 100HP",
+      "1.4 Fire 95HP",
+      "1.3 MultiJet 95HP",
+      "1.6 MultiJet 120HP",
+      "1.5 Hybrid 130HP"
+    ],
+    "500": [
+      "0.9 TwinAir 85HP",
+      "1.0 Hybrid 70HP",
+      "1.2 Fire 69HP",
+      "Abarth 1.4 135HP",
+      "Abarth 1.4 165HP",
+      "500e Elektrik 95HP",
+      "500e Elektrik 118HP"
+    ],
+    "500C": [
+      "0.9 TwinAir 85HP",
+      "1.0 Hybrid 70HP",
+      "1.2 Fire 69HP",
+      "500Ce Elektrik 118HP"
+    ],
+    "500X": [
+      "1.0 T3 120HP",
+      "1.3 T4 150HP",
+      "1.5 Hybrid 130HP",
+      "1.3 MultiJet 95HP",
+      "1.6 MultiJet 120HP"
+    ],
+    "500L": [
+      "1.4 Fire 95HP",
+      "1.3 MultiJet 95HP",
+      "1.6 MultiJet 120HP"
+    ],
+    "Panda": [
+      "0.9 TwinAir 85HP",
+      "1.0 Hybrid 70HP",
+      "1.2 Fire 69HP",
+      "1.3 MultiJet 95HP",
+      "Panda 4x4 0.9 TwinAir 85HP"
+    ],
+    "Punto": [
+      "1.2 Fire 69HP",
+      "1.4 Fire 77HP",
+      "1.3 MultiJet 75HP",
+      "1.3 MultiJet 85HP"
+    ],
+    "Doblo": [
+      "1.3 MultiJet 90HP",
+      "1.6 MultiJet 105HP",
+      "1.6 MultiJet 120HP",
+      "1.5 Diesel (2023+) 100HP",
+      "1.5 Diesel (2023+) 130HP"
+    ],
+    "Fiorino": [
+      "1.3 MultiJet 75HP",
+      "1.3 MultiJet 80HP",
+      "1.3 MultiJet 95HP",
+      "1.4 Fire 77HP"
+    ],
+    "Linea": [
+      "1.3 MultiJet 75HP",
+      "1.3 MultiJet 90HP",
+      "1.4 Fire 77HP",
+      "1.4 T-Jet 120HP"
+    ],
+    "Ducato": [
+      "2.3 MultiJet 130HP",
+      "2.3 MultiJet 140HP",
+      "2.3 MultiJet 160HP",
+      "2.3 MultiJet 180HP"
+    ],
+    "Scudo": [
+      "2.0 HDI 120HP",
+      "2.0 HDI 165HP",
+      "2.0 HDI 180HP"
+    ],
+    "124 Spider": [
+      "1.4 Multiair 140HP",
+      "1.4 Multiair (Abarth) 170HP"
+    ]
   },
   "Ford": {
-    "Fiesta": ["1.0 EcoBoost 95HP", "1.0 EcoBoost 100HP", "1.0 EcoBoost 125HP", "1.5 TDCi 85HP", "ST 1.5 EcoBoost 200HP"],
-    "Focus": ["1.0 EcoBoost 125HP", "1.0 EcoBoost Mild Hybrid 155HP", "1.5 EcoBoost 150HP", "1.5 EcoBoost 182HP", "1.5 EcoBlue 120HP", "2.0 EcoBlue 150HP", "2.3 EcoBoost (ST) 280HP"],
-    "Puma": ["1.0 EcoBoost 125HP", "1.0 EcoBoost Mild Hybrid 125HP", "1.0 EcoBoost Mild Hybrid 155HP", "1.5 EcoBlue 120HP", "Puma ST 1.5 EcoBoost 200HP"],
-    "Kuga": ["1.5 EcoBoost 150HP", "2.5 Hybrid FHEV 190HP", "2.5 Plug-in Hybrid 225HP", "1.5 EcoBlue 120HP", "2.0 EcoBlue 150HP"],
-    "Mondeo": ["1.5 EcoBoost 160HP", "2.0 EcoBoost 203HP", "2.0 HF Hybrid 187HP", "2.0 EcoBlue 150HP", "2.0 EcoBlue 190HP"],
-    "Mustang": ["2.3 EcoBoost 290HP", "5.0 V8 450HP", "5.0 V8 (Dark Horse) 500HP", "5.0 V8 (Shelby GT500) 760HP"],
-    "Mustang Mach-E": ["Elektrik Standard Range RWD 269HP", "Elektrik Extended Range RWD 294HP", "Elektrik Extended Range AWD 351HP", "Mach-E GT 487HP"],
-    "Explorer": ["3.0 EcoBoost 365HP", "3.0 V6 PHEV 457HP"],
-    "Ranger": ["2.0 EcoBlue 170HP", "2.0 EcoBlue 205HP", "3.0 V6 EcoBlue 240HP", "Raptor 3.0 V6 EcoBoost 288HP"],
-    "Transit": ["2.0 EcoBlue 105HP", "2.0 EcoBlue 130HP", "2.0 EcoBlue 170HP", "2.0 EcoBlue 185HP"],
-    "Transit Custom": ["2.0 EcoBlue 110HP", "2.0 EcoBlue 136HP", "2.0 EcoBlue 150HP", "2.0 EcoBlue 170HP", "Elektrik 218HP"],
-    "Transit Connect": ["1.0 EcoBoost 100HP", "1.5 EcoBlue 75HP", "1.5 EcoBlue 100HP", "1.5 EcoBlue 120HP"],
-    "Tourneo Connect": ["1.5 EcoBoost 114HP", "2.0 TDI 122HP"],
-    "Tourneo Courier": ["1.0 EcoBoost 125HP", "1.5 TDCi 75HP", "1.5 TDCi 100HP"],
-    "Tourneo Custom": ["2.0 EcoBlue 136HP", "2.0 EcoBlue 150HP", "2.0 EcoBlue 170HP", "Elektrik 218HP"],
-    "Courier": ["1.0 EcoBoost 100HP", "1.5 TDCi 75HP", "1.5 TDCi 100HP"],
-    "Connect": ["1.5 EcoBlue 75HP", "1.5 EcoBlue 100HP", "1.5 EcoBlue 120HP", "2.0 EcoBlue 122HP"],
-    "EcoSport": ["1.0 EcoBoost 100HP", "1.0 EcoBoost 125HP", "1.0 EcoBoost 140HP", "1.5 TDCi 95HP", "1.5 EcoBlue 100HP", "1.5 EcoBlue 125HP"],
-    "B-Max": ["1.0 EcoBoost 100HP", "1.0 EcoBoost 120HP", "1.4 90HP", "1.6 105HP", "1.5 TDCi 75HP"],
-    "C-Max": ["1.0 EcoBoost 125HP", "1.5 EcoBoost 150HP", "1.5 TDCi 120HP", "2.0 TDCi 150HP"],
-    "Galaxy": ["1.5 EcoBoost 160HP", "2.0 EcoBoost 240HP", "2.0 TDCi 150HP", "2.0 TDCi 180HP", "2.0 TDCi 210HP"],
-    "S-Max": ["1.5 EcoBoost 160HP", "2.0 EcoBoost 240HP", "2.0 TDCi 150HP", "2.0 TDCi 180HP", "2.0 Hybrid 190HP"]
+    "Fiesta": [
+      "1.0 EcoBoost 95HP",
+      "1.0 EcoBoost 100HP",
+      "1.0 EcoBoost 125HP",
+      "1.5 TDCi 85HP",
+      "ST 1.5 EcoBoost 200HP"
+    ],
+    "Focus": [
+      "1.0 EcoBoost 125HP",
+      "1.0 EcoBoost Mild Hybrid 155HP",
+      "1.5 EcoBoost 150HP",
+      "1.5 EcoBoost 182HP",
+      "1.5 EcoBlue 120HP",
+      "2.0 EcoBlue 150HP",
+      "2.3 EcoBoost (ST) 280HP"
+    ],
+    "Puma": [
+      "1.0 EcoBoost 125HP",
+      "1.0 EcoBoost Mild Hybrid 125HP",
+      "1.0 EcoBoost Mild Hybrid 155HP",
+      "1.5 EcoBlue 120HP",
+      "Puma ST 1.5 EcoBoost 200HP"
+    ],
+    "Kuga": [
+      "1.5 EcoBoost 150HP",
+      "2.5 Hybrid FHEV 190HP",
+      "2.5 Plug-in Hybrid 225HP",
+      "1.5 EcoBlue 120HP",
+      "2.0 EcoBlue 150HP"
+    ],
+    "Mondeo": [
+      "1.5 EcoBoost 160HP",
+      "2.0 EcoBoost 203HP",
+      "2.0 HF Hybrid 187HP",
+      "2.0 EcoBlue 150HP",
+      "2.0 EcoBlue 190HP"
+    ],
+    "Mustang": [
+      "2.3 EcoBoost 290HP",
+      "5.0 V8 450HP",
+      "5.0 V8 (Dark Horse) 500HP",
+      "5.0 V8 (Shelby GT500) 760HP"
+    ],
+    "Mustang Mach-E": [
+      "Elektrik Standard Range RWD 269HP",
+      "Elektrik Extended Range RWD 294HP",
+      "Elektrik Extended Range AWD 351HP",
+      "Mach-E GT 487HP"
+    ],
+    "Explorer": [
+      "3.0 EcoBoost 365HP",
+      "3.0 V6 PHEV 457HP"
+    ],
+    "Ranger": [
+      "2.0 EcoBlue 170HP",
+      "2.0 EcoBlue 205HP",
+      "3.0 V6 EcoBlue 240HP",
+      "Raptor 3.0 V6 EcoBoost 288HP"
+    ],
+    "Transit": [
+      "2.0 EcoBlue 105HP",
+      "2.0 EcoBlue 130HP",
+      "2.0 EcoBlue 170HP",
+      "2.0 EcoBlue 185HP"
+    ],
+    "Transit Custom": [
+      "2.0 EcoBlue 110HP",
+      "2.0 EcoBlue 136HP",
+      "2.0 EcoBlue 150HP",
+      "2.0 EcoBlue 170HP",
+      "Elektrik 218HP"
+    ],
+    "Transit Connect": [
+      "1.0 EcoBoost 100HP",
+      "1.5 EcoBlue 75HP",
+      "1.5 EcoBlue 100HP",
+      "1.5 EcoBlue 120HP"
+    ],
+    "Tourneo Connect": [
+      "1.5 EcoBoost 114HP",
+      "2.0 TDI 122HP"
+    ],
+    "Tourneo Courier": [
+      "1.0 EcoBoost 125HP",
+      "1.5 TDCi 75HP",
+      "1.5 TDCi 100HP"
+    ],
+    "Tourneo Custom": [
+      "2.0 EcoBlue 136HP",
+      "2.0 EcoBlue 150HP",
+      "2.0 EcoBlue 170HP",
+      "Elektrik 218HP"
+    ],
+    "Courier": [
+      "1.0 EcoBoost 100HP",
+      "1.5 TDCi 75HP",
+      "1.5 TDCi 100HP"
+    ],
+    "Connect": [
+      "1.5 EcoBlue 75HP",
+      "1.5 EcoBlue 100HP",
+      "1.5 EcoBlue 120HP",
+      "2.0 EcoBlue 122HP"
+    ],
+    "EcoSport": [
+      "1.0 EcoBoost 100HP",
+      "1.0 EcoBoost 125HP",
+      "1.0 EcoBoost 140HP",
+      "1.5 TDCi 95HP",
+      "1.5 EcoBlue 100HP",
+      "1.5 EcoBlue 125HP"
+    ],
+    "B-Max": [
+      "1.0 EcoBoost 100HP",
+      "1.0 EcoBoost 120HP",
+      "1.4 90HP",
+      "1.6 105HP",
+      "1.5 TDCi 75HP"
+    ],
+    "C-Max": [
+      "1.0 EcoBoost 125HP",
+      "1.5 EcoBoost 150HP",
+      "1.5 TDCi 120HP",
+      "2.0 TDCi 150HP"
+    ],
+    "Galaxy": [
+      "1.5 EcoBoost 160HP",
+      "2.0 EcoBoost 240HP",
+      "2.0 TDCi 150HP",
+      "2.0 TDCi 180HP",
+      "2.0 TDCi 210HP"
+    ],
+    "S-Max": [
+      "1.5 EcoBoost 160HP",
+      "2.0 EcoBoost 240HP",
+      "2.0 TDCi 150HP",
+      "2.0 TDCi 180HP",
+      "2.0 Hybrid 190HP"
+    ],
+    "Edge": [
+      "2.0 EcoBoost 245HP",
+      "2.7 V6 EcoBoost 335HP",
+      "2.0 EcoBlue 180HP",
+      "2.0 EcoBlue 190HP",
+      "2.0 EcoBlue 238HP"
+    ],
+    "Escape": [
+      "1.5 EcoBoost 150HP",
+      "1.5 EcoBoost 180HP",
+      "2.0 EcoBoost 250HP",
+      "2.5 FHEV 200HP",
+      "2.5 PHEV 210HP"
+    ],
+    "F-150": [
+      "2.7 V6 EcoBoost 325HP",
+      "3.3 V6 290HP",
+      "3.5 V6 EcoBoost 400HP",
+      "3.5 V6 EcoBoost Raptor 450HP",
+      "5.0 V8 400HP",
+      "3.5 V6 PowerBoost Hybrid 430HP",
+      "Lightning Elektrik 452HP"
+    ]
   },
   "Peugeot": {
-    "108": ["1.0 VTi 68HP", "1.2 PureTech 82HP"],
-    "208": ["1.2 PureTech 75HP", "1.2 PureTech 100HP", "1.2 PureTech 130HP", "1.5 BlueHDi 100HP", "1.2 PureTech Hybrid 100HP", "1.2 PureTech Hybrid 136HP"],
-    "e-208": ["Elektrik 100kW 136HP", "Elektrik 115kW 156HP"],
-    "2008": ["1.2 PureTech 100HP", "1.2 PureTech 130HP", "1.2 PureTech 155HP", "1.5 BlueHDi 100HP", "1.5 BlueHDi 130HP"],
-    "e-2008": ["Elektrik 100kW 136HP", "Elektrik 115kW 156HP"],
-    "308": ["1.2 PureTech 110HP", "1.2 PureTech 130HP", "1.5 BlueHDi 130HP", "1.6 Hybrid 180HP", "1.6 Hybrid 225HP"],
-    "e-308": ["Elektrik 115kW 156HP"],
-    "3008": ["1.2 PureTech 130HP", "1.6 PureTech 180HP", "1.5 BlueHDi 130HP", "2.0 BlueHDi 180HP", "1.6 Hybrid 180HP", "1.6 Hybrid4 300HP"],
-    "408": ["1.2 PureTech 130HP", "1.6 Hybrid 180HP", "1.6 Hybrid 225HP"],
-    "5008": ["1.2 PureTech 130HP", "1.6 PureTech 180HP", "1.5 BlueHDi 130HP", "2.0 BlueHDi 180HP"],
-    "508": ["1.6 PureTech 180HP", "1.6 PureTech 225HP", "1.5 BlueHDi 130HP", "2.0 BlueHDi 180HP", "1.6 Hybrid 225HP", "1.6 Hybrid 360HP"],
-    "301": ["1.2 PureTech 82HP", "1.6 VTi 115HP", "1.6 BlueHDi 100HP", "1.6 HDi 92HP"],
-    "206": ["1.4 75HP", "1.6 110HP", "1.4 HDi 68HP", "1.6 HDi 110HP"],
-    "207": ["1.4 VTi 95HP", "1.6 VTi 120HP", "1.4 HDi 68HP", "1.6 HDi 92HP", "1.6 HDi 110HP"],
-    "Partner": ["1.2 PureTech 110HP", "1.2 PureTech 130HP", "1.5 BlueHDi 75HP", "1.5 BlueHDi 100HP", "1.5 BlueHDi 130HP", "Elektrik 136HP"],
-    "Rifter": ["1.2 PureTech 110HP", "1.2 PureTech 130HP", "1.5 BlueHDi 100HP", "1.5 BlueHDi 130HP"],
-    "Expert": ["1.5 BlueHDi 100HP", "1.5 BlueHDi 120HP", "2.0 BlueHDi 145HP", "2.0 BlueHDi 180HP", "Elektrik 136HP"],
-    "e-Expert": ["Elektrik 100kW 136HP"],
-    "Boxer": ["2.0 BlueHDi 110HP", "2.0 BlueHDi 140HP", "2.0 BlueHDi 165HP", "2.2 BlueHDi 140HP", "2.2 BlueHDi 165HP", "2.2 BlueHDi 180HP"],
-    "Traveller": ["1.5 BlueHDi 120HP", "2.0 BlueHDi 145HP", "2.0 BlueHDi 180HP", "Elektrik 136HP"],
-    "Bipper": ["1.3 HDi 75HP", "1.4 HDi 70HP"]
+    "108": [
+      "1.0 VTi 68HP",
+      "1.2 PureTech 82HP"
+    ],
+    "208": [
+      "1.2 PureTech 75HP",
+      "1.2 PureTech 100HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 100HP",
+      "1.2 PureTech Hybrid 100HP",
+      "1.2 PureTech Hybrid 136HP"
+    ],
+    "e-208": [
+      "Elektrik 100kW 136HP",
+      "Elektrik 115kW 156HP"
+    ],
+    "2008": [
+      "1.2 PureTech 100HP",
+      "1.2 PureTech 130HP",
+      "1.2 PureTech 155HP",
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 130HP"
+    ],
+    "e-2008": [
+      "Elektrik 100kW 136HP",
+      "Elektrik 115kW 156HP"
+    ],
+    "308": [
+      "1.2 PureTech 110HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 130HP",
+      "1.6 Hybrid 180HP",
+      "1.6 Hybrid 225HP"
+    ],
+    "e-308": [
+      "Elektrik 115kW 156HP"
+    ],
+    "3008": [
+      "1.2 PureTech 130HP",
+      "1.6 PureTech 180HP",
+      "1.5 BlueHDi 130HP",
+      "2.0 BlueHDi 180HP",
+      "1.6 Hybrid 180HP",
+      "1.6 Hybrid4 300HP"
+    ],
+    "408": [
+      "1.2 PureTech 130HP",
+      "1.6 Hybrid 180HP",
+      "1.6 Hybrid 225HP"
+    ],
+    "5008": [
+      "1.2 PureTech 130HP",
+      "1.6 PureTech 180HP",
+      "1.5 BlueHDi 130HP",
+      "2.0 BlueHDi 180HP"
+    ],
+    "508": [
+      "1.6 PureTech 180HP",
+      "1.6 PureTech 225HP",
+      "1.5 BlueHDi 130HP",
+      "2.0 BlueHDi 180HP",
+      "1.6 Hybrid 225HP",
+      "1.6 Hybrid 360HP"
+    ],
+    "301": [
+      "1.2 PureTech 82HP",
+      "1.6 VTi 115HP",
+      "1.6 BlueHDi 100HP",
+      "1.6 HDi 92HP"
+    ],
+    "206": [
+      "1.4 75HP",
+      "1.6 110HP",
+      "1.4 HDi 68HP",
+      "1.6 HDi 110HP"
+    ],
+    "207": [
+      "1.4 VTi 95HP",
+      "1.6 VTi 120HP",
+      "1.4 HDi 68HP",
+      "1.6 HDi 92HP",
+      "1.6 HDi 110HP"
+    ],
+    "Partner": [
+      "1.2 PureTech 110HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 75HP",
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 130HP",
+      "Elektrik 136HP"
+    ],
+    "Rifter": [
+      "1.2 PureTech 110HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 130HP"
+    ],
+    "Expert": [
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 120HP",
+      "2.0 BlueHDi 145HP",
+      "2.0 BlueHDi 180HP",
+      "Elektrik 136HP"
+    ],
+    "e-Expert": [
+      "Elektrik 100kW 136HP"
+    ],
+    "Boxer": [
+      "2.0 BlueHDi 110HP",
+      "2.0 BlueHDi 140HP",
+      "2.0 BlueHDi 165HP",
+      "2.2 BlueHDi 140HP",
+      "2.2 BlueHDi 165HP",
+      "2.2 BlueHDi 180HP"
+    ],
+    "Traveller": [
+      "1.5 BlueHDi 120HP",
+      "2.0 BlueHDi 145HP",
+      "2.0 BlueHDi 180HP",
+      "Elektrik 136HP"
+    ],
+    "Bipper": [
+      "1.3 HDi 75HP",
+      "1.4 HDi 70HP"
+    ]
   },
   "Opel": {
-    "Corsa": ["1.2 75HP", "1.2 Turbo 100HP", "1.2 Turbo 130HP", "1.5 Diesel 100HP", "1.2 Hybrid 100HP", "1.2 Hybrid 136HP"],
-    "Corsa Electric": ["Elektrik 136HP", "Elektrik 156HP"],
-    "Astra": ["1.2 Turbo 110HP", "1.2 Turbo 130HP", "1.2 Hybrid 136HP", "1.5 Diesel 130HP", "1.6 PHEV 180HP", "1.6 PHEV 225HP"],
-    "Astra Electric": ["Elektrik 156HP"],
-    "Mokka": ["1.2 Turbo 100HP", "1.2 Turbo 130HP", "1.2 Hybrid 136HP", "1.5 Diesel 110HP"],
-    "Mokka Electric": ["Elektrik 136HP", "Elektrik 156HP"],
-    "Crossland": ["1.2 83HP", "1.2 Turbo 110HP", "1.2 Turbo 130HP", "1.5 Diesel 110HP", "1.5 Diesel 120HP"],
-    "Grandland": ["1.2 Turbo 130HP", "1.6 Turbo 180HP", "1.5 Diesel 130HP", "2.0 Diesel 177HP", "1.6 PHEV 224HP", "1.6 PHEV 300HP"],
-    "Insignia": ["1.5 Turbo 140HP", "1.5 Turbo 165HP", "2.0 Turbo 200HP", "1.5 Diesel 122HP", "2.0 Diesel 174HP"],
-    "Combo": ["1.2 Turbo 110HP", "1.5 Diesel 75HP", "1.5 Diesel 100HP", "1.5 Diesel 130HP"],
-    "Vivaro": ["1.5 Diesel 100HP", "1.5 Diesel 120HP", "2.0 Diesel 145HP", "2.0 Diesel 180HP", "Elektrik 136HP"],
-    "Movano": ["2.2 Diesel 120HP", "2.2 Diesel 140HP", "2.2 Diesel 165HP", "Elektrik 136HP"],
-    "Meriva": ["1.4 Turbo 120HP", "1.4 Turbo 140HP", "1.6 CDTI 95HP", "1.6 CDTI 136HP"],
-    "Zafira": ["1.4 Turbo 140HP", "1.6 Turbo 170HP", "1.6 CDTI 136HP", "2.0 CDTI 170HP"],
-    "Adam": ["1.2 70HP", "1.4 87HP", "1.4 100HP"],
-    "Ampera": ["Elektrik Plug-in 150HP"],
-    "Karl": ["1.0 75HP"]
+    "Corsa": [
+      "1.2 75HP",
+      "1.2 Turbo 100HP",
+      "1.2 Turbo 130HP",
+      "1.5 Diesel 100HP",
+      "1.2 Hybrid 100HP",
+      "1.2 Hybrid 136HP"
+    ],
+    "Corsa Electric": [
+      "Elektrik 136HP",
+      "Elektrik 156HP"
+    ],
+    "Astra": [
+      "1.2 Turbo 110HP",
+      "1.2 Turbo 130HP",
+      "1.2 Hybrid 136HP",
+      "1.5 Diesel 130HP",
+      "1.6 PHEV 180HP",
+      "1.6 PHEV 225HP"
+    ],
+    "Astra Electric": [
+      "Elektrik 156HP"
+    ],
+    "Mokka": [
+      "1.2 Turbo 100HP",
+      "1.2 Turbo 130HP",
+      "1.2 Hybrid 136HP",
+      "1.5 Diesel 110HP"
+    ],
+    "Mokka Electric": [
+      "Elektrik 136HP",
+      "Elektrik 156HP"
+    ],
+    "Crossland": [
+      "1.2 83HP",
+      "1.2 Turbo 110HP",
+      "1.2 Turbo 130HP",
+      "1.5 Diesel 110HP",
+      "1.5 Diesel 120HP"
+    ],
+    "Grandland": [
+      "1.2 Turbo 130HP",
+      "1.6 Turbo 180HP",
+      "1.5 Diesel 130HP",
+      "2.0 Diesel 177HP",
+      "1.6 PHEV 224HP",
+      "1.6 PHEV 300HP"
+    ],
+    "Insignia": [
+      "1.5 Turbo 140HP",
+      "1.5 Turbo 165HP",
+      "2.0 Turbo 200HP",
+      "1.5 Diesel 122HP",
+      "2.0 Diesel 174HP"
+    ],
+    "Combo": [
+      "1.2 Turbo 110HP",
+      "1.5 Diesel 75HP",
+      "1.5 Diesel 100HP",
+      "1.5 Diesel 130HP"
+    ],
+    "Vivaro": [
+      "1.5 Diesel 100HP",
+      "1.5 Diesel 120HP",
+      "2.0 Diesel 145HP",
+      "2.0 Diesel 180HP",
+      "Elektrik 136HP"
+    ],
+    "Movano": [
+      "2.2 Diesel 120HP",
+      "2.2 Diesel 140HP",
+      "2.2 Diesel 165HP",
+      "Elektrik 136HP"
+    ],
+    "Meriva": [
+      "1.4 Turbo 120HP",
+      "1.4 Turbo 140HP",
+      "1.6 CDTI 95HP",
+      "1.6 CDTI 136HP"
+    ],
+    "Zafira": [
+      "1.4 Turbo 140HP",
+      "1.6 Turbo 170HP",
+      "1.6 CDTI 136HP",
+      "2.0 CDTI 170HP"
+    ],
+    "Adam": [
+      "1.2 70HP",
+      "1.4 87HP",
+      "1.4 100HP"
+    ],
+    "Ampera": [
+      "Elektrik Plug-in 150HP"
+    ],
+    "Karl": [
+      "1.0 75HP"
+    ],
+    "Crossland X": [
+      "1.2 83HP",
+      "1.2 Turbo 110HP",
+      "1.2 Turbo 130HP",
+      "1.5 Diesel 102HP",
+      "1.5 Diesel 120HP",
+      "1.6 CDTI 99HP",
+      "1.6 CDTI 120HP"
+    ],
+    "Grandland X": [
+      "1.2 Turbo 130HP",
+      "1.6 Turbo 180HP",
+      "1.5 Diesel 130HP",
+      "2.0 Diesel 177HP",
+      "1.6 PHEV 224HP",
+      "1.6 PHEV 300HP"
+    ]
   },
   "Skoda": {
-    "Fabia": ["1.0 MPI 80HP", "1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP"],
-    "Scala": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP"],
-    "Octavia": ["1.0 TSI 110HP", "1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TSI RS 245HP", "2.0 TDI 116HP", "2.0 TDI 150HP", "2.0 TDI RS 200HP", "1.4 iV PHEV 204HP", "1.4 iV RS PHEV 245HP"],
-    "Superb": ["1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TSI 265HP", "2.0 TDI 150HP", "2.0 TDI 200HP", "1.4 iV PHEV 204HP"],
-    "Kamiq": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP"],
-    "Karoq": ["1.0 TSI 110HP", "1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TDI 116HP", "2.0 TDI 150HP"],
-    "Kodiaq": ["1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TSI RS 245HP", "2.0 TDI 150HP", "2.0 TDI 200HP"],
-    "Enyaq": ["50 Elektrik 146HP", "60 Elektrik 180HP", "80 Elektrik 204HP", "80x Elektrik 265HP", "RS Elektrik 299HP"],
-    "Rapid": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.4 TSI 125HP", "1.6 TDI 90HP", "1.6 TDI 115HP"],
-    "Citigo": ["1.0 MPI 60HP", "1.0 MPI 75HP", "Elektrik 83HP"],
-    "Yeti": ["1.2 TSI 105HP", "1.4 TSI 125HP", "1.4 TSI 150HP", "2.0 TDI 110HP", "2.0 TDI 140HP", "2.0 TDI 170HP"],
-    "Roomster": ["1.2 70HP", "1.2 TSI 86HP", "1.2 TSI 105HP", "1.6 TDI 90HP"]
+    "Fabia": [
+      "1.0 MPI 80HP",
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP"
+    ],
+    "Scala": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP"
+    ],
+    "Octavia": [
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TSI RS 245HP",
+      "2.0 TDI 116HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI RS 200HP",
+      "1.4 iV PHEV 204HP",
+      "1.4 iV RS PHEV 245HP"
+    ],
+    "Superb": [
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TSI 265HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 200HP",
+      "1.4 iV PHEV 204HP"
+    ],
+    "Kamiq": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP"
+    ],
+    "Karoq": [
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TDI 116HP",
+      "2.0 TDI 150HP"
+    ],
+    "Kodiaq": [
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TSI RS 245HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 200HP"
+    ],
+    "Enyaq": [
+      "50 Elektrik 146HP",
+      "60 Elektrik 180HP",
+      "80 Elektrik 204HP",
+      "80x Elektrik 265HP",
+      "RS Elektrik 299HP"
+    ],
+    "Rapid": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.4 TSI 125HP",
+      "1.6 TDI 90HP",
+      "1.6 TDI 115HP"
+    ],
+    "Citigo": [
+      "1.0 MPI 60HP",
+      "1.0 MPI 75HP",
+      "Elektrik 83HP"
+    ],
+    "Yeti": [
+      "1.2 TSI 105HP",
+      "1.4 TSI 125HP",
+      "1.4 TSI 150HP",
+      "2.0 TDI 110HP",
+      "2.0 TDI 140HP",
+      "2.0 TDI 170HP"
+    ],
+    "Roomster": [
+      "1.2 70HP",
+      "1.2 TSI 86HP",
+      "1.2 TSI 105HP",
+      "1.6 TDI 90HP"
+    ]
   },
   "Seat": {
-    "Ibiza": ["1.0 MPI 80HP", "1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP"],
-    "Leon": ["1.0 TSI 110HP", "1.5 TSI 130HP", "1.5 TSI 150HP", "2.0 TSI 190HP", "1.4 eHybrid 204HP", "2.0 TDI 115HP", "2.0 TDI 150HP"],
-    "Arona": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.5 TSI 150HP"],
-    "Ateca": ["1.0 TSI 110HP", "1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TDI 115HP", "2.0 TDI 150HP"],
-    "Tarraco": ["1.5 TSI 150HP", "2.0 TSI 190HP", "2.0 TDI 150HP", "2.0 TDI 200HP", "1.4 eHybrid 245HP"],
-    "Toledo": ["1.0 TSI 95HP", "1.0 TSI 110HP", "1.6 TDI 90HP", "1.6 TDI 115HP"],
-    "Mii": ["1.0 MPI 60HP", "1.0 MPI 75HP", "Elektrik 83HP"],
-    "Alhambra": ["1.4 TSI 150HP", "2.0 TSI 220HP", "2.0 TDI 150HP", "2.0 TDI 184HP"]
+    "Ibiza": [
+      "1.0 MPI 80HP",
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP"
+    ],
+    "Leon": [
+      "1.0 TSI 110HP",
+      "1.5 TSI 130HP",
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "1.4 eHybrid 204HP",
+      "2.0 TDI 115HP",
+      "2.0 TDI 150HP"
+    ],
+    "Arona": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP"
+    ],
+    "Ateca": [
+      "1.0 TSI 110HP",
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TDI 115HP",
+      "2.0 TDI 150HP"
+    ],
+    "Tarraco": [
+      "1.5 TSI 150HP",
+      "2.0 TSI 190HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 200HP",
+      "1.4 eHybrid 245HP"
+    ],
+    "Toledo": [
+      "1.0 TSI 95HP",
+      "1.0 TSI 110HP",
+      "1.6 TDI 90HP",
+      "1.6 TDI 115HP"
+    ],
+    "Mii": [
+      "1.0 MPI 60HP",
+      "1.0 MPI 75HP",
+      "Elektrik 83HP"
+    ],
+    "Alhambra": [
+      "1.4 TSI 150HP",
+      "2.0 TSI 220HP",
+      "2.0 TDI 150HP",
+      "2.0 TDI 184HP"
+    ],
+    "Altea": [
+      "1.2 TSI 105HP",
+      "1.4 TSI 125HP",
+      "1.6 102HP",
+      "1.8 TSI 160HP",
+      "2.0 FSI 150HP",
+      "2.0 TSI 200HP",
+      "1.6 TDI 90HP",
+      "1.6 TDI 105HP",
+      "2.0 TDI 140HP",
+      "2.0 TDI 170HP"
+    ]
   },
   "Cupra": {
-    "Leon": ["1.4 eHybrid 245HP", "2.0 TSI 245HP", "2.0 TSI 300HP", "2.0 TSI 310HP", "2.0 TDI 150HP"],
-    "Formentor": ["1.5 TSI 150HP", "2.0 TSI 245HP", "2.0 TSI 310HP", "2.5 TSI VZ 390HP", "1.4 eHybrid 204HP", "1.4 eHybrid 245HP"],
-    "Ateca": ["2.0 TSI 300HP", "2.0 TSI 310HP"],
-    "Born": ["Elektrik 150kW 204HP", "Elektrik 170kW 231HP", "Elektrik VZ 326HP"],
-    "Tavascan": ["Elektrik Endurance 286HP", "Elektrik VZ 340HP"]
+    "Leon": [
+      "1.4 eHybrid 245HP",
+      "2.0 TSI 245HP",
+      "2.0 TSI 300HP",
+      "2.0 TSI 310HP",
+      "2.0 TDI 150HP"
+    ],
+    "Formentor": [
+      "1.5 TSI 150HP",
+      "2.0 TSI 245HP",
+      "2.0 TSI 310HP",
+      "2.5 TSI VZ 390HP",
+      "1.4 eHybrid 204HP",
+      "1.4 eHybrid 245HP"
+    ],
+    "Ateca": [
+      "2.0 TSI 300HP",
+      "2.0 TSI 310HP"
+    ],
+    "Born": [
+      "Elektrik 150kW 204HP",
+      "Elektrik 170kW 231HP",
+      "Elektrik VZ 326HP"
+    ],
+    "Tavascan": [
+      "Elektrik Endurance 286HP",
+      "Elektrik VZ 340HP"
+    ]
   },
   "Dacia": {
-    "Sandero": ["1.0 SCe 65HP", "1.0 TCe 90HP", "1.0 TCe 100HP LPG", "1.0 Eco-G LPG 100HP"],
-    "Duster": ["1.0 TCe 90HP", "1.2 TCe Mild Hybrid 130HP", "1.3 TCe 130HP", "1.3 TCe 150HP", "1.5 Blue dCi 95HP", "1.5 Blue dCi 115HP", "1.6 Hi-Flex 115HP", "1.6 Eco-G LPG 100HP"],
-    "Jogger": ["1.0 TCe 110HP", "1.0 Eco-G LPG 100HP", "1.6 Hybrid 140HP"],
-    "Logan": ["1.0 SCe 65HP", "0.9 TCe 90HP", "1.5 dCi 75HP", "1.5 Blue dCi 95HP"],
-    "Lodgy": ["1.2 TCe 115HP", "1.5 dCi 90HP", "1.5 dCi 110HP", "1.6 SCe 100HP"],
-    "Dokker": ["1.2 TCe 115HP", "1.5 dCi 75HP", "1.5 dCi 90HP", "1.6 SCe 100HP"],
-    "Spring": ["Elektrik 44HP", "Elektrik 65HP"]
+    "Sandero": [
+      "1.0 SCe 65HP",
+      "1.0 TCe 90HP",
+      "1.0 TCe 100HP LPG",
+      "1.0 Eco-G LPG 100HP"
+    ],
+    "Duster": [
+      "1.0 TCe 90HP",
+      "1.2 TCe Mild Hybrid 130HP",
+      "1.3 TCe 130HP",
+      "1.3 TCe 150HP",
+      "1.5 Blue dCi 95HP",
+      "1.5 Blue dCi 115HP",
+      "1.6 Hi-Flex 115HP",
+      "1.6 Eco-G LPG 100HP"
+    ],
+    "Jogger": [
+      "1.0 TCe 110HP",
+      "1.0 Eco-G LPG 100HP",
+      "1.6 Hybrid 140HP"
+    ],
+    "Logan": [
+      "1.0 SCe 65HP",
+      "0.9 TCe 90HP",
+      "1.5 dCi 75HP",
+      "1.5 Blue dCi 95HP"
+    ],
+    "Lodgy": [
+      "1.2 TCe 115HP",
+      "1.5 dCi 90HP",
+      "1.5 dCi 110HP",
+      "1.6 SCe 100HP"
+    ],
+    "Dokker": [
+      "1.2 TCe 115HP",
+      "1.5 dCi 75HP",
+      "1.5 dCi 90HP",
+      "1.6 SCe 100HP"
+    ],
+    "Spring": [
+      "Elektrik 44HP",
+      "Elektrik 65HP"
+    ]
   },
   "Honda": {
-    "Civic": ["1.0 VTEC Turbo 126HP", "1.5 VTEC Turbo 182HP", "2.0 i-MMD Hybrid 184HP", "Civic Type R 2.0 VTEC Turbo 329HP"],
-    "CR-V": ["1.5 VTEC Turbo 193HP", "2.0 i-MMD Hybrid 184HP", "2.0 e:PHEV 184HP"],
-    "HR-V": ["1.5 i-VTEC 130HP", "1.5 e:HEV Hybrid 131HP"],
-    "Jazz": ["1.3 i-VTEC 102HP", "1.5 i-VTEC 130HP", "1.5 e:HEV Hybrid 109HP"],
-    "ZR-V": ["2.0 e:HEV Hybrid 184HP"],
-    "Accord": ["1.5 VTEC Turbo 192HP", "2.0 i-MMD Hybrid 204HP"],
-    "City": ["1.5 i-VTEC 120HP"],
-    "e:Ny1": ["Elektrik 204HP"],
-    "NSX": ["3.5 V6 Hybrid 581HP"]
+    "Civic": [
+      "1.0 VTEC Turbo 126HP",
+      "1.5 VTEC Turbo 182HP",
+      "2.0 i-MMD Hybrid 184HP",
+      "Civic Type R 2.0 VTEC Turbo 329HP"
+    ],
+    "CR-V": [
+      "1.5 VTEC Turbo 193HP",
+      "2.0 i-MMD Hybrid 184HP",
+      "2.0 e:PHEV 184HP"
+    ],
+    "HR-V": [
+      "1.5 i-VTEC 130HP",
+      "1.5 e:HEV Hybrid 131HP"
+    ],
+    "Jazz": [
+      "1.3 i-VTEC 102HP",
+      "1.5 i-VTEC 130HP",
+      "1.5 e:HEV Hybrid 109HP"
+    ],
+    "ZR-V": [
+      "2.0 e:HEV Hybrid 184HP"
+    ],
+    "Accord": [
+      "1.5 VTEC Turbo 192HP",
+      "2.0 i-MMD Hybrid 204HP"
+    ],
+    "City": [
+      "1.5 i-VTEC 120HP"
+    ],
+    "e:Ny1": [
+      "Elektrik 204HP"
+    ],
+    "NSX": [
+      "3.5 V6 Hybrid 581HP"
+    ]
   },
   "Nissan": {
-    "Micra": ["0.9 IG-T 90HP", "1.0 IG-T 100HP", "1.5 dCi 90HP"],
-    "Juke": ["1.0 DIG-T 114HP", "1.6 Hybrid 143HP", "1.6 Nismo 218HP"],
-    "Qashqai": ["1.3 DIG-T 140HP", "1.3 DIG-T 158HP", "1.3 DIG-T Mild Hybrid 140HP", "1.5 e-POWER 190HP", "1.5 dCi 115HP"],
-    "X-Trail": ["1.5 VC-Turbo 163HP", "1.5 e-POWER 204HP", "2.0 dCi 177HP"],
-    "Leaf": ["Elektrik 40kWh 150HP", "Elektrik e+ 62kWh 217HP"],
-    "Ariya": ["Elektrik Standard Range 218HP", "Elektrik Long Range 242HP", "Elektrik Performance (e-4ORCE) 389HP"],
-    "Navara": ["2.3 dCi 163HP", "2.3 dCi 190HP"],
-    "Townstar": ["1.3 DIG-T 130HP", "Elektrik 122HP"],
-    "Note": ["1.2 80HP", "1.2 DIG-S 98HP", "1.5 dCi 90HP"],
-    "Pulsar": ["1.2 DIG-T 115HP", "1.6 DIG-T 190HP", "1.5 dCi 110HP"],
-    "Primastar": ["2.0 dCi 110HP", "2.0 dCi 130HP", "2.0 dCi 150HP", "2.0 dCi 170HP"],
-    "NV200": ["1.5 dCi 90HP", "1.5 dCi 110HP", "Elektrik 109HP"],
-    "GT-R": ["3.8 V6 Twin-Turbo 570HP", "3.8 V6 Twin-Turbo (Nismo) 600HP"]
+    "Micra": [
+      "0.9 IG-T 90HP",
+      "1.0 IG-T 100HP",
+      "1.5 dCi 90HP"
+    ],
+    "Juke": [
+      "1.0 DIG-T 114HP",
+      "1.6 Hybrid 143HP",
+      "1.6 Nismo 218HP"
+    ],
+    "Qashqai": [
+      "1.3 DIG-T 140HP",
+      "1.3 DIG-T 158HP",
+      "1.3 DIG-T Mild Hybrid 140HP",
+      "1.5 e-POWER 190HP",
+      "1.5 dCi 115HP"
+    ],
+    "X-Trail": [
+      "1.5 VC-Turbo 163HP",
+      "1.5 e-POWER 204HP",
+      "2.0 dCi 177HP"
+    ],
+    "Leaf": [
+      "Elektrik 40kWh 150HP",
+      "Elektrik e+ 62kWh 217HP"
+    ],
+    "Ariya": [
+      "Elektrik Standard Range 218HP",
+      "Elektrik Long Range 242HP",
+      "Elektrik Performance (e-4ORCE) 389HP"
+    ],
+    "Navara": [
+      "2.3 dCi 163HP",
+      "2.3 dCi 190HP"
+    ],
+    "Townstar": [
+      "1.3 DIG-T 130HP",
+      "Elektrik 122HP"
+    ],
+    "Note": [
+      "1.2 80HP",
+      "1.2 DIG-S 98HP",
+      "1.5 dCi 90HP"
+    ],
+    "Pulsar": [
+      "1.2 DIG-T 115HP",
+      "1.6 DIG-T 190HP",
+      "1.5 dCi 110HP"
+    ],
+    "Primastar": [
+      "2.0 dCi 110HP",
+      "2.0 dCi 130HP",
+      "2.0 dCi 150HP",
+      "2.0 dCi 170HP"
+    ],
+    "NV200": [
+      "1.5 dCi 90HP",
+      "1.5 dCi 110HP",
+      "Elektrik 109HP"
+    ],
+    "GT-R": [
+      "3.8 V6 Twin-Turbo 570HP",
+      "3.8 V6 Twin-Turbo (Nismo) 600HP"
+    ],
+    "Murano": [
+      "3.5 V6 260HP",
+      "2.5 dCi 190HP",
+      "3.5 V6 Hybrid 253HP"
+    ],
+    "NV300": [
+      "1.6 dCi 95HP",
+      "1.6 dCi 120HP",
+      "1.6 dCi 125HP",
+      "1.6 dCi 145HP"
+    ],
+    "Pathfinder": [
+      "2.5 dCi 171HP",
+      "3.5 V6 284HP",
+      "3.0 V6 dCi 231HP",
+      "3.5 V6 Hybrid 253HP"
+    ]
   },
   "Volvo": {
-    "XC40": ["B3 Mild Hybrid 163HP", "B4 Mild Hybrid 197HP", "T5 PHEV 262HP", "Recharge T5 PHEV 262HP"],
-    "XC40 Recharge": ["Elektrik Single Motor 231HP", "Elektrik Twin Motor 408HP"],
-    "XC60": ["B4 Mild Hybrid 197HP", "B5 Mild Hybrid 250HP", "B6 Mild Hybrid 299HP", "T6 PHEV 350HP", "T8 PHEV 455HP"],
-    "XC90": ["B5 Mild Hybrid 250HP", "B6 Mild Hybrid 299HP", "T8 PHEV 455HP"],
-    "S60": ["B3 Mild Hybrid 163HP", "B4 Mild Hybrid 197HP", "B5 Mild Hybrid 250HP", "T8 PHEV 455HP", "Polestar Engineered 455HP"],
-    "S90": ["B4 Mild Hybrid 197HP", "B5 Mild Hybrid 250HP", "B6 Mild Hybrid 299HP", "T8 PHEV 455HP"],
-    "V60": ["B3 Mild Hybrid 163HP", "B4 Mild Hybrid 197HP", "B5 Mild Hybrid 250HP", "T8 PHEV 455HP"],
-    "V90": ["B4 Mild Hybrid 197HP", "B5 Mild Hybrid 250HP", "B6 Mild Hybrid 299HP"],
-    "C40": ["Elektrik Single Motor 231HP", "Elektrik Twin Motor 408HP"],
-    "EX30": ["Elektrik Single Motor 272HP", "Elektrik Twin Motor Performance 428HP"],
-    "EX90": ["Elektrik Twin Motor 408HP", "Elektrik Twin Motor Performance 517HP"],
-    "S40": ["1.6 100HP", "2.0 145HP", "1.6 D 115HP", "2.0 D 136HP"],
-    "V40": ["T2 1.6 122HP", "T3 1.5 152HP", "T4 2.0 190HP", "D2 1.6 115HP", "D3 2.0 150HP"],
-    "V50": ["1.8 125HP", "2.0 145HP", "1.6 D 115HP", "2.0 D 136HP"]
+    "XC40": [
+      "B3 Mild Hybrid 163HP",
+      "B4 Mild Hybrid 197HP",
+      "T5 PHEV 262HP",
+      "Recharge T5 PHEV 262HP"
+    ],
+    "XC40 Recharge": [
+      "Elektrik Single Motor 231HP",
+      "Elektrik Twin Motor 408HP"
+    ],
+    "XC60": [
+      "B4 Mild Hybrid 197HP",
+      "B5 Mild Hybrid 250HP",
+      "B6 Mild Hybrid 299HP",
+      "T6 PHEV 350HP",
+      "T8 PHEV 455HP"
+    ],
+    "XC90": [
+      "B5 Mild Hybrid 250HP",
+      "B6 Mild Hybrid 299HP",
+      "T8 PHEV 455HP"
+    ],
+    "S60": [
+      "B3 Mild Hybrid 163HP",
+      "B4 Mild Hybrid 197HP",
+      "B5 Mild Hybrid 250HP",
+      "T8 PHEV 455HP",
+      "Polestar Engineered 455HP"
+    ],
+    "S90": [
+      "B4 Mild Hybrid 197HP",
+      "B5 Mild Hybrid 250HP",
+      "B6 Mild Hybrid 299HP",
+      "T8 PHEV 455HP"
+    ],
+    "V60": [
+      "B3 Mild Hybrid 163HP",
+      "B4 Mild Hybrid 197HP",
+      "B5 Mild Hybrid 250HP",
+      "T8 PHEV 455HP"
+    ],
+    "V90": [
+      "B4 Mild Hybrid 197HP",
+      "B5 Mild Hybrid 250HP",
+      "B6 Mild Hybrid 299HP"
+    ],
+    "C40": [
+      "Elektrik Single Motor 231HP",
+      "Elektrik Twin Motor 408HP"
+    ],
+    "EX30": [
+      "Elektrik Single Motor 272HP",
+      "Elektrik Twin Motor Performance 428HP"
+    ],
+    "EX90": [
+      "Elektrik Twin Motor 408HP",
+      "Elektrik Twin Motor Performance 517HP"
+    ],
+    "S40": [
+      "1.6 100HP",
+      "2.0 145HP",
+      "1.6 D 115HP",
+      "2.0 D 136HP"
+    ],
+    "V40": [
+      "T2 1.6 122HP",
+      "T3 1.5 152HP",
+      "T4 2.0 190HP",
+      "D2 1.6 115HP",
+      "D3 2.0 150HP"
+    ],
+    "V50": [
+      "1.8 125HP",
+      "2.0 145HP",
+      "1.6 D 115HP",
+      "2.0 D 136HP"
+    ],
+    "C30": [
+      "1.6 100HP",
+      "1.8 125HP",
+      "2.0 145HP",
+      "2.4i 170HP",
+      "2.5 T5 230HP",
+      "1.6 D 109HP",
+      "2.0 D 136HP"
+    ],
+    "C70": [
+      "2.0 145HP",
+      "2.4 170HP",
+      "2.4i 170HP",
+      "2.5 T5 220HP",
+      "2.5 T5 230HP",
+      "2.0 D 136HP",
+      "2.4 D5 180HP"
+    ],
+    "S80": [
+      "2.0 145HP",
+      "2.0T 180HP",
+      "2.5T 210HP",
+      "3.2 238HP",
+      "4.4 V8 315HP",
+      "2.0 D 136HP",
+      "2.4 D5 163HP",
+      "2.4 D5 185HP"
+    ],
+    "V70": [
+      "2.0 145HP",
+      "2.4 170HP",
+      "2.5T 231HP",
+      "T5 250HP",
+      "T6 304HP",
+      "2.0 D 136HP",
+      "2.4 D5 185HP",
+      "2.4 D5 215HP"
+    ],
+    "XC70": [
+      "2.5T 210HP",
+      "3.2 238HP",
+      "T6 304HP",
+      "2.4 D5 185HP",
+      "2.4 D5 215HP",
+      "3.0 D5 224HP"
+    ]
   },
   "Mazda": {
-    "2": ["1.5 Skyactiv-G 75HP", "1.5 Skyactiv-G 90HP", "1.5 Skyactiv-G Mild Hybrid 90HP"],
-    "3": ["2.0 Skyactiv-G Mild Hybrid 122HP", "2.0 Skyactiv-X Mild Hybrid 186HP"],
-    "6": ["2.0 Skyactiv-G 145HP", "2.0 Skyactiv-G 165HP", "2.5 Skyactiv-G 194HP", "2.2 Skyactiv-D 150HP", "2.2 Skyactiv-D 184HP"],
-    "CX-3": ["1.5 Skyactiv-G 120HP", "2.0 Skyactiv-G 121HP", "2.0 Skyactiv-G 150HP"],
-    "CX-30": ["2.0 Skyactiv-G Mild Hybrid 122HP", "2.0 Skyactiv-G Mild Hybrid 150HP", "2.0 Skyactiv-X Mild Hybrid 186HP"],
-    "CX-5": ["2.0 Skyactiv-G 165HP", "2.5 Skyactiv-G 194HP", "2.2 Skyactiv-D 150HP", "2.2 Skyactiv-D 184HP"],
-    "CX-60": ["2.5 e-Skyactiv PHEV 327HP", "3.3 e-Skyactiv D Mild Hybrid 200HP", "3.3 e-Skyactiv D Mild Hybrid 254HP"],
-    "CX-9": ["2.5 Skyactiv-G Turbo 231HP"],
-    "MX-5": ["1.5 Skyactiv-G 132HP", "2.0 Skyactiv-G 184HP"],
-    "MX-30": ["2.0 Skyactiv-G Mild Hybrid 122HP", "Elektrik 145HP", "R-EV Plug-in Hybrid 170HP"]
+    "2": [
+      "1.5 Skyactiv-G 75HP",
+      "1.5 Skyactiv-G 90HP",
+      "1.5 Skyactiv-G Mild Hybrid 90HP"
+    ],
+    "3": [
+      "2.0 Skyactiv-G Mild Hybrid 122HP",
+      "2.0 Skyactiv-X Mild Hybrid 186HP"
+    ],
+    "6": [
+      "2.0 Skyactiv-G 145HP",
+      "2.0 Skyactiv-G 165HP",
+      "2.5 Skyactiv-G 194HP",
+      "2.2 Skyactiv-D 150HP",
+      "2.2 Skyactiv-D 184HP"
+    ],
+    "CX-3": [
+      "1.5 Skyactiv-G 120HP",
+      "2.0 Skyactiv-G 121HP",
+      "2.0 Skyactiv-G 150HP"
+    ],
+    "CX-30": [
+      "2.0 Skyactiv-G Mild Hybrid 122HP",
+      "2.0 Skyactiv-G Mild Hybrid 150HP",
+      "2.0 Skyactiv-X Mild Hybrid 186HP"
+    ],
+    "CX-5": [
+      "2.0 Skyactiv-G 165HP",
+      "2.5 Skyactiv-G 194HP",
+      "2.2 Skyactiv-D 150HP",
+      "2.2 Skyactiv-D 184HP"
+    ],
+    "CX-60": [
+      "2.5 e-Skyactiv PHEV 327HP",
+      "3.3 e-Skyactiv D Mild Hybrid 200HP",
+      "3.3 e-Skyactiv D Mild Hybrid 254HP"
+    ],
+    "CX-9": [
+      "2.5 Skyactiv-G Turbo 231HP"
+    ],
+    "MX-5": [
+      "1.5 Skyactiv-G 132HP",
+      "2.0 Skyactiv-G 184HP"
+    ],
+    "MX-30": [
+      "2.0 Skyactiv-G Mild Hybrid 122HP",
+      "Elektrik 145HP",
+      "R-EV Plug-in Hybrid 170HP"
+    ]
   },
   "Citroen": {
-    "C1": ["1.0 VTi 68HP", "1.2 PureTech 82HP"],
-    "C3": ["1.2 PureTech 83HP", "1.2 PureTech 110HP", "1.5 BlueHDi 100HP"],
-    "e-C3": ["Elektrik 113HP"],
-    "C3 Aircross": ["1.2 PureTech 110HP", "1.2 PureTech 130HP", "1.5 BlueHDi 110HP"],
-    "C4": ["1.2 PureTech 100HP", "1.2 PureTech 130HP", "1.5 BlueHDi 130HP", "1.2 Hybrid 136HP"],
-    "e-C4": ["Elektrik 136HP", "Elektrik 156HP"],
-    "C4 X": ["1.2 PureTech 100HP", "1.2 PureTech 130HP", "1.5 BlueHDi 130HP"],
-    "C4 Cactus": ["1.2 PureTech 82HP", "1.2 PureTech 110HP", "1.2 PureTech 130HP", "1.5 BlueHDi 100HP"],
-    "C4 Picasso": ["1.2 PureTech 130HP", "1.6 THP 165HP", "1.6 HDi 115HP", "2.0 BlueHDi 150HP"],
-    "C5": ["1.6 THP 150HP", "2.0 HDi 140HP", "2.2 HDi 170HP", "3.0 V6 HDi 240HP"],
-    "C5 Aircross": ["1.2 PureTech 130HP", "1.6 PureTech 180HP", "1.5 BlueHDi 130HP", "2.0 BlueHDi 180HP", "1.6 Hybrid 225HP"],
-    "C5 X": ["1.2 PureTech 130HP", "1.6 PureTech 180HP", "1.6 Hybrid 225HP"],
-    "Berlingo": ["1.2 PureTech 110HP", "1.2 PureTech 130HP", "1.5 BlueHDi 100HP", "1.5 BlueHDi 130HP", "Elektrik 136HP"],
-    "C-Elysee": ["1.2 PureTech 82HP", "1.6 VTi 115HP", "1.6 BlueHDi 100HP", "1.6 HDi 92HP"],
-    "SpaceTourer": ["1.5 BlueHDi 120HP", "2.0 BlueHDi 145HP", "2.0 BlueHDi 180HP", "Elektrik 136HP"],
-    "Jumpy": ["1.5 BlueHDi 100HP", "1.5 BlueHDi 120HP", "2.0 BlueHDi 145HP", "2.0 BlueHDi 180HP", "Elektrik 136HP"],
-    "Jumper": ["2.0 BlueHDi 110HP", "2.0 BlueHDi 140HP", "2.0 BlueHDi 165HP", "2.2 BlueHDi 140HP", "2.2 BlueHDi 165HP", "2.2 BlueHDi 180HP"],
-    "Nemo": ["1.3 HDi 75HP", "1.4 HDi 70HP"],
-    "DS3": ["1.2 PureTech 82HP", "1.2 PureTech 110HP", "1.6 THP 165HP", "1.6 THP 208HP", "1.4 HDi 70HP", "1.6 HDi 100HP"]
+    "C1": [
+      "1.0 VTi 68HP",
+      "1.2 PureTech 82HP"
+    ],
+    "C3": [
+      "1.2 PureTech 83HP",
+      "1.2 PureTech 110HP",
+      "1.5 BlueHDi 100HP"
+    ],
+    "e-C3": [
+      "Elektrik 113HP"
+    ],
+    "C3 Aircross": [
+      "1.2 PureTech 110HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 110HP"
+    ],
+    "C4": [
+      "1.2 PureTech 100HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 130HP",
+      "1.2 Hybrid 136HP"
+    ],
+    "e-C4": [
+      "Elektrik 136HP",
+      "Elektrik 156HP"
+    ],
+    "C4 X": [
+      "1.2 PureTech 100HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 130HP"
+    ],
+    "C4 Cactus": [
+      "1.2 PureTech 82HP",
+      "1.2 PureTech 110HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 100HP"
+    ],
+    "C4 Picasso": [
+      "1.2 PureTech 130HP",
+      "1.6 THP 165HP",
+      "1.6 HDi 115HP",
+      "2.0 BlueHDi 150HP"
+    ],
+    "C5": [
+      "1.6 THP 150HP",
+      "2.0 HDi 140HP",
+      "2.2 HDi 170HP",
+      "3.0 V6 HDi 240HP"
+    ],
+    "C5 Aircross": [
+      "1.2 PureTech 130HP",
+      "1.6 PureTech 180HP",
+      "1.5 BlueHDi 130HP",
+      "2.0 BlueHDi 180HP",
+      "1.6 Hybrid 225HP"
+    ],
+    "C5 X": [
+      "1.2 PureTech 130HP",
+      "1.6 PureTech 180HP",
+      "1.6 Hybrid 225HP"
+    ],
+    "Berlingo": [
+      "1.2 PureTech 110HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 130HP",
+      "Elektrik 136HP"
+    ],
+    "C-Elysee": [
+      "1.2 PureTech 82HP",
+      "1.6 VTi 115HP",
+      "1.6 BlueHDi 100HP",
+      "1.6 HDi 92HP"
+    ],
+    "SpaceTourer": [
+      "1.5 BlueHDi 120HP",
+      "2.0 BlueHDi 145HP",
+      "2.0 BlueHDi 180HP",
+      "Elektrik 136HP"
+    ],
+    "Jumpy": [
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 120HP",
+      "2.0 BlueHDi 145HP",
+      "2.0 BlueHDi 180HP",
+      "Elektrik 136HP"
+    ],
+    "Jumper": [
+      "2.0 BlueHDi 110HP",
+      "2.0 BlueHDi 140HP",
+      "2.0 BlueHDi 165HP",
+      "2.2 BlueHDi 140HP",
+      "2.2 BlueHDi 165HP",
+      "2.2 BlueHDi 180HP"
+    ],
+    "Nemo": [
+      "1.3 HDi 75HP",
+      "1.4 HDi 70HP"
+    ],
+    "DS3": [
+      "1.2 PureTech 82HP",
+      "1.2 PureTech 110HP",
+      "1.6 THP 165HP",
+      "1.6 THP 208HP",
+      "1.4 HDi 70HP",
+      "1.6 HDi 100HP"
+    ],
+    "DS4": [
+      "1.2 PureTech 130HP",
+      "1.6 THP 165HP",
+      "1.6 THP 210HP",
+      "1.6 BlueHDi 115HP",
+      "1.6 BlueHDi 120HP",
+      "2.0 BlueHDi 150HP"
+    ],
+    "DS5": [
+      "1.6 THP 165HP",
+      "1.6 THP 200HP",
+      "1.6 BlueHDi 120HP",
+      "2.0 BlueHDi 150HP",
+      "2.0 BlueHDi 180HP",
+      "2.0 Hybrid4 200HP"
+    ]
   },
   "DS Automobiles": {
-    "DS 3": ["1.2 PureTech 100HP", "1.2 PureTech 130HP", "1.5 BlueHDi 130HP"],
-    "DS 3 Crossback": ["1.2 PureTech 100HP", "1.2 PureTech 130HP", "1.5 BlueHDi 100HP", "1.5 BlueHDi 130HP", "E-Tense Elektrik 136HP"],
-    "DS 4": ["1.2 PureTech 130HP", "1.6 PureTech 180HP", "1.6 PureTech 225HP", "1.5 BlueHDi 130HP", "E-Tense PHEV 225HP"],
-    "DS 7": ["1.6 PureTech 180HP", "1.6 PureTech 225HP", "1.5 BlueHDi 130HP", "2.0 BlueHDi 180HP", "E-Tense 4x4 PHEV 300HP", "E-Tense 4x4 PHEV 360HP"],
-    "DS 9": ["1.6 PureTech 225HP", "E-Tense 4x4 PHEV 360HP"]
+    "DS 3": [
+      "1.2 PureTech 100HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 130HP"
+    ],
+    "DS 3 Crossback": [
+      "1.2 PureTech 100HP",
+      "1.2 PureTech 130HP",
+      "1.5 BlueHDi 100HP",
+      "1.5 BlueHDi 130HP",
+      "E-Tense Elektrik 136HP"
+    ],
+    "DS 4": [
+      "1.2 PureTech 130HP",
+      "1.6 PureTech 180HP",
+      "1.6 PureTech 225HP",
+      "1.5 BlueHDi 130HP",
+      "E-Tense PHEV 225HP"
+    ],
+    "DS 7": [
+      "1.6 PureTech 180HP",
+      "1.6 PureTech 225HP",
+      "1.5 BlueHDi 130HP",
+      "2.0 BlueHDi 180HP",
+      "E-Tense 4x4 PHEV 300HP",
+      "E-Tense 4x4 PHEV 360HP"
+    ],
+    "DS 9": [
+      "1.6 PureTech 225HP",
+      "E-Tense 4x4 PHEV 360HP"
+    ]
   },
   "Porsche": {
-    "911": ["3.0 Carrera 385HP", "3.0 Carrera S 450HP", "3.0 Carrera 4S 450HP", "3.8 Turbo 580HP", "3.8 Turbo S 650HP", "4.0 GT3 510HP", "4.0 GT3 RS 525HP"],
-    "Cayenne": ["3.0 V6 353HP", "3.0 V6 (S) 474HP", "4.0 V8 (GTS) 500HP", "4.0 V8 Turbo 650HP", "3.0 V6 E-Hybrid 470HP", "4.0 V8 Turbo E-Hybrid 739HP"],
-    "Cayenne Coupe": ["3.0 V6 353HP", "3.0 V6 (S) 474HP", "4.0 V8 (GTS) 500HP", "4.0 V8 Turbo 650HP", "3.0 V6 E-Hybrid 470HP"],
-    "Macan": ["2.0 Turbo 265HP", "2.9 V6 (S) 380HP", "2.9 V6 (GTS) 440HP", "Elektrik Macan 4 408HP", "Elektrik Macan Turbo 639HP"],
-    "Panamera": ["2.9 V6 353HP", "2.9 V6 (4S) 440HP", "4.0 V8 (GTS) 480HP", "4.0 V8 Turbo S 630HP", "2.9 V6 E-Hybrid 470HP", "4.0 V8 Turbo S E-Hybrid 700HP"],
-    "Taycan": ["Elektrik (Base) 408HP", "Elektrik (4S) 530HP", "Elektrik (GTS) 598HP", "Elektrik (Turbo) 680HP", "Elektrik (Turbo S) 761HP", "Elektrik (Turbo GT) 1019HP"],
-    "Taycan Cross Turismo": ["Elektrik (4) 476HP", "Elektrik (4S) 571HP", "Elektrik (Turbo) 680HP", "Elektrik (Turbo S) 761HP"],
-    "718 Boxster": ["2.0 300HP", "2.5 S 350HP", "4.0 GTS 400HP", "4.0 Spyder 420HP"],
-    "718 Cayman": ["2.0 300HP", "2.5 S 350HP", "4.0 GTS 400HP", "4.0 GT4 420HP", "4.0 GT4 RS 500HP"]
+    "911": [
+      "3.0 Carrera 385HP",
+      "3.0 Carrera S 450HP",
+      "3.0 Carrera 4S 450HP",
+      "3.8 Turbo 580HP",
+      "3.8 Turbo S 650HP",
+      "4.0 GT3 510HP",
+      "4.0 GT3 RS 525HP"
+    ],
+    "Cayenne": [
+      "3.0 V6 353HP",
+      "3.0 V6 (S) 474HP",
+      "4.0 V8 (GTS) 500HP",
+      "4.0 V8 Turbo 650HP",
+      "3.0 V6 E-Hybrid 470HP",
+      "4.0 V8 Turbo E-Hybrid 739HP"
+    ],
+    "Cayenne Coupe": [
+      "3.0 V6 353HP",
+      "3.0 V6 (S) 474HP",
+      "4.0 V8 (GTS) 500HP",
+      "4.0 V8 Turbo 650HP",
+      "3.0 V6 E-Hybrid 470HP"
+    ],
+    "Macan": [
+      "2.0 Turbo 265HP",
+      "2.9 V6 (S) 380HP",
+      "2.9 V6 (GTS) 440HP",
+      "Elektrik Macan 4 408HP",
+      "Elektrik Macan Turbo 639HP"
+    ],
+    "Panamera": [
+      "2.9 V6 353HP",
+      "2.9 V6 (4S) 440HP",
+      "4.0 V8 (GTS) 480HP",
+      "4.0 V8 Turbo S 630HP",
+      "2.9 V6 E-Hybrid 470HP",
+      "4.0 V8 Turbo S E-Hybrid 700HP"
+    ],
+    "Taycan": [
+      "Elektrik (Base) 408HP",
+      "Elektrik (4S) 530HP",
+      "Elektrik (GTS) 598HP",
+      "Elektrik (Turbo) 680HP",
+      "Elektrik (Turbo S) 761HP",
+      "Elektrik (Turbo GT) 1019HP"
+    ],
+    "Taycan Cross Turismo": [
+      "Elektrik (4) 476HP",
+      "Elektrik (4S) 571HP",
+      "Elektrik (Turbo) 680HP",
+      "Elektrik (Turbo S) 761HP"
+    ],
+    "718 Boxster": [
+      "2.0 300HP",
+      "2.5 S 350HP",
+      "4.0 GTS 400HP",
+      "4.0 Spyder 420HP"
+    ],
+    "718 Cayman": [
+      "2.0 300HP",
+      "2.5 S 350HP",
+      "4.0 GTS 400HP",
+      "4.0 GT4 420HP",
+      "4.0 GT4 RS 500HP"
+    ]
   },
   "Land Rover": {
-    "Defender": ["2.0 P300 300HP", "3.0 P400 400HP", "5.0 V8 525HP", "2.0 D200 200HP", "3.0 D250 249HP", "3.0 D300 300HP"],
-    "Discovery": ["3.0 P360 Mild Hybrid 360HP", "3.0 D250 Mild Hybrid 249HP", "3.0 D300 Mild Hybrid 300HP"],
-    "Discovery Sport": ["2.0 P200 200HP", "2.0 P250 249HP", "2.0 D165 165HP", "2.0 D200 200HP", "1.5 P300e PHEV 309HP"],
-    "Range Rover": ["3.0 P400 Mild Hybrid 400HP", "4.4 V8 P530 530HP", "3.0 D300 Mild Hybrid 300HP", "3.0 D350 Mild Hybrid 350HP", "3.0 P440e PHEV 440HP", "3.0 P510e PHEV 510HP"],
-    "Range Rover Sport": ["3.0 P360 360HP", "3.0 P400 400HP", "4.4 V8 P530 530HP", "3.0 D300 300HP", "3.0 D350 350HP", "3.0 P440e PHEV 440HP", "3.0 P510e PHEV 510HP"],
-    "Range Rover Evoque": ["2.0 P200 200HP", "2.0 P250 249HP", "2.0 D165 165HP", "2.0 D200 200HP", "1.5 P300e PHEV 309HP"],
-    "Range Rover Velar": ["2.0 P250 250HP", "3.0 P400 Mild Hybrid 400HP", "2.0 D200 Mild Hybrid 200HP", "3.0 D300 Mild Hybrid 300HP", "2.0 P400e PHEV 404HP"],
-    "Freelander": ["2.2 eD4 150HP", "2.2 SD4 190HP"]
+    "Defender": [
+      "2.0 P300 300HP",
+      "3.0 P400 400HP",
+      "5.0 V8 525HP",
+      "2.0 D200 200HP",
+      "3.0 D250 249HP",
+      "3.0 D300 300HP"
+    ],
+    "Discovery": [
+      "3.0 P360 Mild Hybrid 360HP",
+      "3.0 D250 Mild Hybrid 249HP",
+      "3.0 D300 Mild Hybrid 300HP"
+    ],
+    "Discovery Sport": [
+      "2.0 P200 200HP",
+      "2.0 P250 249HP",
+      "2.0 D165 165HP",
+      "2.0 D200 200HP",
+      "1.5 P300e PHEV 309HP"
+    ],
+    "Range Rover": [
+      "3.0 P400 Mild Hybrid 400HP",
+      "4.4 V8 P530 530HP",
+      "3.0 D300 Mild Hybrid 300HP",
+      "3.0 D350 Mild Hybrid 350HP",
+      "3.0 P440e PHEV 440HP",
+      "3.0 P510e PHEV 510HP"
+    ],
+    "Range Rover Sport": [
+      "3.0 P360 360HP",
+      "3.0 P400 400HP",
+      "4.4 V8 P530 530HP",
+      "3.0 D300 300HP",
+      "3.0 D350 350HP",
+      "3.0 P440e PHEV 440HP",
+      "3.0 P510e PHEV 510HP"
+    ],
+    "Range Rover Evoque": [
+      "2.0 P200 200HP",
+      "2.0 P250 249HP",
+      "2.0 D165 165HP",
+      "2.0 D200 200HP",
+      "1.5 P300e PHEV 309HP"
+    ],
+    "Range Rover Velar": [
+      "2.0 P250 250HP",
+      "3.0 P400 Mild Hybrid 400HP",
+      "2.0 D200 Mild Hybrid 200HP",
+      "3.0 D300 Mild Hybrid 300HP",
+      "2.0 P400e PHEV 404HP"
+    ],
+    "Freelander": [
+      "2.2 eD4 150HP",
+      "2.2 SD4 190HP"
+    ]
   },
   "Jeep": {
-    "Avenger": ["1.2 Turbo 100HP", "1.2 Hybrid 136HP", "Elektrik 156HP"],
-    "Renegade": ["1.0 Turbo 120HP", "1.3 Turbo 150HP", "1.3 Turbo 180HP", "1.6 MultiJet 120HP", "4xe Plug-in Hybrid 190HP", "4xe Plug-in Hybrid 240HP"],
-    "Compass": ["1.3 Turbo 130HP", "1.3 Turbo 150HP", "1.3 Turbo 180HP", "1.6 MultiJet 130HP", "2.0 MultiJet 170HP", "4xe Plug-in Hybrid 190HP", "4xe Plug-in Hybrid 240HP"],
-    "Cherokee": ["2.0 Turbo 272HP", "3.2 V6 272HP", "2.2 MultiJet 185HP", "2.2 MultiJet 200HP"],
-    "Commander": ["1.3 Turbo 185HP", "2.0 Diesel 170HP"],
-    "Grand Cherokee": ["3.6 V6 286HP", "5.7 V8 HEMI 360HP", "6.4 V8 SRT 475HP", "6.2 V8 Trackhawk 710HP", "4xe Plug-in Hybrid 380HP"],
-    "Wrangler": ["2.0 Turbo 272HP", "3.6 V6 285HP", "2.2 MultiJet 200HP", "4xe Plug-in Hybrid 380HP"],
-    "Gladiator": ["3.0 V6 260HP", "3.6 V6 285HP"]
+    "Avenger": [
+      "1.2 Turbo 100HP",
+      "1.2 Hybrid 136HP",
+      "Elektrik 156HP"
+    ],
+    "Renegade": [
+      "1.0 Turbo 120HP",
+      "1.3 Turbo 150HP",
+      "1.3 Turbo 180HP",
+      "1.6 MultiJet 120HP",
+      "4xe Plug-in Hybrid 190HP",
+      "4xe Plug-in Hybrid 240HP"
+    ],
+    "Compass": [
+      "1.3 Turbo 130HP",
+      "1.3 Turbo 150HP",
+      "1.3 Turbo 180HP",
+      "1.6 MultiJet 130HP",
+      "2.0 MultiJet 170HP",
+      "4xe Plug-in Hybrid 190HP",
+      "4xe Plug-in Hybrid 240HP"
+    ],
+    "Cherokee": [
+      "2.0 Turbo 272HP",
+      "3.2 V6 272HP",
+      "2.2 MultiJet 185HP",
+      "2.2 MultiJet 200HP"
+    ],
+    "Commander": [
+      "1.3 Turbo 185HP",
+      "2.0 Diesel 170HP"
+    ],
+    "Grand Cherokee": [
+      "3.6 V6 286HP",
+      "5.7 V8 HEMI 360HP",
+      "6.4 V8 SRT 475HP",
+      "6.2 V8 Trackhawk 710HP",
+      "4xe Plug-in Hybrid 380HP"
+    ],
+    "Wrangler": [
+      "2.0 Turbo 272HP",
+      "3.6 V6 285HP",
+      "2.2 MultiJet 200HP",
+      "4xe Plug-in Hybrid 380HP"
+    ],
+    "Gladiator": [
+      "3.0 V6 260HP",
+      "3.6 V6 285HP"
+    ]
   },
   "Tesla": {
-    "Model 3": ["RWD 283HP", "Long Range AWD 498HP", "Performance AWD 534HP"],
-    "Model Y": ["RWD 299HP", "Long Range AWD 514HP", "Performance AWD 534HP"],
-    "Model S": ["Long Range AWD 670HP", "Plaid Tri-Motor 1020HP"],
-    "Model X": ["Long Range AWD 670HP", "Plaid Tri-Motor 1020HP"],
-    "Cybertruck": ["AWD 600HP", "Cyberbeast Tri-Motor 845HP"]
+    "Model 3": [
+      "RWD 283HP",
+      "Long Range AWD 498HP",
+      "Performance AWD 534HP"
+    ],
+    "Model Y": [
+      "RWD 299HP",
+      "Long Range AWD 514HP",
+      "Performance AWD 534HP"
+    ],
+    "Model S": [
+      "Long Range AWD 670HP",
+      "Plaid Tri-Motor 1020HP"
+    ],
+    "Model X": [
+      "Long Range AWD 670HP",
+      "Plaid Tri-Motor 1020HP"
+    ],
+    "Cybertruck": [
+      "AWD 600HP",
+      "Cyberbeast Tri-Motor 845HP"
+    ]
   },
   "Togg": {
-    "T10X": ["Elektrik V1 RWD Standard 200HP", "Elektrik V1 RWD Long Range 218HP", "Elektrik V1 AWD Long Range 326HP"],
-    "T10F": ["Elektrik V1 RWD Long Range 218HP", "Elektrik V1 AWD Long Range 326HP"]
+    "T10X": [
+      "Elektrik V1 RWD Standard 200HP",
+      "Elektrik V1 RWD Long Range 218HP",
+      "Elektrik V1 AWD Long Range 326HP"
+    ],
+    "T10F": [
+      "Elektrik V1 RWD Long Range 218HP",
+      "Elektrik V1 AWD Long Range 326HP"
+    ]
   },
   "Lexus": {
-    "CT": ["200h Hybrid 136HP"],
-    "ES": ["300h Hybrid 218HP", "350 3.5 V6 300HP"],
-    "IS": ["300h Hybrid 223HP", "350 3.5 V6 314HP", "500 5.0 V8 479HP"],
-    "LS": ["500 3.5 V6 Twin-Turbo 422HP", "500h Hybrid 359HP"],
-    "LC": ["500 5.0 V8 464HP", "500h Multi-Stage Hybrid 359HP"],
-    "NX": ["250 2.5 205HP", "350h Hybrid 242HP", "450h+ Plug-in Hybrid 309HP"],
-    "RX": ["350h Hybrid 245HP", "450h+ Plug-in Hybrid 309HP", "500h F Sport Performance 371HP"],
-    "RZ": ["450e Elektrik 313HP"],
-    "UX": ["250h Hybrid 184HP", "300e Elektrik 204HP"],
-    "GS": ["300h Hybrid 223HP", "350 3.5 V6 314HP", "450h Hybrid 296HP", "F 5.0 V8 477HP"],
-    "LX": ["600 3.5 V6 Twin-Turbo 415HP", "570 5.7 V8 383HP"],
-    "RC": ["300h Hybrid 223HP", "350 3.5 V6 314HP", "F 5.0 V8 477HP"]
+    "CT": [
+      "200h Hybrid 136HP"
+    ],
+    "ES": [
+      "300h Hybrid 218HP",
+      "350 3.5 V6 300HP"
+    ],
+    "IS": [
+      "300h Hybrid 223HP",
+      "350 3.5 V6 314HP",
+      "500 5.0 V8 479HP"
+    ],
+    "LS": [
+      "500 3.5 V6 Twin-Turbo 422HP",
+      "500h Hybrid 359HP"
+    ],
+    "LC": [
+      "500 5.0 V8 464HP",
+      "500h Multi-Stage Hybrid 359HP"
+    ],
+    "NX": [
+      "250 2.5 205HP",
+      "350h Hybrid 242HP",
+      "450h+ Plug-in Hybrid 309HP"
+    ],
+    "RX": [
+      "350h Hybrid 245HP",
+      "450h+ Plug-in Hybrid 309HP",
+      "500h F Sport Performance 371HP"
+    ],
+    "RZ": [
+      "450e Elektrik 313HP"
+    ],
+    "UX": [
+      "250h Hybrid 184HP",
+      "300e Elektrik 204HP"
+    ],
+    "GS": [
+      "300h Hybrid 223HP",
+      "350 3.5 V6 314HP",
+      "450h Hybrid 296HP",
+      "F 5.0 V8 477HP"
+    ],
+    "LX": [
+      "600 3.5 V6 Twin-Turbo 415HP",
+      "570 5.7 V8 383HP"
+    ],
+    "RC": [
+      "300h Hybrid 223HP",
+      "350 3.5 V6 314HP",
+      "F 5.0 V8 477HP"
+    ]
   },
   "Mini": {
-    "Hatch": ["One 1.5 102HP", "Cooper 1.5 136HP", "Cooper S 2.0 178HP", "JCW 2.0 231HP", "Cooper SE Elektrik 184HP"],
-    "Convertible": ["Cooper 1.5 136HP", "Cooper S 2.0 178HP", "JCW 2.0 231HP"],
-    "Countryman": ["Cooper 1.5 136HP", "Cooper S 2.0 178HP", "JCW ALL4 2.0 306HP", "Cooper SE Plug-in Hybrid 220HP", "Cooper SE Elektrik 204HP", "Cooper E Elektrik 204HP"],
-    "Clubman": ["Cooper 1.5 136HP", "Cooper S 2.0 178HP", "JCW ALL4 2.0 306HP"],
-    "Coupe": ["Cooper 1.6 122HP", "Cooper S 1.6 184HP", "JCW 1.6 211HP"],
-    "Paceman": ["Cooper 1.6 122HP", "Cooper S 1.6 184HP", "JCW ALL4 1.6 218HP"]
+    "Hatch": [
+      "One 1.5 102HP",
+      "Cooper 1.5 136HP",
+      "Cooper S 2.0 178HP",
+      "JCW 2.0 231HP",
+      "Cooper SE Elektrik 184HP"
+    ],
+    "Convertible": [
+      "Cooper 1.5 136HP",
+      "Cooper S 2.0 178HP",
+      "JCW 2.0 231HP"
+    ],
+    "Countryman": [
+      "Cooper 1.5 136HP",
+      "Cooper S 2.0 178HP",
+      "JCW ALL4 2.0 306HP",
+      "Cooper SE Plug-in Hybrid 220HP",
+      "Cooper SE Elektrik 204HP",
+      "Cooper E Elektrik 204HP"
+    ],
+    "Clubman": [
+      "Cooper 1.5 136HP",
+      "Cooper S 2.0 178HP",
+      "JCW ALL4 2.0 306HP"
+    ],
+    "Coupe": [
+      "Cooper 1.6 122HP",
+      "Cooper S 1.6 184HP",
+      "JCW 1.6 211HP"
+    ],
+    "Paceman": [
+      "Cooper 1.6 122HP",
+      "Cooper S 1.6 184HP",
+      "JCW ALL4 1.6 218HP"
+    ]
   },
   "Alfa Romeo": {
-    "Giulia": ["2.0 Turbo 200HP", "2.0 Turbo 280HP", "2.9 V6 Biturbo Quadrifoglio 510HP", "2.2 JTDm 160HP", "2.2 JTDm 190HP", "2.2 JTDm 210HP"],
-    "Giulietta": ["1.4 TB 120HP", "1.4 TB 150HP", "1.4 TB MultiAir 170HP", "1.6 JTDm 120HP", "2.0 JTDm 150HP", "2.0 JTDm 170HP", "1.75 TBi Quadrifoglio Verde 240HP"],
-    "Stelvio": ["2.0 Turbo 200HP", "2.0 Turbo 280HP", "2.9 V6 Biturbo Quadrifoglio 510HP", "2.2 JTDm 160HP", "2.2 JTDm 190HP", "2.2 JTDm 210HP"],
-    "Tonale": ["1.5 VGT Mild Hybrid 130HP", "1.5 VGT Mild Hybrid 160HP", "1.3 VGT Plug-in Hybrid Q4 280HP"],
-    "MiTo": ["0.9 TwinAir 85HP", "0.9 TwinAir 105HP", "1.4 MultiAir 135HP", "1.4 MultiAir 170HP", "1.3 JTDm 85HP", "1.3 JTDm 95HP"],
-    "147": ["1.6 Twin Spark 105HP", "1.6 Twin Spark 120HP", "2.0 Twin Spark 150HP", "3.2 V6 GTA 250HP", "1.9 JTD 115HP", "1.9 JTD 140HP"],
-    "156": ["1.8 Twin Spark 140HP", "2.0 Twin Spark 155HP", "2.5 V6 190HP", "3.2 V6 GTA 250HP", "1.9 JTD 105HP", "1.9 JTD 140HP", "2.4 JTD 175HP"],
-    "159": ["1.8 MPI 140HP", "1.8 TBi 200HP", "2.2 JTS 185HP", "3.2 JTS V6 260HP", "1.9 JTDm 120HP", "1.9 JTDm 150HP", "2.4 JTDm 200HP"]
+    "Giulia": [
+      "2.0 Turbo 200HP",
+      "2.0 Turbo 280HP",
+      "2.9 V6 Biturbo Quadrifoglio 510HP",
+      "2.2 JTDm 160HP",
+      "2.2 JTDm 190HP",
+      "2.2 JTDm 210HP"
+    ],
+    "Giulietta": [
+      "1.4 TB 120HP",
+      "1.4 TB 150HP",
+      "1.4 TB MultiAir 170HP",
+      "1.6 JTDm 120HP",
+      "2.0 JTDm 150HP",
+      "2.0 JTDm 170HP",
+      "1.75 TBi Quadrifoglio Verde 240HP"
+    ],
+    "Stelvio": [
+      "2.0 Turbo 200HP",
+      "2.0 Turbo 280HP",
+      "2.9 V6 Biturbo Quadrifoglio 510HP",
+      "2.2 JTDm 160HP",
+      "2.2 JTDm 190HP",
+      "2.2 JTDm 210HP"
+    ],
+    "Tonale": [
+      "1.5 VGT Mild Hybrid 130HP",
+      "1.5 VGT Mild Hybrid 160HP",
+      "1.3 VGT Plug-in Hybrid Q4 280HP"
+    ],
+    "MiTo": [
+      "0.9 TwinAir 85HP",
+      "0.9 TwinAir 105HP",
+      "1.4 MultiAir 135HP",
+      "1.4 MultiAir 170HP",
+      "1.3 JTDm 85HP",
+      "1.3 JTDm 95HP"
+    ],
+    "147": [
+      "1.6 Twin Spark 105HP",
+      "1.6 Twin Spark 120HP",
+      "2.0 Twin Spark 150HP",
+      "3.2 V6 GTA 250HP",
+      "1.9 JTD 115HP",
+      "1.9 JTD 140HP"
+    ],
+    "156": [
+      "1.8 Twin Spark 140HP",
+      "2.0 Twin Spark 155HP",
+      "2.5 V6 190HP",
+      "3.2 V6 GTA 250HP",
+      "1.9 JTD 105HP",
+      "1.9 JTD 140HP",
+      "2.4 JTD 175HP"
+    ],
+    "159": [
+      "1.8 MPI 140HP",
+      "1.8 TBi 200HP",
+      "2.2 JTS 185HP",
+      "3.2 JTS V6 260HP",
+      "1.9 JTDm 120HP",
+      "1.9 JTDm 150HP",
+      "2.4 JTDm 200HP"
+    ],
+    "Brera": [
+      "2.2 JTS 185HP",
+      "3.2 JTS V6 260HP",
+      "2.0 JTDm 170HP",
+      "2.4 JTDm 200HP",
+      "2.4 JTDm 210HP"
+    ],
+    "Spider": [
+      "2.0 JTS 165HP",
+      "2.2 JTS 185HP",
+      "3.2 JTS V6 260HP",
+      "2.4 JTDm 200HP",
+      "2.4 JTDm 210HP"
+    ]
   },
   "Jaguar": {
-    "E-Pace": ["P200 2.0 200HP", "P250 2.0 249HP", "P300 2.0 300HP", "D165 2.0 165HP", "D200 2.0 204HP", "P300e PHEV 309HP"],
-    "F-Pace": ["P250 2.0 249HP", "P340 3.0 Mild Hybrid 340HP", "P400 3.0 Mild Hybrid 400HP", "P550 SVR 5.0 V8 550HP", "D200 2.0 Mild Hybrid 204HP", "D300 3.0 Mild Hybrid 300HP", "P400e PHEV 404HP"],
-    "F-Type": ["P300 2.0 300HP", "P450 5.0 V8 450HP", "P575 R 5.0 V8 575HP"],
-    "I-Pace": ["EV400 Elektrik 400HP"],
-    "XE": ["P250 2.0 249HP", "P300 2.0 300HP", "D200 2.0 204HP"],
-    "XF": ["P250 2.0 249HP", "P300 2.0 300HP", "D200 2.0 204HP"],
-    "XJ": ["3.0 V6 Supercharged 340HP", "5.0 V8 Supercharged 510HP", "3.0 V6 Diesel 300HP"]
+    "E-Pace": [
+      "P200 2.0 200HP",
+      "P250 2.0 249HP",
+      "P300 2.0 300HP",
+      "D165 2.0 165HP",
+      "D200 2.0 204HP",
+      "P300e PHEV 309HP"
+    ],
+    "F-Pace": [
+      "P250 2.0 249HP",
+      "P340 3.0 Mild Hybrid 340HP",
+      "P400 3.0 Mild Hybrid 400HP",
+      "P550 SVR 5.0 V8 550HP",
+      "D200 2.0 Mild Hybrid 204HP",
+      "D300 3.0 Mild Hybrid 300HP",
+      "P400e PHEV 404HP"
+    ],
+    "F-Type": [
+      "P300 2.0 300HP",
+      "P450 5.0 V8 450HP",
+      "P575 R 5.0 V8 575HP"
+    ],
+    "I-Pace": [
+      "EV400 Elektrik 400HP"
+    ],
+    "XE": [
+      "P250 2.0 249HP",
+      "P300 2.0 300HP",
+      "D200 2.0 204HP"
+    ],
+    "XF": [
+      "P250 2.0 249HP",
+      "P300 2.0 300HP",
+      "D200 2.0 204HP"
+    ],
+    "XJ": [
+      "3.0 V6 Supercharged 340HP",
+      "5.0 V8 Supercharged 510HP",
+      "3.0 V6 Diesel 300HP"
+    ]
   },
   "Mitsubishi": {
-    "ASX": ["1.0 Turbo 91HP", "1.3 Turbo 140HP", "1.3 Turbo 158HP", "1.6 VVT 117HP", "2.0 MIVEC 150HP", "1.6 Hybrid 143HP", "1.6 Plug-in Hybrid 160HP"],
-    "Colt": ["1.0 Turbo 91HP", "1.6 Hybrid 91HP", "1.6 Hybrid 143HP"],
-    "Eclipse Cross": ["1.5 T-MIVEC 163HP", "2.4 PHEV 188HP"],
-    "Outlander": ["2.0 MIVEC 150HP", "2.4 MIVEC 167HP", "2.2 DI-D 150HP", "2.2 DI-D 170HP", "2.4 PHEV 188HP", "2.4 PHEV 224HP"],
-    "L200": ["2.4 DI-D 154HP", "2.4 DI-D 180HP"],
-    "Space Star": ["1.0 71HP", "1.2 MIVEC 80HP"],
-    "Lancer": ["1.6 117HP", "1.8 143HP", "2.0 150HP", "Lancer Evolution 2.0 Turbo 280HP", "Lancer Evolution 2.0 Turbo (MR) 300HP"],
-    "Pajero": ["3.0 V6 178HP", "3.2 DI-D 200HP", "3.8 V6 248HP"]
+    "ASX": [
+      "1.0 Turbo 91HP",
+      "1.3 Turbo 140HP",
+      "1.3 Turbo 158HP",
+      "1.6 VVT 117HP",
+      "2.0 MIVEC 150HP",
+      "1.6 Hybrid 143HP",
+      "1.6 Plug-in Hybrid 160HP"
+    ],
+    "Colt": [
+      "1.0 Turbo 91HP",
+      "1.6 Hybrid 91HP",
+      "1.6 Hybrid 143HP"
+    ],
+    "Eclipse Cross": [
+      "1.5 T-MIVEC 163HP",
+      "2.4 PHEV 188HP"
+    ],
+    "Outlander": [
+      "2.0 MIVEC 150HP",
+      "2.4 MIVEC 167HP",
+      "2.2 DI-D 150HP",
+      "2.2 DI-D 170HP",
+      "2.4 PHEV 188HP",
+      "2.4 PHEV 224HP"
+    ],
+    "L200": [
+      "2.4 DI-D 154HP",
+      "2.4 DI-D 180HP"
+    ],
+    "Space Star": [
+      "1.0 71HP",
+      "1.2 MIVEC 80HP"
+    ],
+    "Lancer": [
+      "1.6 117HP",
+      "1.8 143HP",
+      "2.0 150HP",
+      "Lancer Evolution 2.0 Turbo 280HP",
+      "Lancer Evolution 2.0 Turbo (MR) 300HP"
+    ],
+    "Pajero": [
+      "3.0 V6 178HP",
+      "3.2 DI-D 200HP",
+      "3.8 V6 248HP"
+    ]
   },
   "Suzuki": {
-    "Swift": ["1.2 Dualjet Hybrid 83HP", "1.0 Boosterjet 111HP", "1.4 Boosterjet Sport 140HP"],
-    "Vitara": ["1.4 Boosterjet Mild Hybrid 129HP", "1.5 Hybrid 102HP", "1.5 Hybrid (AllGrip) 115HP"],
-    "S-Cross": ["1.4 Boosterjet Mild Hybrid 129HP", "1.5 Hybrid 102HP", "1.5 Hybrid (AllGrip) 115HP"],
-    "Jimny": ["1.5 ALLGRIP 102HP"],
-    "Ignis": ["1.2 Dualjet Hybrid 83HP"],
-    "Across": ["2.5 Plug-in Hybrid 306HP"],
-    "Baleno": ["1.0 Boosterjet 111HP", "1.2 Dualjet 90HP", "1.2 Smart Hybrid 90HP"],
-    "Celerio": ["1.0 67HP"],
-    "Splash": ["1.0 65HP", "1.2 86HP", "1.3 DDiS 75HP"],
-    "SX4": ["1.6 120HP", "1.6 DDiS 120HP"],
-    "Alto": ["1.0 67HP"]
+    "Swift": [
+      "1.2 Dualjet Hybrid 83HP",
+      "1.0 Boosterjet 111HP",
+      "1.4 Boosterjet Sport 140HP"
+    ],
+    "Vitara": [
+      "1.4 Boosterjet Mild Hybrid 129HP",
+      "1.5 Hybrid 102HP",
+      "1.5 Hybrid (AllGrip) 115HP"
+    ],
+    "S-Cross": [
+      "1.4 Boosterjet Mild Hybrid 129HP",
+      "1.5 Hybrid 102HP",
+      "1.5 Hybrid (AllGrip) 115HP"
+    ],
+    "Jimny": [
+      "1.5 ALLGRIP 102HP"
+    ],
+    "Ignis": [
+      "1.2 Dualjet Hybrid 83HP"
+    ],
+    "Across": [
+      "2.5 Plug-in Hybrid 306HP"
+    ],
+    "Baleno": [
+      "1.0 Boosterjet 111HP",
+      "1.2 Dualjet 90HP",
+      "1.2 Smart Hybrid 90HP"
+    ],
+    "Celerio": [
+      "1.0 67HP"
+    ],
+    "Splash": [
+      "1.0 65HP",
+      "1.2 86HP",
+      "1.3 DDiS 75HP"
+    ],
+    "SX4": [
+      "1.6 120HP",
+      "1.6 DDiS 120HP"
+    ],
+    "Alto": [
+      "1.0 67HP"
+    ]
   },
   "MG": {
-    "ZS": ["1.0 Turbo 111HP", "1.5 106HP"],
-    "ZS EV": ["Elektrik 177HP"],
-    "HS": ["1.5 Turbo 169HP", "PHEV 258HP"],
-    "4": ["Elektrik Standard 170HP", "Elektrik Long Range 204HP", "Elektrik XPower 435HP"],
-    "MG4": ["Elektrik Standard 170HP", "Elektrik Long Range 204HP", "Elektrik Extended Range 245HP", "Elektrik XPower 435HP"],
-    "5": ["Elektrik 156HP"],
-    "Marvel R": ["Elektrik 180HP", "Elektrik Performance 288HP"]
+    "ZS": [
+      "1.0 Turbo 111HP",
+      "1.5 106HP"
+    ],
+    "ZS EV": [
+      "Elektrik 177HP"
+    ],
+    "HS": [
+      "1.5 Turbo 169HP",
+      "PHEV 258HP"
+    ],
+    "4": [
+      "Elektrik Standard 170HP",
+      "Elektrik Long Range 204HP",
+      "Elektrik XPower 435HP"
+    ],
+    "MG4": [
+      "Elektrik Standard 170HP",
+      "Elektrik Long Range 204HP",
+      "Elektrik Extended Range 245HP",
+      "Elektrik XPower 435HP"
+    ],
+    "5": [
+      "Elektrik 156HP"
+    ],
+    "Marvel R": [
+      "Elektrik 180HP",
+      "Elektrik Performance 288HP"
+    ]
   },
   "Subaru": {
-    "Impreza": ["1.6i 114HP", "2.0i 150HP", "2.0i-S e-Boxer Hybrid 150HP"],
-    "XV": ["1.6i 114HP", "2.0i 156HP", "2.0i e-Boxer Hybrid 150HP"],
-    "Crosstrek": ["2.0i 152HP", "2.0i e-Boxer Hybrid 150HP"],
-    "Forester": ["2.0i e-Boxer Hybrid 150HP", "2.5i 184HP"],
-    "Legacy": ["2.5i 184HP", "2.4 Turbo 260HP"],
-    "Outback": ["2.5i 169HP", "2.4 Turbo 260HP"],
-    "Solterra": ["Elektrik AWD 218HP"],
-    "BRZ": ["2.4 Boxer 234HP"],
-    "WRX": ["2.4 Turbo 271HP", "2.5 Turbo STI 310HP"],
-    "Levorg": ["1.6 GT 170HP", "2.0 GT 300HP", "1.8 GT Sport 177HP"]
+    "Impreza": [
+      "1.6i 114HP",
+      "2.0i 150HP",
+      "2.0i-S e-Boxer Hybrid 150HP"
+    ],
+    "XV": [
+      "1.6i 114HP",
+      "2.0i 156HP",
+      "2.0i e-Boxer Hybrid 150HP"
+    ],
+    "Crosstrek": [
+      "2.0i 152HP",
+      "2.0i e-Boxer Hybrid 150HP"
+    ],
+    "Forester": [
+      "2.0i e-Boxer Hybrid 150HP",
+      "2.5i 184HP"
+    ],
+    "Legacy": [
+      "2.5i 184HP",
+      "2.4 Turbo 260HP"
+    ],
+    "Outback": [
+      "2.5i 169HP",
+      "2.4 Turbo 260HP"
+    ],
+    "Solterra": [
+      "Elektrik AWD 218HP"
+    ],
+    "BRZ": [
+      "2.4 Boxer 234HP"
+    ],
+    "WRX": [
+      "2.4 Turbo 271HP",
+      "2.5 Turbo STI 310HP"
+    ],
+    "Levorg": [
+      "1.6 GT 170HP",
+      "2.0 GT 300HP",
+      "1.8 GT Sport 177HP"
+    ]
   },
   "Chery": {
-    "Tiggo 4 Pro": ["1.5 Turbo 147HP", "1.5 VVT 113HP"],
-    "Tiggo 7 Pro": ["1.6 Turbo 197HP", "1.5 Turbo 147HP"],
-    "Tiggo 8 Pro": ["1.6 Turbo 197HP", "2.0 Turbo 254HP"],
-    "Arrizo 6": ["1.5 Turbo 147HP"]
+    "Tiggo 4 Pro": [
+      "1.5 Turbo 147HP",
+      "1.5 VVT 113HP"
+    ],
+    "Tiggo 7 Pro": [
+      "1.6 Turbo 197HP",
+      "1.5 Turbo 147HP"
+    ],
+    "Tiggo 8 Pro": [
+      "1.6 Turbo 197HP",
+      "2.0 Turbo 254HP"
+    ],
+    "Arrizo 6": [
+      "1.5 Turbo 147HP"
+    ]
   },
   "BYD": {
-    "Atto 3": ["Elektrik 204HP"],
-    "Dolphin": ["Elektrik Active 95HP", "Elektrik Boost 177HP", "Elektrik Comfort 204HP", "Elektrik Design 204HP"],
-    "Seal": ["Elektrik Design RWD 313HP", "Elektrik Excellence AWD 530HP"],
-    "Han": ["EV Elektrik 380HP", "EV Elektrik AWD 494HP"],
-    "Tang": ["EV Elektrik AWD 517HP"]
+    "Atto 3": [
+      "Elektrik 204HP"
+    ],
+    "Dolphin": [
+      "Elektrik Active 95HP",
+      "Elektrik Boost 177HP",
+      "Elektrik Comfort 204HP",
+      "Elektrik Design 204HP"
+    ],
+    "Seal": [
+      "Elektrik Design RWD 313HP",
+      "Elektrik Excellence AWD 530HP"
+    ],
+    "Han": [
+      "EV Elektrik 380HP",
+      "EV Elektrik AWD 494HP"
+    ],
+    "Tang": [
+      "EV Elektrik AWD 517HP"
+    ]
   },
   "Isuzu": {
-    "D-Max": ["1.9 Blue Power 163HP", "3.0 Blue Power 177HP"]
+    "D-Max": [
+      "1.9 Blue Power 163HP",
+      "3.0 Blue Power 177HP"
+    ]
   },
   "SsangYong": {
-    "Korando": ["1.5 GDI Turbo 163HP", "1.6 Diesel 136HP", "Elektrik e-Motion 190HP"],
-    "Rexton": ["2.2 Diesel 202HP"],
-    "Musso": ["2.2 Diesel 181HP", "2.2 Diesel 202HP"],
-    "Tivoli": ["1.2 GDI Turbo 128HP", "1.5 GDI Turbo 163HP", "1.6 Diesel 136HP"],
-    "Torres": ["1.5 GDI Turbo 163HP", "Elektrik EVX 207HP"],
-    "XLV": ["1.6 GDI 128HP", "1.6 Diesel 115HP"],
-    "Actyon": ["2.0 Xdi 149HP", "2.3 149HP"],
-    "Kyron": ["2.0 Xdi 141HP", "2.7 Xdi 165HP"]
+    "Korando": [
+      "1.5 GDI Turbo 163HP",
+      "1.6 Diesel 136HP",
+      "Elektrik e-Motion 190HP"
+    ],
+    "Rexton": [
+      "2.2 Diesel 202HP"
+    ],
+    "Musso": [
+      "2.2 Diesel 181HP",
+      "2.2 Diesel 202HP"
+    ],
+    "Tivoli": [
+      "1.2 GDI Turbo 128HP",
+      "1.5 GDI Turbo 163HP",
+      "1.6 Diesel 136HP"
+    ],
+    "Torres": [
+      "1.5 GDI Turbo 163HP",
+      "Elektrik EVX 207HP"
+    ],
+    "XLV": [
+      "1.6 GDI 128HP",
+      "1.6 Diesel 115HP"
+    ],
+    "Actyon": [
+      "2.0 Xdi 149HP",
+      "2.3 149HP"
+    ],
+    "Kyron": [
+      "2.0 Xdi 141HP",
+      "2.7 Xdi 165HP"
+    ]
   },
   "Chevrolet": {
-    "Aveo": ["1.2 84HP", "1.4 100HP", "1.3 TDCi 75HP"],
-    "Cruze": ["1.4 Turbo 153HP", "1.6 124HP", "1.8 140HP", "2.0 VCDi 150HP", "2.0 VCDi 163HP"],
-    "Spark": ["1.0 68HP", "1.2 81HP"],
-    "Camaro": ["2.0 Turbo 275HP", "3.6 V6 335HP", "6.2 V8 455HP", "6.2 V8 SS 6.2 455HP", "6.2 V8 ZL1 650HP"],
-    "Corvette": ["6.2 V8 (Stingray) 495HP", "5.5 V8 (Z06) 670HP"],
-    "Malibu": ["1.5 Turbo 163HP", "2.0 Turbo 250HP"],
-    "Captiva": ["2.2 VCDi 163HP", "2.4 171HP", "3.0 V6 258HP"],
-    "Trax": ["1.4 Turbo 140HP", "1.8 140HP", "1.7 VCDi 130HP"],
-    "Equinox": ["1.5 Turbo 170HP", "2.0 Turbo 252HP", "1.6 Diesel 136HP"]
+    "Aveo": [
+      "1.2 84HP",
+      "1.4 100HP",
+      "1.3 TDCi 75HP"
+    ],
+    "Cruze": [
+      "1.4 Turbo 153HP",
+      "1.6 124HP",
+      "1.8 140HP",
+      "2.0 VCDi 150HP",
+      "2.0 VCDi 163HP"
+    ],
+    "Spark": [
+      "1.0 68HP",
+      "1.2 81HP"
+    ],
+    "Camaro": [
+      "2.0 Turbo 275HP",
+      "3.6 V6 335HP",
+      "6.2 V8 455HP",
+      "6.2 V8 SS 6.2 455HP",
+      "6.2 V8 ZL1 650HP"
+    ],
+    "Corvette": [
+      "6.2 V8 (Stingray) 495HP",
+      "5.5 V8 (Z06) 670HP"
+    ],
+    "Malibu": [
+      "1.5 Turbo 163HP",
+      "2.0 Turbo 250HP"
+    ],
+    "Captiva": [
+      "2.2 VCDi 163HP",
+      "2.4 171HP",
+      "3.0 V6 258HP"
+    ],
+    "Trax": [
+      "1.4 Turbo 140HP",
+      "1.8 140HP",
+      "1.7 VCDi 130HP"
+    ],
+    "Equinox": [
+      "1.5 Turbo 170HP",
+      "2.0 Turbo 252HP",
+      "1.6 Diesel 136HP"
+    ],
+    "Tahoe": [
+      "5.3 V8 355HP",
+      "6.2 V8 420HP",
+      "3.0 Duramax Diesel 277HP"
+    ],
+    "Trailblazer": [
+      "1.2 Turbo 137HP",
+      "1.3 Turbo 155HP",
+      "2.0 VCDi 180HP",
+      "2.5 LT 193HP",
+      "2.8 Duramax 200HP"
+    ]
   },
   "Tata": {
-    "Nexon": ["1.2 Revotron 120HP", "1.5 Revotorq Diesel 113HP", "Elektrik EV Max 143HP"]
+    "Nexon": [
+      "1.2 Revotron 120HP",
+      "1.5 Revotorq Diesel 113HP",
+      "Elektrik EV Max 143HP"
+    ]
   },
   "Geely": {
-    "Coolray": ["1.5T 150HP", "1.5T Mild Hybrid 177HP"],
-    "Emgrand": ["1.5 122HP", "1.4T 132HP"],
-    "Monjaro": ["2.0T 238HP"],
-    "Okavango": ["1.5T Mild Hybrid 190HP"]
+    "Coolray": [
+      "1.5T 150HP",
+      "1.5T Mild Hybrid 177HP"
+    ],
+    "Emgrand": [
+      "1.5 122HP",
+      "1.4T 132HP"
+    ],
+    "Monjaro": [
+      "2.0T 238HP"
+    ],
+    "Okavango": [
+      "1.5T Mild Hybrid 190HP"
+    ]
   },
   "Ferrari": {
-    "Roma": ["3.9 V8 Twin-Turbo 620HP"],
-    "Portofino": ["3.9 V8 Twin-Turbo 600HP", "3.9 V8 Twin-Turbo M 620HP"],
-    "F8 Tributo": ["3.9 V8 Twin-Turbo 720HP"],
-    "296 GTB": ["3.0 V6 PHEV 830HP"],
-    "SF90": ["4.0 V8 PHEV 1000HP"],
-    "812": ["6.5 V12 800HP", "6.5 V12 GTS 800HP", "6.5 V12 Competizione 830HP"],
-    "Purosangue": ["6.5 V12 725HP"],
-    "488": ["3.9 V8 Twin-Turbo 670HP", "3.9 V8 Twin-Turbo Pista 720HP"]
+    "Roma": [
+      "3.9 V8 Twin-Turbo 620HP"
+    ],
+    "Portofino": [
+      "3.9 V8 Twin-Turbo 600HP",
+      "3.9 V8 Twin-Turbo M 620HP"
+    ],
+    "F8 Tributo": [
+      "3.9 V8 Twin-Turbo 720HP"
+    ],
+    "296 GTB": [
+      "3.0 V6 PHEV 830HP"
+    ],
+    "SF90": [
+      "4.0 V8 PHEV 1000HP"
+    ],
+    "812": [
+      "6.5 V12 800HP",
+      "6.5 V12 GTS 800HP",
+      "6.5 V12 Competizione 830HP"
+    ],
+    "Purosangue": [
+      "6.5 V12 725HP"
+    ],
+    "488": [
+      "3.9 V8 Twin-Turbo 670HP",
+      "3.9 V8 Twin-Turbo Pista 720HP"
+    ]
   },
   "Lamborghini": {
-    "Huracan": ["5.2 V10 610HP", "5.2 V10 Evo 640HP", "5.2 V10 STO 640HP", "5.2 V10 Tecnica 640HP"],
-    "Aventador": ["6.5 V12 700HP", "6.5 V12 S 740HP", "6.5 V12 SVJ 770HP", "6.5 V12 Ultimae 780HP"],
-    "Revuelto": ["6.5 V12 PHEV 1015HP"],
-    "Urus": ["4.0 V8 Twin-Turbo 650HP", "4.0 V8 Twin-Turbo S 666HP", "4.0 V8 Twin-Turbo Performante 666HP"]
+    "Huracan": [
+      "5.2 V10 610HP",
+      "5.2 V10 Evo 640HP",
+      "5.2 V10 STO 640HP",
+      "5.2 V10 Tecnica 640HP"
+    ],
+    "Aventador": [
+      "6.5 V12 700HP",
+      "6.5 V12 S 740HP",
+      "6.5 V12 SVJ 770HP",
+      "6.5 V12 Ultimae 780HP"
+    ],
+    "Revuelto": [
+      "6.5 V12 PHEV 1015HP"
+    ],
+    "Urus": [
+      "4.0 V8 Twin-Turbo 650HP",
+      "4.0 V8 Twin-Turbo S 666HP",
+      "4.0 V8 Twin-Turbo Performante 666HP"
+    ]
   },
   "Bentley": {
-    "Continental GT": ["4.0 V8 550HP", "6.0 W12 635HP", "4.0 V8 (S) 550HP", "6.0 W12 Speed 659HP"],
-    "Flying Spur": ["4.0 V8 550HP", "6.0 W12 635HP", "4.0 V8 PHEV 544HP"],
-    "Bentayga": ["4.0 V8 550HP", "6.0 W12 635HP", "4.0 V8 PHEV 456HP"],
-    "Mulsanne": ["6.75 V8 512HP", "6.75 V8 Speed 537HP"]
+    "Continental GT": [
+      "4.0 V8 550HP",
+      "6.0 W12 635HP",
+      "4.0 V8 (S) 550HP",
+      "6.0 W12 Speed 659HP"
+    ],
+    "Flying Spur": [
+      "4.0 V8 550HP",
+      "6.0 W12 635HP",
+      "4.0 V8 PHEV 544HP"
+    ],
+    "Bentayga": [
+      "4.0 V8 550HP",
+      "6.0 W12 635HP",
+      "4.0 V8 PHEV 456HP"
+    ],
+    "Mulsanne": [
+      "6.75 V8 512HP",
+      "6.75 V8 Speed 537HP"
+    ]
   },
   "Maserati": {
-    "Ghibli": ["2.0 Mild Hybrid 330HP", "3.0 V6 350HP", "3.0 V6 (S) 430HP", "3.8 V8 (Trofeo) 580HP", "3.0 V6 Diesel 275HP"],
-    "Quattroporte": ["3.0 V6 350HP", "3.0 V6 (S) 430HP", "3.8 V8 (Trofeo) 580HP", "3.0 V6 Diesel 275HP"],
-    "Levante": ["2.0 Mild Hybrid 330HP", "3.0 V6 350HP", "3.0 V6 (S) 430HP", "3.8 V8 (Trofeo) 580HP"],
-    "Grecale": ["2.0 Mild Hybrid 300HP", "2.0 Mild Hybrid Modena 330HP", "3.0 V6 Trofeo 530HP", "Folgore Elektrik 550HP"],
-    "GranTurismo": ["3.0 V6 Modena 490HP", "3.0 V6 Trofeo 550HP", "Folgore Elektrik 761HP"],
-    "GranCabrio": ["3.0 V6 Trofeo 550HP", "Folgore Elektrik 761HP"],
-    "MC20": ["3.0 V6 Twin-Turbo 630HP"]
+    "Ghibli": [
+      "2.0 Mild Hybrid 330HP",
+      "3.0 V6 350HP",
+      "3.0 V6 (S) 430HP",
+      "3.8 V8 (Trofeo) 580HP",
+      "3.0 V6 Diesel 275HP"
+    ],
+    "Quattroporte": [
+      "3.0 V6 350HP",
+      "3.0 V6 (S) 430HP",
+      "3.8 V8 (Trofeo) 580HP",
+      "3.0 V6 Diesel 275HP"
+    ],
+    "Levante": [
+      "2.0 Mild Hybrid 330HP",
+      "3.0 V6 350HP",
+      "3.0 V6 (S) 430HP",
+      "3.8 V8 (Trofeo) 580HP"
+    ],
+    "Grecale": [
+      "2.0 Mild Hybrid 300HP",
+      "2.0 Mild Hybrid Modena 330HP",
+      "3.0 V6 Trofeo 530HP",
+      "Folgore Elektrik 550HP"
+    ],
+    "GranTurismo": [
+      "3.0 V6 Modena 490HP",
+      "3.0 V6 Trofeo 550HP",
+      "Folgore Elektrik 761HP"
+    ],
+    "GranCabrio": [
+      "3.0 V6 Trofeo 550HP",
+      "Folgore Elektrik 761HP"
+    ],
+    "MC20": [
+      "3.0 V6 Twin-Turbo 630HP"
+    ]
   },
   "McLaren": {
-    "720S": ["4.0 V8 Twin-Turbo 720HP"],
-    "570S": ["3.8 V8 Twin-Turbo 570HP"],
-    "600LT": ["3.8 V8 Twin-Turbo 600HP"],
-    "540C": ["3.8 V8 Twin-Turbo 540HP"],
-    "GT": ["4.0 V8 Twin-Turbo 620HP"],
-    "Artura": ["3.0 V6 PHEV 680HP"]
+    "720S": [
+      "4.0 V8 Twin-Turbo 720HP"
+    ],
+    "570S": [
+      "3.8 V8 Twin-Turbo 570HP"
+    ],
+    "600LT": [
+      "3.8 V8 Twin-Turbo 600HP"
+    ],
+    "540C": [
+      "3.8 V8 Twin-Turbo 540HP"
+    ],
+    "GT": [
+      "4.0 V8 Twin-Turbo 620HP"
+    ],
+    "Artura": [
+      "3.0 V6 PHEV 680HP"
+    ]
   },
   "Aston Martin": {
-    "DB11": ["4.0 V8 Biturbo 503HP", "5.2 V12 Biturbo 630HP"],
-    "DBS": ["5.2 V12 Biturbo 725HP"],
-    "Vantage": ["4.0 V8 Biturbo 510HP", "4.0 V8 Biturbo F1 Edition 535HP"],
-    "DBX": ["4.0 V8 Biturbo 550HP", "4.0 V8 Biturbo 707 707HP"],
-    "Rapide": ["5.9 V12 552HP", "6.0 V12 (S) 560HP"],
-    "DB9": ["5.9 V12 476HP", "5.9 V12 517HP"],
-    "Vanquish": ["5.9 V12 568HP"]
+    "DB11": [
+      "4.0 V8 Biturbo 503HP",
+      "5.2 V12 Biturbo 630HP"
+    ],
+    "DBS": [
+      "5.2 V12 Biturbo 725HP"
+    ],
+    "Vantage": [
+      "4.0 V8 Biturbo 510HP",
+      "4.0 V8 Biturbo F1 Edition 535HP"
+    ],
+    "DBX": [
+      "4.0 V8 Biturbo 550HP",
+      "4.0 V8 Biturbo 707 707HP"
+    ],
+    "Rapide": [
+      "5.9 V12 552HP",
+      "6.0 V12 (S) 560HP"
+    ],
+    "DB9": [
+      "5.9 V12 476HP",
+      "5.9 V12 517HP"
+    ],
+    "Vanquish": [
+      "5.9 V12 568HP"
+    ]
+  },
+  "Cadillac": {
+    "ATS": [
+      "2.0 Turbo 272HP",
+      "3.6 V6 335HP",
+      "3.6 V6 Twin-Turbo (V) 470HP"
+    ],
+    "CT4": [
+      "2.0 Turbo 237HP",
+      "2.7 Turbo 310HP",
+      "3.6 V6 Twin-Turbo Blackwing 472HP"
+    ],
+    "CT5": [
+      "2.0 Turbo 237HP",
+      "3.0 V6 Twin-Turbo 355HP",
+      "6.2 V8 Supercharged Blackwing 668HP"
+    ],
+    "CT6": [
+      "2.0 Turbo 237HP",
+      "3.0 V6 Twin-Turbo 404HP",
+      "4.2 V8 Twin-Turbo Blackwing 550HP"
+    ],
+    "Escalade": [
+      "6.2 V8 420HP",
+      "3.0 Duramax Diesel 277HP",
+      "6.2 V8 Supercharged (V) 682HP"
+    ],
+    "Lyriq": [
+      "Elektrik RWD 342HP",
+      "Elektrik AWD 500HP"
+    ],
+    "XT4": [
+      "2.0 Turbo 237HP",
+      "2.0 Turbo 235HP Diesel"
+    ],
+    "XT5": [
+      "2.0 Turbo 237HP",
+      "3.6 V6 310HP"
+    ],
+    "XT6": [
+      "2.0 Turbo 237HP",
+      "3.6 V6 310HP"
+    ]
+  },
+  "Daewoo": {
+    "Lanos": [
+      "1.4 75HP",
+      "1.5 86HP",
+      "1.6 105HP"
+    ],
+    "Leganza": [
+      "2.0 133HP",
+      "2.2 133HP"
+    ],
+    "Matiz": [
+      "0.8 52HP",
+      "1.0 63HP"
+    ],
+    "Nubira": [
+      "1.6 106HP",
+      "2.0 133HP"
+    ],
+    "Tacuma": [
+      "1.6 106HP",
+      "1.8 122HP",
+      "2.0 131HP"
+    ],
+    "Tico": [
+      "0.8 42HP",
+      "0.8 48HP"
+    ]
+  },
+  "Daihatsu": {
+    "Charade": [
+      "1.0 67HP",
+      "1.3 83HP",
+      "1.5 102HP"
+    ],
+    "Copen": [
+      "0.66 Turbo 64HP",
+      "1.3 87HP"
+    ],
+    "Cuore": [
+      "0.85 44HP",
+      "1.0 58HP"
+    ],
+    "Hijet": [
+      "0.66 Turbo 64HP",
+      "1.3 86HP"
+    ],
+    "Materia": [
+      "1.3 91HP",
+      "1.5 103HP"
+    ],
+    "Sirion": [
+      "1.0 69HP",
+      "1.3 87HP",
+      "1.5 103HP"
+    ],
+    "Terios": [
+      "1.3 86HP",
+      "1.5 105HP"
+    ],
+    "YRV": [
+      "1.0 58HP",
+      "1.3 90HP",
+      "1.3 Turbo 130HP"
+    ]
+  },
+  "Infiniti": {
+    "Q30": [
+      "1.6 122HP",
+      "2.0 208HP",
+      "1.5 dCi 109HP",
+      "2.2 dCi 170HP"
+    ],
+    "Q50": [
+      "2.0 211HP",
+      "3.0 V6 Twin-Turbo 300HP",
+      "3.0 V6 Twin-Turbo (Red Sport) 400HP",
+      "2.2 d 170HP",
+      "3.5 V6 Hybrid 364HP"
+    ],
+    "Q60": [
+      "2.0 211HP",
+      "3.0 V6 Twin-Turbo 300HP",
+      "3.0 V6 Twin-Turbo (Red Sport) 400HP"
+    ],
+    "Q70": [
+      "2.5 V6 222HP",
+      "3.7 V6 330HP",
+      "5.6 V8 420HP",
+      "2.2 d 170HP",
+      "3.5 V6 Hybrid 364HP"
+    ],
+    "QX30": [
+      "2.0 211HP",
+      "2.2 d 170HP"
+    ],
+    "QX50": [
+      "2.0 VC-Turbo 272HP",
+      "3.7 V6 329HP"
+    ],
+    "QX55": [
+      "2.0 VC-Turbo 272HP"
+    ],
+    "QX60": [
+      "3.5 V6 295HP",
+      "2.5 VC-Turbo 268HP"
+    ],
+    "QX70": [
+      "3.7 V6 320HP",
+      "5.0 V8 390HP",
+      "3.0 d 238HP"
+    ],
+    "QX80": [
+      "5.6 V8 400HP"
+    ]
+  },
+  "Iveco": {
+    "Daily": [
+      "2.3 HPI 136HP",
+      "2.3 HPI 156HP",
+      "3.0 HPI 160HP",
+      "3.0 HPI 180HP",
+      "3.0 HPI 210HP",
+      "Elektrik 136HP"
+    ],
+    "Daily Van": [
+      "2.3 HPI 136HP",
+      "2.3 HPI 156HP",
+      "3.0 HPI 180HP"
+    ],
+    "Daily Blue Power": [
+      "2.3 HPI 136HP",
+      "2.3 HPI 156HP",
+      "CNG 3.0 136HP"
+    ],
+    "Daily Electric": [
+      "Elektrik 80kW",
+      "Elektrik 140kW"
+    ],
+    "Eurocargo": [
+      "4.5 160HP",
+      "5.9 190HP",
+      "5.9 220HP",
+      "6.7 250HP",
+      "6.7 280HP",
+      "6.7 320HP"
+    ],
+    "S-Way": [
+      "11.0 420HP",
+      "13.0 460HP",
+      "13.0 510HP",
+      "13.0 570HP",
+      "CNG 13.0 460HP"
+    ]
+  },
+  "Lada": {
+    "Granta": [
+      "1.6 87HP",
+      "1.6 98HP",
+      "1.6 106HP"
+    ],
+    "Kalina": [
+      "1.4 89HP",
+      "1.6 87HP",
+      "1.6 98HP"
+    ],
+    "Largus": [
+      "1.6 87HP",
+      "1.6 106HP"
+    ],
+    "Niva": [
+      "1.7 83HP",
+      "1.7 i 80HP",
+      "1.8 85HP"
+    ],
+    "Priora": [
+      "1.6 81HP",
+      "1.6 98HP",
+      "1.6 106HP"
+    ],
+    "Samara": [
+      "1.5 70HP",
+      "1.5 80HP",
+      "1.6 81HP"
+    ],
+    "Vesta": [
+      "1.6 106HP",
+      "1.8 122HP",
+      "CNG 1.6 106HP"
+    ],
+    "XRAY": [
+      "1.6 106HP",
+      "1.8 122HP"
+    ]
+  },
+  "Lancia": {
+    "Delta": [
+      "1.4 T-Jet 120HP",
+      "1.4 MultiAir 150HP",
+      "1.8 T-Jet 200HP",
+      "1.6 MJ 120HP",
+      "2.0 MJ 165HP"
+    ],
+    "Musa": [
+      "1.4 8V 77HP",
+      "1.4 16V 95HP",
+      "1.6 MJ 105HP",
+      "1.6 MJ 120HP"
+    ],
+    "Phedra": [
+      "2.0 136HP",
+      "3.0 V6 204HP",
+      "2.0 MJ 120HP",
+      "2.0 MJ 136HP",
+      "2.2 MJ 170HP"
+    ],
+    "Thema": [
+      "3.6 V6 286HP",
+      "3.0 V6 MJ 190HP",
+      "3.0 V6 MJ 239HP"
+    ],
+    "Thesis": [
+      "2.0 20V 185HP",
+      "2.4 20V 170HP",
+      "3.0 V6 215HP",
+      "3.2 V6 230HP",
+      "2.4 MJ 185HP"
+    ],
+    "Voyager": [
+      "2.8 CRD 163HP",
+      "3.6 V6 283HP"
+    ],
+    "Y": [
+      "1.1 54HP",
+      "1.2 60HP",
+      "1.2 80HP"
+    ],
+    "Ypsilon": [
+      "1.0 Hybrid 70HP",
+      "1.2 69HP",
+      "0.9 TwinAir 85HP",
+      "1.3 MJ 95HP"
+    ]
+  },
+  "Lincoln": {
+    "Aviator": [
+      "3.0 V6 Twin-Turbo 400HP",
+      "3.0 V6 PHEV Grand Touring 494HP"
+    ],
+    "Continental": [
+      "2.7 V6 EcoBoost 335HP",
+      "3.0 V6 EcoBoost 400HP",
+      "3.7 V6 305HP"
+    ],
+    "Corsair": [
+      "2.0 EcoBoost 250HP",
+      "2.3 EcoBoost 295HP",
+      "2.5 Hybrid 266HP"
+    ],
+    "MKC": [
+      "2.0 EcoBoost 240HP",
+      "2.3 EcoBoost 285HP"
+    ],
+    "MKT": [
+      "3.5 V6 EcoBoost 365HP",
+      "3.7 V6 303HP"
+    ],
+    "MKX": [
+      "2.7 V6 EcoBoost 335HP",
+      "3.7 V6 303HP"
+    ],
+    "MKZ": [
+      "2.0 EcoBoost 245HP",
+      "3.0 V6 EcoBoost 400HP",
+      "2.0 Hybrid 188HP"
+    ],
+    "Nautilus": [
+      "2.0 Turbo 250HP",
+      "2.7 V6 EcoBoost 335HP",
+      "Hybrid 2.0 310HP"
+    ],
+    "Navigator": [
+      "3.5 V6 EcoBoost 440HP",
+      "3.5 V6 EcoBoost Black Label 450HP"
+    ]
+  },
+  "Lotus": {
+    "Elan": [
+      "1.6 Turbo 167HP"
+    ],
+    "Elise": [
+      "1.6 134HP",
+      "1.8 Supercharged 220HP",
+      "1.8 Supercharged 250HP"
+    ],
+    "Emira": [
+      "2.0 Turbo i4 365HP",
+      "3.5 V6 Supercharged 405HP",
+      "3.5 V6 Supercharged 430HP"
+    ],
+    "Eletre": [
+      "Elektrik Dual Motor 600HP",
+      "Elektrik Dual Motor (R) 905HP"
+    ],
+    "Emeya": [
+      "Elektrik Dual Motor 603HP",
+      "Elektrik Dual Motor (R) 905HP"
+    ],
+    "Europa": [
+      "2.0 Supercharged 200HP",
+      "2.0 Supercharged 225HP"
+    ],
+    "Evora": [
+      "3.5 V6 280HP",
+      "3.5 V6 Supercharged 410HP",
+      "3.5 V6 Supercharged GT430 430HP"
+    ],
+    "Exige": [
+      "1.8 Supercharged 260HP",
+      "3.5 V6 Supercharged 345HP",
+      "3.5 V6 Supercharged Cup 430HP"
+    ],
+    "Evija": [
+      "Elektrik Quad Motor 2000HP"
+    ]
+  },
+  "Rolls-Royce": {
+    "Cullinan": [
+      "6.75 V12 Twin-Turbo 563HP",
+      "6.75 V12 Twin-Turbo Black Badge 600HP"
+    ],
+    "Dawn": [
+      "6.6 V12 Twin-Turbo 563HP",
+      "6.6 V12 Twin-Turbo Black Badge 601HP"
+    ],
+    "Ghost": [
+      "6.75 V12 Twin-Turbo 563HP",
+      "6.75 V12 Twin-Turbo Black Badge 600HP"
+    ],
+    "Phantom": [
+      "6.75 V12 Twin-Turbo 563HP"
+    ],
+    "Spectre": [
+      "Elektrik Dual Motor 584HP"
+    ],
+    "Wraith": [
+      "6.6 V12 Twin-Turbo 624HP",
+      "6.6 V12 Twin-Turbo Black Badge 631HP"
+    ]
+  },
+  "Rover": {
+    "25": [
+      "1.1 75HP",
+      "1.4 84HP",
+      "1.6 109HP",
+      "1.8 117HP",
+      "2.0 iDT 101HP"
+    ],
+    "45": [
+      "1.4 103HP",
+      "1.6 109HP",
+      "1.8 117HP",
+      "2.0 V6 148HP",
+      "2.0 iDT 101HP",
+      "2.0 iDT 113HP"
+    ],
+    "75": [
+      "1.8 120HP",
+      "1.8T 150HP",
+      "2.0 V6 150HP",
+      "2.5 V6 177HP",
+      "2.0 CDT 116HP",
+      "2.0 CDTI 131HP"
+    ],
+    "100": [
+      "1.1 60HP",
+      "1.4 75HP"
+    ],
+    "200": [
+      "1.4 75HP",
+      "1.6 111HP",
+      "1.8 143HP",
+      "2.0 iDT 105HP"
+    ],
+    "400": [
+      "1.6 112HP",
+      "2.0 136HP",
+      "2.0 iDT 105HP"
+    ],
+    "600": [
+      "1.8 115HP",
+      "2.0 115HP",
+      "2.3 158HP",
+      "2.0 TD 105HP"
+    ],
+    "800": [
+      "2.0 136HP",
+      "2.0 Turbo 180HP",
+      "2.5 V6 175HP",
+      "2.7 V6 169HP",
+      "2.5 Diesel 118HP"
+    ],
+    "MG ZR": [
+      "1.4 84HP",
+      "1.8 117HP",
+      "1.8 160HP",
+      "2.0 iDT 101HP"
+    ],
+    "Streetwise": [
+      "1.4 84HP",
+      "1.6 109HP",
+      "2.0 iDT 101HP"
+    ]
+  },
+  "Saab": {
+    "9-3": [
+      "1.8 122HP",
+      "1.8T 150HP",
+      "1.8T 175HP",
+      "2.0T 175HP",
+      "2.0T 210HP",
+      "2.8 V6 T 280HP",
+      "1.9 TiD 120HP",
+      "1.9 TiD 150HP",
+      "1.9 TTiD 180HP"
+    ],
+    "9-4X": [
+      "3.0 V6 265HP",
+      "2.8 V6 Turbo 300HP"
+    ],
+    "9-5": [
+      "2.0T 150HP",
+      "2.3T 220HP",
+      "2.3T Aero 260HP",
+      "2.8 V6 T 280HP",
+      "1.9 TiD 150HP",
+      "2.0 TiD 160HP"
+    ],
+    "9-7X": [
+      "4.2 275HP",
+      "5.3 V8 300HP",
+      "6.0 V8 390HP"
+    ],
+    "900": [
+      "2.0 126HP",
+      "2.0 Turbo 185HP",
+      "2.3 150HP",
+      "2.5 V6 170HP"
+    ],
+    "9000": [
+      "2.0 130HP",
+      "2.0 Turbo 200HP",
+      "2.3 150HP",
+      "2.3 Turbo 225HP",
+      "3.0 V6 210HP"
+    ]
+  },
+  "Smart": {
+    "EQ forfour": [
+      "Elektrik 82HP"
+    ],
+    "EQ fortwo": [
+      "Elektrik 82HP"
+    ],
+    "forfour": [
+      "1.0 71HP",
+      "0.9 Turbo 90HP",
+      "1.5 CDI 68HP",
+      "1.5 CDI 95HP"
+    ],
+    "fortwo": [
+      "1.0 71HP",
+      "0.9 Turbo 90HP",
+      "0.8 CDI 54HP",
+      "1.0 84HP (Brabus)"
+    ],
+    "Roadster": [
+      "0.7 Turbo 60HP",
+      "0.7 Turbo 80HP",
+      "0.7 Turbo 101HP"
+    ],
+    "#1": [
+      "Elektrik RWD 272HP",
+      "Elektrik AWD Brabus 428HP"
+    ],
+    "#3": [
+      "Elektrik RWD 272HP",
+      "Elektrik AWD Brabus 428HP"
+    ]
+  },
+  "Polestar": {
+    "Polestar 1": [
+      "2.0 Twin-Charged PHEV 619HP"
+    ],
+    "Polestar 2": [
+      "Elektrik Standard RWD 272HP",
+      "Elektrik Long Range RWD 299HP",
+      "Elektrik Long Range Dual Motor 421HP",
+      "Elektrik Long Range Performance 476HP"
+    ],
+    "Polestar 3": [
+      "Elektrik Long Range Dual Motor 489HP",
+      "Elektrik Performance Dual Motor 517HP"
+    ],
+    "Polestar 4": [
+      "Elektrik Long Range Single Motor 272HP",
+      "Elektrik Long Range Dual Motor 544HP"
+    ],
+    "Polestar 5": [
+      "Elektrik Dual Motor 884HP"
+    ]
+  },
+  "Zeekr": {
+    "001": [
+      "Elektrik RWD 272HP",
+      "Elektrik AWD 544HP",
+      "Elektrik Performance AWD 656HP"
+    ],
+    "007": [
+      "Elektrik RWD 416HP",
+      "Elektrik AWD 647HP"
+    ],
+    "7X": [
+      "Elektrik RWD 421HP",
+      "Elektrik AWD 636HP"
+    ],
+    "X": [
+      "Elektrik RWD 272HP",
+      "Elektrik AWD 428HP"
+    ],
+    "009": [
+      "Elektrik AWD 544HP",
+      "Elektrik AWD (Grand) 748HP"
+    ]
+  },
+  "Lynk & Co": {
+    "01": [
+      "1.5 Turbo 180HP",
+      "2.0 Turbo 254HP",
+      "1.5 PHEV 261HP",
+      "1.5 Hybrid 140HP"
+    ],
+    "02": [
+      "1.5 Turbo 150HP",
+      "2.0 Turbo 190HP",
+      "Elektrik 272HP"
+    ],
+    "03": [
+      "1.5 Turbo 180HP",
+      "2.0 Turbo 254HP",
+      "2.0 Turbo Cyan 528HP"
+    ],
+    "05": [
+      "2.0 Turbo 254HP",
+      "2.0 Turbo PHEV 265HP"
+    ],
+    "06": [
+      "1.5 Turbo 150HP",
+      "1.5 PHEV 197HP"
+    ],
+    "09": [
+      "2.0 Turbo 254HP",
+      "2.0 Turbo PHEV 385HP"
+    ]
+  },
+  "Leapmotor": {
+    "T03": [
+      "Elektrik 109HP"
+    ],
+    "C10": [
+      "Elektrik RWD 218HP",
+      "Range Extender 215HP"
+    ],
+    "C11": [
+      "Elektrik RWD 272HP",
+      "Elektrik AWD 544HP"
+    ],
+    "C16": [
+      "Range Extender 272HP"
+    ]
+  },
+  "Skywell": {
+    "ET5": [
+      "Elektrik Long Range 204HP"
+    ],
+    "BE11": [
+      "Elektrik Long Range 204HP"
+    ]
+  },
+  "Hongqi": {
+    "H5": [
+      "2.0 Turbo 224HP"
+    ],
+    "H9": [
+      "2.0 Turbo 252HP",
+      "3.0 V6 Supercharged 296HP"
+    ],
+    "HS5": [
+      "2.0 Turbo 224HP"
+    ],
+    "HS7": [
+      "3.0 V6 Supercharged 337HP"
+    ],
+    "E-HS9": [
+      "Elektrik RWD 218HP",
+      "Elektrik AWD 456HP",
+      "Elektrik AWD (Performance) 550HP"
+    ]
+  },
+  "Nio": {
+    "ET5": [
+      "Elektrik 75kWh 286HP",
+      "Elektrik 100kWh 286HP",
+      "Elektrik 150kWh 286HP"
+    ],
+    "ET7": [
+      "Elektrik 75kWh 480HP",
+      "Elektrik 100kWh 480HP",
+      "Elektrik 150kWh 480HP"
+    ],
+    "ES6": [
+      "Elektrik 75kWh 483HP",
+      "Elektrik 100kWh 483HP"
+    ],
+    "ES8": [
+      "Elektrik 100kWh 653HP",
+      "Elektrik 150kWh 653HP"
+    ],
+    "EC6": [
+      "Elektrik 75kWh 483HP",
+      "Elektrik 100kWh 483HP"
+    ],
+    "EC7": [
+      "Elektrik 75kWh 653HP",
+      "Elektrik 100kWh 653HP"
+    ]
+  },
+  "Karsan": {
+    "Jest": [
+      "2.3 HPI 136HP",
+      "2.3 HPI 146HP"
+    ],
+    "Atak": [
+      "3.0 Diesel 170HP",
+      "3.0 Diesel 180HP"
+    ],
+    "Star": [
+      "2.3 HPI 146HP"
+    ],
+    "e-Jest": [
+      "Elektrik 135HP"
+    ],
+    "e-Atak": [
+      "Elektrik 230HP"
+    ],
+    "Jest Electric": [
+      "Elektrik 135HP"
+    ]
+  },
+  "BMC": {
+    "Tugra": [
+      "12.9L 480HP",
+      "12.9L 520HP"
+    ],
+    "Levend": [
+      "9.0L 330HP",
+      "9.0L 360HP"
+    ],
+    "Fatih": [
+      "7.2L 220HP",
+      "7.2L 280HP"
+    ]
+  },
+  "Ineos": {
+    "Grenadier": [
+      "3.0 BMW B58 Benzin 286HP",
+      "3.0 BMW B57 Diesel 249HP"
+    ],
+    "Quartermaster": [
+      "3.0 BMW B58 Benzin 286HP",
+      "3.0 BMW B57 Diesel 249HP"
+    ]
+  },
+  "DFSK": {
+    "Glory 330": [
+      "1.5 113HP"
+    ],
+    "Glory 500": [
+      "1.5 Turbo 150HP"
+    ],
+    "Glory 580": [
+      "1.5 Turbo 150HP",
+      "1.8 140HP"
+    ],
+    "K01": [
+      "1.2 76HP",
+      "1.3 83HP"
+    ],
+    "Seres 3": [
+      "Elektrik 163HP"
+    ]
+  },
+  "JAC": {
+    "J7": [
+      "1.5 Turbo 174HP"
+    ],
+    "JS3": [
+      "1.5 117HP"
+    ],
+    "JS4": [
+      "1.5 Turbo 150HP"
+    ],
+    "JS8": [
+      "2.0 Turbo 254HP"
+    ],
+    "iEV7": [
+      "Elektrik 116HP"
+    ],
+    "T8": [
+      "2.0 Diesel 139HP"
+    ]
   }
 }

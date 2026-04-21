@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen, ShoppingCart, X as XIcon } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/helpers';
-import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel } from '../../data/carData';
+import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel, getGearsForSelection } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
 import { fileAPI, notificationsAPI } from '../../services/api';
@@ -552,6 +552,8 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
   const modelEngines = getEnginesForModel(formData.brand, formData.model);
   const availableEngines = modelEngines || engineTypes;
   const availablePackages = getPackagesForModel(formData.brand, formData.model);
+  // ✅ Vites listesi motor + markaya göre dinamik filtrelenir (elektrik motor → tek vites, marka-spesifik vitesleri gizle)
+  const availableGears = getGearsForSelection(formData.brand, formData.engine_type);
   const availableDistricts = getDistrictsByProvince(formData.province);
 
   const tabs = [
@@ -705,7 +707,8 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                     className="w-full h-11 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary text-sm"
                     data-testid="car-gear-select"
                   >
-                    {gearTypes.map(type => (
+                    <option value="">Seçiniz</option>
+                    {availableGears.map(type => (
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>

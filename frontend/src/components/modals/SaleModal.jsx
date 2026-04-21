@@ -11,7 +11,7 @@ import {
 } from '../ui/dialog';
 
 const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
-  const { customers, addCustomer, user } = useApp();
+  const { customers, addCustomer, user, transactions } = useApp();
   const [formData, setFormData] = useState({
     price: '',
     employee_share: '',
@@ -183,7 +183,26 @@ ${companyName}`;
   const remaining = finalPrice - deposit;
   const employeeShare = parseNumber(formData.employee_share);
   const ownerPayment = car.ownership === 'consignment' ? (car.purchase_price || 0) : 0;
-  const netProfit = remaining - employeeShare - ownerPayment - (car.ownership === 'stock' ? (car.purchase_price || 0) : 0);
+
+  // ✅ Araca ait birikmiş giderleri (boya, bakım, lastik, sigorta, yedek parça vb.)
+  // hesapla. 'Araç Sahibine Ödeme' ve 'Çalışan Payı' burada hariç — zaten özet kalemlerinde ayrı.
+  const vehicleExpenses = (transactions || [])
+    .filter(t => (
+      t.car_id === car.id &&
+      t.type === 'expense' &&
+      !t.deleted &&
+      t.category !== 'Araç Sahibine Ödeme' &&
+      t.category !== 'Çalışan Payı' &&
+      t.category !== 'Kapora İadesi'
+    ));
+  const totalVehicleExpenses = vehicleExpenses.reduce((sum, t) => sum + (t.amount || 0), 0);
+
+  const netProfit =
+    remaining
+    - employeeShare
+    - ownerPayment
+    - (car.ownership === 'stock' ? (car.purchase_price || 0) : 0)
+    - totalVehicleExpenses;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseModal}>
@@ -408,6 +427,33 @@ ${companyName}`;
                 <div className="flex justify-between text-muted-foreground">
                   <span>Araç Sahibine</span>
                   <span>-{formatCurrency(ownerPayment)}</span>
+                </div>
+              )}
+              {car.ownership === 'stock' && (car.purchase_price || 0) > 0 && (
+                <div className="flex justify-between text-muted-foreground" data-testid="summary-purchase-price">
+                  <span>Alış Maliyeti</span>
+                  <span>-{formatCurrency(car.purchase_price)}</span>
+                </div>
+              )}
+              {totalVehicleExpenses > 0 && (
+                <div className="flex flex-col gap-1" data-testid="summary-vehicle-expenses">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Araç Giderleri ({vehicleExpenses.length} kalem)</span>
+                    <span>-{formatCurrency(totalVehicleExpenses)}</span>
+                  </div>
+                  <details className="text-xs text-muted-foreground/80 pl-3">
+                    <summary className="cursor-pointer hover:text-primary transition-colors">
+                      Detayları gör
+                    </summary>
+                    <ul className="mt-1.5 space-y-1">
+                      {vehicleExpenses.map(t => (
+                        <li key={t.id} className="flex justify-between">
+                          <span>• {t.category || 'Gider'} {t.description ? `(${t.description.substring(0, 30)}${t.description.length > 30 ? '…' : ''})` : ''}</span>
+                          <span>-{formatCurrency(t.amount)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 </div>
               )}
               <div className="flex justify-between pt-2 border-t border-border font-semibold">
