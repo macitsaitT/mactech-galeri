@@ -2,26 +2,34 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.6.0
+- **Version:** 5.7.0
 - **Last Updated:** 2026-02-20
-- **Status:** MVP Complete - Comprehensive Catalog + Sale Flow Hardening
+- **Status:** Capital/Kasa Sistemi Aktif — Tam Muhasebe Mode
 
 ## Implementation Status
 
+### v5.7.0 - Kasa Sistemi + Muayene Bildirim Fix (2026-02-20)
+- [x] **Kasa / Sermaye Sistemi (P0)**: MongoDB atomik `$inc` + koşullu filtre ile yarış-koşulsuz bakiye.
+- [x] Yeni koleksiyonlar: `capital` (org_id bazlı tek doküman), `capital_movements` (denetim logu)
+- [x] Yeni endpoint'ler: `GET /api/capital`, `POST /api/capital/adjust` (deposit/withdrawal), `POST /api/capital/set`, `GET /api/capital/movements`
+- [x] `transactions` create/update/delete/restore akışları → kasa delta otomatik uygular (+income, −expense)
+- [x] Expense sırasında bakiye yetersizse atomik 400 döner: `"Yetersiz sermaye! Mevcut: ₺X, Gerekli: ₺Y"`
+- [x] Frontend: Dashboard tepe kartı (**Mevcut Sermaye**, altın gradient), `CapitalModal` 3 mod (Giriş / Çıkış / Bakiye Düzenle)
+- [x] `AddCarModal`: Stok araç alışında yetersiz sermaye → araç kaydı rollback + uyarı
+- [x] `AppContext`: `capital` state + `refreshCapital`, `adjustCapital`, `setCapitalAmount`
+- [x] Eski `transactions` dokunulmaz (`capital_applied` flag), sadece yeni işlemler kasayı etkiler (3a)
+
+- [x] **Muayene Bildirim Bug Fix**: Araç muayene/sigorta tarihi güncellendiğinde `notifications` ve tetiklenmiş `reminders` otomatik temizlenir (backend `patch_car` + `update_car`).
+- [x] Bildirim "X" butonu artık soft-delete yerine bildirimi listeden tamamen kaldırır (yeni `DELETE /api/notifications/{id}`).
+
 ### v5.6.0 - Satış Akışı Sağlamlaştırma + Tam Katalog (2026-02-20)
-- [x] **Bug Fix (P0):** Satış fiyatı `EditTransactionModal` ile düzenlenince `cars.sale_price` ve `sold_date` de otomatik senkronize ediliyor (backend `update_transaction`). Artık Dashboard ve raporlarda güncel fiyat gözüküyor.
-- [x] **Bug Fix (P0):** `SaleModal` özetinde aracın **birikmiş giderleri** (boya, lastik, bakım vb.) artık listeleniyor. Toplam net kar hesabından otomatik düşülüyor. "Detayları gör" ile kalemler açılabiliyor.
-- [x] **Bug Fix (P0):** Özete **Alış Maliyeti** (stok araçlar için `purchase_price`) satırı eklendi — kar hesabı şeffaflaştı.
-- [x] **Data (P1):** Katalog 48 → **73 marka** / 551 → **741 model** / 1965 → **2543 motor** / 2298 → **2929 paket** varyantına çıkarıldı.
-- [x] Yeni eklenen markalar: Polestar, Zeekr, Lynk & Co, Leapmotor, Skywell, Hongqi, Nio, Karsan (Türk yerli), BMC, Ineos, DFSK, JAC.
-- [x] Önceden boş olan 13 marka dolduruldu: Cadillac, Daewoo, Daihatsu, Infiniti, Iveco, Lada, Lancia, Lincoln, Lotus, Rolls-Royce, Rover, Saab, Smart.
-- [x] Mevcut markalarda 30+ eksik model eklendi (Mercedes SLC/X/AMG One, Ford F-150/Edge/Escape, Volvo V70/XC70/S80, Renault Laguna/Grand Scenic, Hyundai Getz/ix35 vb.).
-- [x] **Vites filtreleme:** `getGearsForSelection(brand, engine)` ile elektrik motor seçilince sadece elektrikli + otomatik; DSG/PDK/S-Tronic/Powershift/EDC marka-spesifik filtreleniyor.
+- [x] Satış fiyatı düzenleme → `cars.sale_price` senkron
+- [x] `SaleModal` araç giderleri özeti + detay
+- [x] 73 marka / 741 model / 2543 motor / 2929 paket
+- [x] `getGearsForSelection` akıllı vites filtreleme
 
 ### v5.5.0 - Kapsamlı Araç Veritabanı (2026-02-20)
-- [x] `carData.js` → JSON tabanlı modüler yapıya taşındı
-- [x] `/app/frontend/src/data/catalog/modelEngines.json` + `modelPackages.json`
-- [x] `AddCarModal` dinamik filtreleme JSON verisiyle otomatik çalışır
+- [x] JSON tabanlı katalog (carData.js → catalog/*.json)
 
 ### v5.4.0 - Google Social Login & Bildirim Sistemi Aktif
 - [x] Google Social Login: Emergent Auth entegrasyonu (POST /api/auth/google)

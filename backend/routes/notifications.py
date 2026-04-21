@@ -139,6 +139,22 @@ async def mark_notification_read(
     return {"message": "Bildirim okundu olarak işaretlendi"}
 
 
+@router.delete("/{notification_id}")
+async def delete_notification(
+    notification_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Bildirimi listeden kaldır (hard delete)"""
+    db = await get_database()
+    org_id = current_user.get("org_id") or current_user.get("id")
+    result = await db.notifications.delete_one(
+        {"id": notification_id, "org_id": org_id}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Bildirim bulunamadı")
+    return {"message": "Bildirim silindi"}
+
+
 @router.post("/check-and-create")
 async def check_and_create_notifications(
     current_user: dict = Depends(get_current_user)

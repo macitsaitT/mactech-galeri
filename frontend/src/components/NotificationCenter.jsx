@@ -36,16 +36,14 @@ const NotificationCenter = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Bildirimi okundu işaretle
+  // Bildirimi okundu işaretle + listeden kaldır (kullanıcı isteği: "bildirim kayıyor")
   const markAsRead = async (notificationId) => {
     try {
-      await notificationsAPI.markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
+      await notificationsAPI.deleteNotification(notificationId);
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Bildirim işaretlenemedi:', error);
+      console.error('Bildirim silinemedi:', error);
     }
   };
 
@@ -141,7 +139,8 @@ const NotificationCenter = () => {
                         <button
                           onClick={() => markAsRead(notif.id)}
                           className="p-1 hover:bg-muted rounded transition-colors flex-shrink-0"
-                          title="Okundu işaretle"
+                          title="Bildirimi kaldır"
+                          data-testid={`dismiss-notif-${notif.id}`}
                         >
                           <X size={16} className="text-muted-foreground" />
                         </button>

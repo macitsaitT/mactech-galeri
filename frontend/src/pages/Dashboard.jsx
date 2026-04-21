@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
-import { 
+import {
   Car, TrendingUp, Wallet, Package, ShoppingCart, CreditCard, FileText, Calendar,
-  BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter
+  BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter, Plus
 } from 'lucide-react';
+import CapitalModal from '../components/modals/CapitalModal';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, AreaChart, Area
@@ -97,12 +98,13 @@ const presets = [
 ];
 
 const Dashboard = ({ onOpenReport }) => {
-  const { cars, transactions, loading } = useApp();
+  const { cars, transactions, loading, capital } = useApp();
 
   const [preset, setPreset] = useState('month');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [showCustom, setShowCustom] = useState(false);
+  const [capitalModalOpen, setCapitalModalOpen] = useState(false);
 
   const dateRange = useMemo(() => {
     if (showCustom && customStart && customEnd) return { start: customStart, end: customEnd };
@@ -302,6 +304,45 @@ const Dashboard = ({ onOpenReport }) => {
 
   return (
     <div className="space-y-5 pb-24 md:pb-6 animate-fade-in" data-testid="dashboard">
+      {/* ✅ Mevcut Sermaye (Kasa) Kartı */}
+      <div
+        className="relative overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 sm:p-6"
+        data-testid="capital-card"
+      >
+        <div
+          className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/20 blur-3xl"
+          aria-hidden
+        />
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary/80">
+              <Wallet size={14} />
+              Mevcut Sermaye
+            </div>
+            <div
+              className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-primary break-all"
+              data-testid="capital-amount-display"
+            >
+              {formatCurrency(Number(capital?.amount || 0))}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Her araç alış/satışı ve tüm işlemler bu bakiyeyi otomatik günceller.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCapitalModalOpen(true)}
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-primary/40 bg-background/60 px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+            data-testid="open-capital-modal-btn"
+          >
+            <Plus size={16} />
+            Kasa İşlemi
+          </button>
+        </div>
+      </div>
+
+      <CapitalModal isOpen={capitalModalOpen} onClose={() => setCapitalModalOpen(false)} />
+
       {/* Date Range Filter */}
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4" data-testid="date-filter">
         <div className="flex items-center gap-2 mb-3">

@@ -42,6 +42,30 @@ async def update_car(car_id: str, car: CarCreate, current_user: dict = Depends(g
     update_data = car.model_dump()
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": update_data})
+
+    # ✅ Muayene / Sigorta tarihi değiştiyse bildirimleri ve tetiklenmiş reminder'ları temizle
+    inspection_fields = {
+        "muayene_tarihi": "muayene",
+        "inspection_date": "muayene",
+        "sigorta_bitis_tarihi": "sigorta",
+    }
+    changed_types = set()
+    for field, notif_type in inspection_fields.items():
+        new_val = update_data.get(field)
+        old_val = existing.get(field)
+        if (new_val or old_val) and new_val != old_val:
+            changed_types.add(notif_type)
+    if changed_types:
+        await db.notifications.delete_many({
+            "org_id": org_id,
+            "car_id": car_id,
+            "notification_type": {"$in": list(changed_types)},
+        })
+        await db.reminders.update_many(
+            {"org_id": org_id, "car_id": car_id, "reminder_type": {"$in": list(changed_types)}},
+            {"$set": {"is_triggered": False}},
+        )
+
     return await db.cars.find_one({"id": car_id}, {"_id": 0})
 
 
@@ -61,6 +85,30 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
         updates["sold_by_name"] = ""
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": updates})
+
+    # ✅ Muayene / Sigorta tarihi değişirse ilgili bekleyen bildirimleri ve tetiklenmiş
+    # reminder'ları temizle → kullanıcı tarihi güncelleyince eski bildirim listesinde kalmaz.
+    inspection_fields = {
+        "muayene_tarihi": "muayene",
+        "inspection_date": "muayene",
+        "sigorta_bitis_tarihi": "sigorta",
+    }
+    changed_types = set()
+    for field, notif_type in inspection_fields.items():
+        if field in updates and updates.get(field) != existing.get(field):
+            changed_types.add(notif_type)
+    if changed_types:
+        await db.notifications.delete_many({
+            "org_id": org_id,
+            "car_id": car_id,
+            "notification_type": {"$in": list(changed_types)},
+        })
+        # Triggered reminder'ları sıfırla → yeni tarih için yeniden tetiklenebilsin
+        await db.reminders.update_many(
+            {"org_id": org_id, "car_id": car_id, "reminder_type": {"$in": list(changed_types)}},
+            {"$set": {"is_triggered": False}},
+        )
+
     return await db.cars.find_one({"id": car_id}, {"_id": 0})
 
 

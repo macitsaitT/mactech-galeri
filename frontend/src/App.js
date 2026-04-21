@@ -137,17 +137,26 @@ const AppContent = () => {
       await updateCar(carModal.car.id, carData);
     } else {
       const newCar = await addCar(carData);
-      
+
       // Add purchase transaction for stock cars
       if (carData.ownership === 'stock' && carData.purchase_price > 0) {
-        await addTransaction({
-          type: 'expense',
-          category: 'Araç Alımı',
-          amount: carData.purchase_price,
-          date: carData.entry_date || new Date().toISOString().split('T')[0],
-          description: `${carData.plate?.toUpperCase()} - ${carData.brand} ${carData.model} Alışı`,
-          car_id: newCar.id
-        });
+        try {
+          await addTransaction({
+            type: 'expense',
+            category: 'Araç Alımı',
+            amount: carData.purchase_price,
+            date: carData.entry_date || new Date().toISOString().split('T')[0],
+            description: `${carData.plate?.toUpperCase()} - ${carData.brand} ${carData.model} Alışı`,
+            car_id: newCar.id
+          });
+        } catch (err) {
+          // ✅ Capital yetersizse araç kaydını geri al ve kullanıcıyı uyar
+          const detail = err?.response?.data?.detail;
+          const msg = (detail && typeof detail === 'object' && detail.message) || detail;
+          try { await deleteCar(newCar.id, true); } catch (_) {}
+          alert(typeof msg === 'string' ? msg : 'Araç alışı kaydedilemedi: yetersiz sermaye. Lütfen önce Kasa Girişi yapın.');
+          return; // Modal açık kalsın ki kullanıcı tekrar deneyebilsin
+        }
       }
     }
     setCarModal({ open: false, car: null });
@@ -250,7 +259,9 @@ const AppContent = () => {
       setSaleModal({ open: false, car: null });
     } catch (error) {
       console.error('Satış hatası:', error);
-      alert('Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+      const detail = error?.response?.data?.detail;
+      const msg = (detail && typeof detail === 'object' && detail.message) || detail || 'Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
+      alert(typeof msg === 'string' ? msg : 'Satış kaydedilirken bir hata oluştu.');
     }
   };
 

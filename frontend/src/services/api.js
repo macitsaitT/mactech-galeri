@@ -183,6 +183,16 @@ export const statsAPI = {
   get: () => api.get('/stats'),
 };
 
+// ==================== CAPITAL (Kasa / Sermaye) ====================
+export const capitalAPI = {
+  get: () => api.get('/capital'),
+  adjust: (amount, type, description = '') =>
+    api.post('/capital/adjust', { amount, type, description }),
+  set: (amount, description = '') =>
+    api.post('/capital/set', { amount, description }),
+  movements: (limit = 100) => api.get(`/capital/movements?limit=${limit}`),
+};
+
 // ==================== USERS ====================
 export const usersAPI = {
   getAll: () => api.get('/users'),
@@ -220,6 +230,7 @@ export const invoicesAPI = {
 export const notificationsAPI = {
   getNotifications: (unreadOnly = false) => api.get('/notifications', { params: { unread_only: unreadOnly } }),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
+  deleteNotification: (notificationId) => api.delete(`/notifications/${notificationId}`),
   createReminder: (data) => api.post('/notifications/reminders', data),
   getCarReminders: (carId) => api.get(`/notifications/reminders/${carId}`),
   deleteReminder: (reminderId) => api.delete(`/notifications/reminders/${reminderId}`),

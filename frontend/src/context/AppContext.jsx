@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI, permissionsAPI } from '../services/api';
+import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI, permissionsAPI, capitalAPI } from '../services/api';
 import api from '../services/api';
 import { notifyEvent } from '../utils/notifications';
 
@@ -29,6 +29,7 @@ export const AppProvider = ({ children }) => {
   const [appointments, setAppointments] = useState([]);
   const [permissions, setPermissions] = useState(null);
   const [orgOwner, setOrgOwner] = useState(null);
+  const [capital, setCapital] = useState({ amount: 0 }); // ✅ Kasa / Sermaye bakiyesi
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -49,7 +50,7 @@ export const AppProvider = ({ children }) => {
     
     setLoading(true);
     try {
-      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes, ownerRes] = await Promise.all([
+      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes, ownerRes, capitalRes] = await Promise.all([
         carsAPI.getAll(),
         customersAPI.getAll(),
         transactionsAPI.getAll(),
@@ -57,6 +58,7 @@ export const AppProvider = ({ children }) => {
         appointmentsAPI.getAll(),
         permissionsAPI.get().catch(() => ({ data: null })),
         api.get('/org/owner').catch(() => ({ data: null })),
+        capitalAPI.get().catch(() => ({ data: { amount: 0 } })),
       ]);
 
       setCars(carsRes.data || []);
@@ -64,6 +66,7 @@ export const AppProvider = ({ children }) => {
       setTransactions(transactionsRes.data || []);
       setStats(statsRes.data || null);
       setAppointments(appointmentsRes.data || []);
+      setCapital(capitalRes.data || { amount: 0 });
       if (ownerRes.data) setOrgOwner(ownerRes.data);
       if (permRes.data) {
         setPermissions({
@@ -230,14 +233,14 @@ export const AppProvider = ({ children }) => {
   const addTransaction = async (transactionData) => {
     const response = await transactionsAPI.create(transactionData);
     setTransactions(prev => [...prev, response.data]);
-    await refreshStats();
+    await Promise.all([refreshStats(), refreshCapital()]);
     return response.data;
   };
 
   const updateTransaction = async (id, updates) => {
     const response = await transactionsAPI.update(id, updates);
     setTransactions(prev => prev.map(t => t.id === id ? response.data : t));
-    await refreshStats();
+    await Promise.all([refreshStats(), refreshCapital()]);
     return response.data;
   };
 
@@ -248,13 +251,13 @@ export const AppProvider = ({ children }) => {
     } else {
       setTransactions(prev => prev.map(t => t.id === id ? { ...t, deleted: true, deleted_at: new Date().toISOString() } : t));
     }
-    await refreshStats();
+    await Promise.all([refreshStats(), refreshCapital()]);
   };
 
   const restoreTransaction = async (id) => {
     const response = await transactionsAPI.restore(id);
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...response.data, deleted: false, deleted_at: null } : t));
-    await refreshStats();
+    await Promise.all([refreshStats(), refreshCapital()]);
   };
 
   // Refresh stats
@@ -265,6 +268,28 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       console.error('Error refreshing stats:', error);
     }
+  };
+
+  // ✅ Capital / Kasa
+  const refreshCapital = useCallback(async () => {
+    try {
+      const res = await capitalAPI.get();
+      setCapital(res.data || { amount: 0 });
+    } catch (e) {
+      // sessiz
+    }
+  }, []);
+
+  const adjustCapital = async (amount, type, description = '') => {
+    const res = await capitalAPI.adjust(amount, type, description);
+    setCapital(res.data);
+    return res.data;
+  };
+
+  const setCapitalAmount = async (amount, description = '') => {
+    const res = await capitalAPI.set(amount, description);
+    setCapital(res.data);
+    return res.data;
   };
 
   // Toggle theme
@@ -344,6 +369,12 @@ export const AppProvider = ({ children }) => {
     updateAppointment,
     deleteAppointment,
     restoreAppointment,
+
+    // ✅ Capital / Kasa
+    capital,
+    refreshCapital,
+    adjustCapital,
+    setCapitalAmount,
 
     // Permissions
     permissions,
