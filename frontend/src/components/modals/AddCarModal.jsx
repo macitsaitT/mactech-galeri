@@ -562,7 +562,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
     { id: 'photos', label: 'Fotoğraflar', icon: Camera },
     { id: 'documents', label: 'Belgeler', icon: FolderOpen },
     { id: 'ownership', label: 'Sahiplik / Konsinye', icon: Users },
-    ...(editingCar && editingCar.status === 'Satıldı' ? [{ id: 'sale_info', label: 'Satış Bilgileri', icon: ShoppingCart }] : []),
+    ...(editingCar ? [{ id: 'sale_info', label: editingCar.status === 'Satıldı' ? 'Satış Bilgileri' : 'Çalışan Payı', icon: ShoppingCart }] : []),
   ];
 
   return (
@@ -1368,20 +1368,29 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
             </div>
           )}
 
-          {/* Sale Info Tab - Sadece satılmış araçlar için */}
-          {activeTab === 'sale_info' && editingCar && editingCar.status === 'Satıldı' && (
+          {/* Sale Info Tab - Her zaman görünür (satılmamış araçlar için "Çalışan Payı" planlama) */}
+          {activeTab === 'sale_info' && editingCar && (
             <div className="space-y-6 py-4">
-              <div className="bg-success/10 border border-success/30 rounded-xl p-4">
-                <h4 className="font-semibold text-success mb-1">✓ Araç Satıldı</h4>
-                <p className="text-sm text-muted-foreground">
-                  Satış Tarihi: {editingCar.sold_date ? new Date(editingCar.sold_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}
-                </p>
-                {editingCar.customer_name && (
+              {editingCar.status === 'Satıldı' ? (
+                <div className="bg-success/10 border border-success/30 rounded-xl p-4">
+                  <h4 className="font-semibold text-success mb-1">✓ Araç Satıldı</h4>
                   <p className="text-sm text-muted-foreground">
-                    Müşteri: {editingCar.customer_name}
+                    Satış Tarihi: {editingCar.sold_date ? new Date(editingCar.sold_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}
                   </p>
-                )}
-              </div>
+                  {editingCar.customer_name && (
+                    <p className="text-sm text-muted-foreground">
+                      Müşteri: {editingCar.customer_name}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                  <h4 className="font-semibold text-primary mb-1">Çalışan Payı / Satışı Yapan</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Bu alanlar araç satıldığında otomatik uygulanacaktır. İsterseniz şimdiden planlayabilirsiniz.
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

@@ -104,7 +104,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
       
     } catch (error) {
       console.error('Error confirming sale:', error);
-      alert('Satış kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
+      // Hata mesajı parent (App.js) tarafından gösterildi; burada tekrar alert gösterme
     } finally {
       setLoading(false);
     }

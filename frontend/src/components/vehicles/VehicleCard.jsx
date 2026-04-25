@@ -13,7 +13,8 @@ import {
   ShoppingCart,
   Car,
   FileText,
-  RotateCcw
+  RotateCcw,
+  Share2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,6 +34,7 @@ const VehicleCard = ({
   onDeposit, 
   onSale,
   onCancelSale,
+  onShare,
   showActions = true 
 }) => {
   const statusColor = getStatusColor(car.status);
@@ -93,6 +95,10 @@ const VehicleCard = ({
                 <DropdownMenuItem onClick={() => onView?.(car)} data-testid={`view-${car.id}`}>
                   <Eye size={16} className="mr-2" />
                   Detay Görüntüle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onShare?.(car)} data-testid={`share-${car.id}`}>
+                  <Share2 size={16} className="mr-2" />
+                  WhatsApp Paylaş
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit?.(car)} data-testid={`edit-${car.id}`}>
                   <Edit size={16} className="mr-2" />

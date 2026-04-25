@@ -148,6 +148,8 @@ class TransactionBase(BaseModel):
     date: str
     car_id: Optional[str] = None
     employee_name: Optional[str] = None
+    customer_id: Optional[str] = None  # ✅ Vadeli satış / müşteri ödemesi takibi
+    installment_id: Optional[str] = None  # ✅ Bir vadeli satışa bağlı ödeme
 
 
 class TransactionCreate(TransactionBase):

@@ -2,35 +2,26 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.7.0
-- **Last Updated:** 2026-02-20
-- **Status:** Capital/Kasa Sistemi Aktif — Tam Muhasebe Mode
+- **Version:** 5.8.0
+- **Last Updated:** 2026-02-25
+- **Status:** Vadeli Satış + WhatsApp Paylaşım + Net Kâr Optimizasyon
 
 ## Implementation Status
 
-### v5.7.0 - Kasa Sistemi + Muayene Bildirim Fix (2026-02-20)
-- [x] **Kasa / Sermaye Sistemi (P0)**: MongoDB atomik `$inc` + koşullu filtre ile yarış-koşulsuz bakiye.
-- [x] Yeni koleksiyonlar: `capital` (org_id bazlı tek doküman), `capital_movements` (denetim logu)
-- [x] Yeni endpoint'ler: `GET /api/capital`, `POST /api/capital/adjust` (deposit/withdrawal), `POST /api/capital/set`, `GET /api/capital/movements`
-- [x] `transactions` create/update/delete/restore akışları → kasa delta otomatik uygular (+income, −expense)
-- [x] Expense sırasında bakiye yetersizse atomik 400 döner: `"Yetersiz sermaye! Mevcut: ₺X, Gerekli: ₺Y"`
-- [x] Frontend: Dashboard tepe kartı (**Mevcut Sermaye**, altın gradient), `CapitalModal` 3 mod (Giriş / Çıkış / Bakiye Düzenle)
-- [x] `AddCarModal`: Stok araç alışında yetersiz sermaye → araç kaydı rollback + uyarı
-- [x] `AppContext`: `capital` state + `refreshCapital`, `adjustCapital`, `setCapitalAmount`
-- [x] Eski `transactions` dokunulmaz (`capital_applied` flag), sadece yeni işlemler kasayı etkiler (3a)
+### v5.8.0 - Çoklu Özellik Paketi (2026-02-25)
+- [x] **Bug Fix (P0)**: Satış onaylanıp ekrandan çıkmıyordu — App.js modal kapatma çağrısı kaldırıldı, SaleModal kendi flow'unu yönetiyor (Satış Tamamlandı → WhatsApp gönder → kapat). Hata varsa `throw error` ile SaleModal başarısız ekranına geçmiyor.
+- [x] **Bug Fix (P0)**: Düzenleme'de çalışan payı yoktu — `Sale Info` tab'ı her zaman görünür yapıldı (satılmamış araçlarda "Çalışan Payı / Satışı Yapan" planlama, satılmış araçta düzenleme). Backend `patch_car`'da `employee_share` değişirse ilgili "Çalışan Payı" tx'i + kasa otomatik senkronize ediliyor.
+- [x] **Net Kâr** kartı düzeltmesi: artık `totalIncome - totalExpense` değil; sadece **satılan araç başı kar** (sale_price − purchase_price − araca-bağlı giderler), `Math.max(0, ...)` ile asla eksiye düşmüyor. İşletme giderleri (kira, maaş, fatura) yansımıyor.
+- [x] **Vadeli Satış / Borç Takibi (P0)**: Yeni `installments` koleksiyonu, `routes/installments.py`. Müşteri kartında **Vadeli Satışlar** drawer + `InstallmentModal` (create/detail). Ödemeler `transactions` üzerinden (`category=Taksit Ödemesi`, `installment_id` referansı) → kasa otomatik senkron.
+- [x] **PDF Yazdırma**: `utils/installmentPdf.js` jsPDF ile borç senedi/ekstre çıktısı (özet, ödeme tablosu, imza alanları).
+- [x] **WhatsApp Paylaşım Kartı (P1)**: `ShareCardModal` + html2canvas ile fotoğraf + temel özellikleri olan zarif JPG kartı. Araç dropdown'da "WhatsApp Paylaş" → görseli indir + wa.me metin açar. Native Web Share API desteği var.
 
-- [x] **Muayene Bildirim Bug Fix**: Araç muayene/sigorta tarihi güncellendiğinde `notifications` ve tetiklenmiş `reminders` otomatik temizlenir (backend `patch_car` + `update_car`).
-- [x] Bildirim "X" butonu artık soft-delete yerine bildirimi listeden tamamen kaldırır (yeni `DELETE /api/notifications/{id}`).
+### v5.7.0 - Kasa Sistemi + Muayene Bildirim Fix
+- Kasa/Sermaye sistemi (atomik), Dashboard kartı, CapitalModal
+- Muayene tarihi değişince bildirim auto-temizleme
 
-### v5.6.0 - Satış Akışı Sağlamlaştırma + Tam Katalog (2026-02-20)
-- [x] Satış fiyatı düzenleme → `cars.sale_price` senkron
-- [x] `SaleModal` araç giderleri özeti + detay
-- [x] 73 marka / 741 model / 2543 motor / 2929 paket
-- [x] `getGearsForSelection` akıllı vites filtreleme
-
-### v5.5.0 - Kapsamlı Araç Veritabanı (2026-02-20)
-- [x] JSON tabanlı katalog (carData.js → catalog/*.json)
-
+### v5.6.0 - Satış Akışı + Tam Katalog (73 marka)
+### v5.5.0 - JSON tabanlı katalog
 ### v5.4.0 - Google Social Login & Bildirim Sistemi Aktif
 - [x] Google Social Login: Emergent Auth entegrasyonu (POST /api/auth/google)
 - [x] Login sayfasında "Google ile Giriş Yap" butonu

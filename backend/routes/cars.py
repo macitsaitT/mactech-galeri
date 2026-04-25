@@ -86,6 +86,67 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": updates})
 
+    # ✅ employee_share değişirse ilgili "Çalışan Payı" expense transaction'ı da senkronize et
+    if "employee_share" in updates:
+        new_share = float(updates.get("employee_share", 0) or 0)
+        old_share = float(existing.get("employee_share", 0) or 0)
+        if new_share != old_share:
+            tx = await db.transactions.find_one({
+                "org_id": org_id,
+                "car_id": car_id,
+                "category": "Çalışan Payı",
+                "deleted": {"$ne": True},
+            })
+            if tx:
+                # Mevcut tx'i update_transaction üzerinden güncelle (capital sync için)
+                from capital_service import apply_delta
+                old_amount = float(tx.get("amount", 0) or 0)
+                # capital delta = -(new - old)  çünkü expense → büyürse kasadan daha fazla düş
+                cap_delta = -(new_share - old_amount)
+                if cap_delta != 0 and tx.get("capital_applied"):
+                    await apply_delta(
+                        org_id, cap_delta,
+                        reason="employee_share_sync",
+                        ref_type="transaction", ref_id=tx["id"],
+                        description="Çalışan payı güncellendi (araç senkron)",
+                        allow_negative=True,
+                        user_id=current_user["user_id"],
+                    )
+                await db.transactions.update_one(
+                    {"id": tx["id"]},
+                    {"$set": {"amount": new_share}},
+                )
+            elif new_share > 0:
+                # Tx yoksa yeni "Çalışan Payı" expense oluştur (araç satılmışsa)
+                if existing.get("status") == "Satıldı":
+                    import uuid
+                    tx_doc = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": current_user["user_id"],
+                        "org_id": org_id,
+                        "created_by": current_user["user_id"],
+                        "type": "expense",
+                        "category": "Çalışan Payı",
+                        "amount": new_share,
+                        "date": existing.get("sold_date") or datetime.now(timezone.utc).date().isoformat(),
+                        "description": f"Çalışan Payı - {existing.get('plate', '').upper()}",
+                        "car_id": car_id,
+                        "deleted": False,
+                        "deleted_at": None,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "capital_applied": True,
+                    }
+                    from capital_service import apply_delta
+                    await apply_delta(
+                        org_id, -new_share,
+                        reason="employee_share_create",
+                        ref_type="transaction", ref_id=tx_doc["id"],
+                        description=f"Çalışan payı eklendi: {existing.get('plate', '')}",
+                        allow_negative=True,
+                        user_id=current_user["user_id"],
+                    )
+                    await db.transactions.insert_one(tx_doc)
+
     # ✅ Muayene / Sigorta tarihi değişirse ilgili bekleyen bildirimleri ve tetiklenmiş
     # reminder'ları temizle → kullanıcı tarihi güncelleyince eski bildirim listesinde kalmaz.
     inspection_fields = {

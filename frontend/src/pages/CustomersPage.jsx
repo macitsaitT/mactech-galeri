@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatDate, formatCurrency, downloadBlob } from '../utils/helpers';
 import { 
@@ -12,7 +12,8 @@ import {
   Plus,
   Download,
   MessageCircle,
-  CheckCircle
+  CheckCircle,
+  CreditCard
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,9 +21,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
-import { exportAPI } from '../services/api';
+import { exportAPI, installmentsAPI } from '../services/api';
+import InstallmentModal from '../components/modals/InstallmentModal';
 
-const CustomerCard = ({ customer, cars, onEdit, onDelete }) => {
+const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, installmentSummary }) => {
   const interestedCar = cars.find(c => c.id === customer.interested_car_id);
   
   const getTypeColor = (type) => {
@@ -70,6 +72,10 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete }) => {
               <Edit size={16} className="mr-2" />
               Düzenle
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onOpenInstallments?.(customer)}>
+              <CreditCard size={16} className="mr-2" />
+              Vadeli Satışlar
+            </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => onDelete?.(customer)}
               className="text-destructive focus:text-destructive"
@@ -109,6 +115,27 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete }) => {
         <p className="text-xs text-muted-foreground">
           Eklenme: {formatDate(customer.created_at)}
         </p>
+
+        {/* ✅ Vadeli Satış Özeti */}
+        {installmentSummary && installmentSummary.count > 0 && (
+          <button
+            onClick={() => onOpenInstallments?.(customer)}
+            className="w-full p-3 rounded-lg bg-primary/5 border border-primary/30 hover:bg-primary/10 transition-colors text-left"
+            data-testid={`installments-summary-${customer.id}`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CreditCard size={16} className="text-primary shrink-0" />
+                <span className="text-xs font-semibold text-primary">
+                  {installmentSummary.count} Vadeli Satış
+                </span>
+              </div>
+              <span className={`text-xs font-bold ${installmentSummary.remaining > 0 ? 'text-destructive' : 'text-success'}`}>
+                Kalan: {formatCurrency(installmentSummary.remaining)}
+              </span>
+            </div>
+          </button>
+        )}
 
         {customer.phone && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -151,6 +178,37 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
   const [filterType, setFilterType] = useState('all');
   const [exporting, setExporting] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+
+  // ✅ Vadeli satışlar - tüm müşteriler için tek seferde çek
+  const [installments, setInstallments] = useState([]);
+  const [installmentDrawer, setInstallmentDrawer] = useState({ open: false, customer: null });
+  const [installmentModal, setInstallmentModal] = useState({ open: false, mode: 'create', customerId: null, installmentId: null });
+
+  const refreshInstallments = async () => {
+    try {
+      const res = await installmentsAPI.list();
+      setInstallments(res.data || []);
+    } catch (_) {}
+  };
+
+  useEffect(() => { refreshInstallments(); }, []);
+
+  // Müşteri başına özet
+  const summaryByCustomer = useMemo(() => {
+    const map = {};
+    installments.forEach(i => {
+      if (!map[i.customer_id]) map[i.customer_id] = { count: 0, total: 0, paid: 0, remaining: 0 };
+      map[i.customer_id].count += 1;
+      map[i.customer_id].total += Number(i.total_amount || 0);
+      map[i.customer_id].paid += Number(i.paid_amount || 0) + Number(i.down_payment_amount || 0);
+      map[i.customer_id].remaining += Number(i.remaining_amount || 0);
+    });
+    return map;
+  }, [installments]);
+
+  const handleOpenInstallments = (customer) => {
+    setInstallmentDrawer({ open: true, customer });
+  };
 
   const filteredCustomers = useMemo(() => {
     let result = customers.filter(c => !c.deleted);
@@ -282,10 +340,95 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
               cars={activeCars}
               onEdit={onEditCustomer}
               onDelete={onDeleteCustomer}
+              onOpenInstallments={handleOpenInstallments}
+              installmentSummary={summaryByCustomer[customer.id]}
             />
           ))}
         </div>
       )}
+
+      {/* Vadeli satış drawer (müşteri seçildiğinde modal aç) */}
+      {installmentDrawer.open && installmentDrawer.customer && (
+        <CustomerInstallmentsDrawer
+          customer={installmentDrawer.customer}
+          installments={installments.filter(i => i.customer_id === installmentDrawer.customer.id)}
+          onClose={() => setInstallmentDrawer({ open: false, customer: null })}
+          onAddNew={() => {
+            const cust = installmentDrawer.customer;
+            setInstallmentDrawer({ open: false, customer: null });
+            setInstallmentModal({ open: true, mode: 'create', customerId: cust.id, installmentId: null });
+          }}
+          onOpenDetail={(id) => {
+            setInstallmentDrawer({ open: false, customer: null });
+            setInstallmentModal({ open: true, mode: 'detail', customerId: null, installmentId: id });
+          }}
+        />
+      )}
+
+      <InstallmentModal
+        isOpen={installmentModal.open}
+        onClose={async () => { setInstallmentModal({ open: false, mode: 'create', customerId: null, installmentId: null }); await refreshInstallments(); }}
+        mode={installmentModal.mode}
+        customerId={installmentModal.customerId}
+        installmentId={installmentModal.installmentId}
+      />
+    </div>
+  );
+};
+
+// ✅ Müşteri'ye ait vadeli satışlar listesi (modal/drawer)
+const CustomerInstallmentsDrawer = ({ customer, installments, onClose, onAddNew, onOpenDetail }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Vadeli Satışlar</div>
+            <h3 className="text-lg font-heading font-semibold">{customer.name}</h3>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+            <Trash2 size={18} className="hidden" />
+            <span className="text-2xl leading-none">×</span>
+          </button>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {installments.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Bu müşteri için henüz vadeli satış yok.
+            </div>
+          ) : (
+            installments.map((i) => (
+              <button
+                key={i.id}
+                onClick={() => onOpenDetail(i.id)}
+                className="w-full text-left rounded-lg border border-border bg-muted/20 hover:bg-muted/40 p-3 transition-colors"
+                data-testid={`installment-row-${i.id}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-semibold">{formatCurrency(i.total_amount)}</div>
+                  <span className={`text-xs font-bold ${i.is_settled ? 'text-success' : 'text-destructive'}`}>
+                    {i.is_settled ? 'Tamamlandı' : `Kalan: ${formatCurrency(i.remaining_amount)}`}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground flex items-center justify-between">
+                  <span>{formatDate(i.start_date)} · {i.term_count} ay</span>
+                  <span>Ödenen: {formatCurrency((i.paid_amount || 0) + (i.down_payment_amount || 0))}</span>
+                </div>
+                {i.description && <div className="mt-1 text-xs text-muted-foreground truncate">{i.description}</div>}
+              </button>
+            ))
+          )}
+
+          <button
+            onClick={onAddNew}
+            className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2"
+            data-testid="add-installment-btn"
+          >
+            <Plus size={18} /> Yeni Vadeli Satış
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

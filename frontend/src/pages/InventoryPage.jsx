@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import VehicleCard from '../components/vehicles/VehicleCard';
+import ShareCardModal from '../components/modals/ShareCardModal';
 import { Search, SlidersHorizontal, Car, Download, CheckCircle } from 'lucide-react';
 import { exportAPI } from '../services/api';
 import { downloadBlob } from '../utils/helpers';
@@ -11,6 +12,7 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
   const [sortBy, setSortBy] = useState('newest');
   const [exporting, setExporting] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [shareCarId, setShareCarId] = useState(null); // ✅ WhatsApp paylaşım kartı
 
   // Filter cars based on view type
   const filteredCars = useMemo(() => {
@@ -164,10 +166,18 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
               onDeposit={onDeposit}
               onSale={onSale}
               onCancelSale={onCancelSale}
+              onShare={(c) => setShareCarId(c.id)}
             />
           ))}
         </div>
       )}
+
+      {/* WhatsApp Paylaşım Kartı */}
+      <ShareCardModal
+        isOpen={!!shareCarId}
+        onClose={() => setShareCarId(null)}
+        car={cars.find(c => c.id === shareCarId)}
+      />
     </div>
   );
 };

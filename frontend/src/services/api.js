@@ -193,6 +193,27 @@ export const capitalAPI = {
   movements: (limit = 100) => api.get(`/capital/movements?limit=${limit}`),
 };
 
+// ==================== INSTALLMENTS (Vadeli Satış / Borç Takibi) ====================
+export const installmentsAPI = {
+  list: (params = {}) => api.get('/installments', { params }),
+  get: (id) => api.get(`/installments/${id}`),
+  create: (data) => api.post('/installments', data),
+  update: (id, data) => api.put(`/installments/${id}`, data),
+  delete: (id) => api.delete(`/installments/${id}`),
+  // Taksit ödemesi: doğrudan transactions endpoint'i kullanılır (installment_id bağlanır)
+  addPayment: ({ installmentId, customerId, carId, amount, date, description }) =>
+    api.post('/transactions', {
+      type: 'income',
+      category: 'Taksit Ödemesi',
+      amount,
+      date,
+      description: description || 'Taksit ödemesi',
+      customer_id: customerId,
+      car_id: carId,
+      installment_id: installmentId,
+    }),
+};
+
 // ==================== USERS ====================
 export const usersAPI = {
   getAll: () => api.get('/users'),

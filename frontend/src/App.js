@@ -256,12 +256,15 @@ const AppContent = () => {
         await updateCustomer(customerId, { type: 'Satış Yapıldı' });
       }
 
-      setSaleModal({ open: false, car: null });
+      // ✅ NOT: Modal'ı burada kapatmıyoruz — SaleModal "Satış Tamamlandı / WhatsApp Gönder"
+      // post-success ekranını gösterir, kullanıcı oradan kendi kapatır.
     } catch (error) {
       console.error('Satış hatası:', error);
       const detail = error?.response?.data?.detail;
       const msg = (detail && typeof detail === 'object' && detail.message) || detail || 'Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
       alert(typeof msg === 'string' ? msg : 'Satış kaydedilirken bir hata oluştu.');
+      // ✅ Hata fırlat ki SaleModal "Satış Tamamlandı" ekranına geçmesin
+      throw error;
     }
   };
 
