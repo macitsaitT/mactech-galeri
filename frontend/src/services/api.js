@@ -190,6 +190,8 @@ export const capitalAPI = {
     api.post('/capital/adjust', { amount, type, description }),
   set: (amount, description = '') =>
     api.post('/capital/set', { amount, description }),
+  initialize: (startingAmount, description = '') =>
+    api.post('/capital/initialize', { starting_amount: startingAmount, description }),
   movements: (limit = 100) => api.get(`/capital/movements?limit=${limit}`),
 };
 

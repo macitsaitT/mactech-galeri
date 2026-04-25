@@ -292,6 +292,14 @@ export const AppProvider = ({ children }) => {
     return res.data;
   };
 
+  const initializeCapital = async (startingAmount, description = '') => {
+    const res = await capitalAPI.initialize(startingAmount, description);
+    setCapital(res.data);
+    // Geçmiş tx'ler capital_applied=True olduğundan refresh stat
+    await refreshStats();
+    return res.data;
+  };
+
   // Toggle theme
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -375,6 +383,7 @@ export const AppProvider = ({ children }) => {
     refreshCapital,
     adjustCapital,
     setCapitalAmount,
+    initializeCapital,
 
     // Permissions
     permissions,

@@ -21,6 +21,11 @@ class CapitalSet(BaseModel):
     description: Optional[str] = ""
 
 
+class CapitalInitialize(BaseModel):
+    starting_amount: float = Field(..., ge=0, description="Başlangıç sermayesi")
+    description: Optional[str] = ""
+
+
 @router.get("/capital")
 async def read_capital(current_user: dict = Depends(get_current_user)):
     org_id = current_user.get("org_id", current_user["user_id"])
@@ -61,6 +66,71 @@ async def set_capital(body: CapitalSet, current_user: dict = Depends(get_current
         user_id=current_user.get("user_id"),
     )
     return updated
+
+
+@router.post("/capital/initialize")
+async def initialize_capital(body: CapitalInitialize, current_user: dict = Depends(get_current_user)):
+    """
+    İlk Kurulum / Geçmiş İşlemleri Uygula:
+    - Kasaya henüz uygulanmamış (capital_applied != True) tüm aktif transaction'ları toplayıp
+      net delta hesaplar (income +, expense -).
+    - Hedef bakiye = starting_amount + net_delta. Yani kullanıcı başlangıç sermayesini girer,
+      sistem geçmiş alış/satış/giderleri otomatik düşer/ekler.
+    - Tüm bu tx'leri capital_applied=True işaretler ki sonradan tekrar uygulanmasın.
+    """
+    org_id = current_user.get("org_id", current_user["user_id"])
+
+    # Geçmiş, kasaya uygulanmamış aktif transactions
+    cursor = db.transactions.find({
+        "org_id": org_id,
+        "deleted": {"$ne": True},
+        "capital_applied": {"$ne": True},
+    })
+    tx_list = await cursor.to_list(50000)
+
+    net_delta = 0.0
+    for t in tx_list:
+        amount = float(t.get("amount", 0) or 0)
+        net_delta += amount if t.get("type") == "income" else -amount
+
+    target = float(body.starting_amount) + net_delta
+
+    current = await get_capital(org_id)
+    current_amt = float(current.get("amount", 0) or 0)
+    diff = target - current_amt
+
+    if diff != 0:
+        await apply_delta(
+            org_id,
+            diff,
+            reason="capital_initialize",
+            ref_type="manual",
+            description=(
+                body.description
+                or f"İlk kurulum: başlangıç ₺{body.starting_amount:,.2f} + geçmiş net ₺{net_delta:,.2f}"
+            ),
+            allow_negative=True,
+            user_id=current_user.get("user_id"),
+        )
+
+    # Tüm uygulanan tx'leri işaretle (yeni transactionlar zaten True ile geliyor)
+    if tx_list:
+        await db.transactions.update_many(
+            {
+                "org_id": org_id,
+                "deleted": {"$ne": True},
+                "capital_applied": {"$ne": True},
+            },
+            {"$set": {"capital_applied": True}},
+        )
+
+    final = await get_capital(org_id)
+    return {
+        **final,
+        "applied_transactions": len(tx_list),
+        "net_delta_from_history": net_delta,
+        "starting_amount": body.starting_amount,
+    }
 
 
 @router.get("/capital/movements")
