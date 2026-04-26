@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
+from datetime import datetime, timezone
 
 from auth import get_current_user
 from db import db
@@ -153,37 +154,80 @@ _DELETABLE_REASONS = {
     "capital_initialize",
 }
 
+# Bu reason'lı hareketler tx-bağlı — silindiğinde ilgili tx de soft-delete edilir
+_TX_LINKED_REASONS = {
+    "transaction_create",
+    "transaction_update",
+    "transaction_restore",
+}
+
 
 @router.delete("/capital/movements/{movement_id}")
 async def delete_movement(movement_id: str, current_user: dict = Depends(get_current_user)):
     """
-    Manuel kasa hareketini sil ve etkisini kasadan geri al.
-    Yalnızca `_DELETABLE_REASONS` içindeki manuel hareketler silinebilir;
-    transaction-bağlı hareketler (transaction_create vb.) ilgili işlem üzerinden yönetilir.
+    Kasa hareketini sil ve etkisini kasadan geri al.
+    - Manuel hareketler (deposit/withdrawal/set/initialize) doğrudan silinir + bakiye revert edilir.
+    - Transaction-bağlı hareketler silindiğinde, ilgili transaction'ı da soft-delete eder
+      (kullanıcı "kasa görünümünde temizlik" yapmak isterse — yarım kalmış satış denemeleri vb.).
+    - `transaction_delete`, `employee_share_*` gibi otomatik üretilen kayıtlar kaldırılamaz
+      (kayıt bütünlüğü için).
     """
     org_id = current_user.get("org_id", current_user["user_id"])
     mv = await db.capital_movements.find_one({"id": movement_id, "org_id": org_id}, {"_id": 0})
     if not mv:
         raise HTTPException(status_code=404, detail="Kasa hareketi bulunamadı")
-    if mv.get("reason") not in _DELETABLE_REASONS:
-        raise HTTPException(
-            status_code=400,
-            detail="Bu hareket transaction'a bağlıdır. İlgili gelir/gider işlemi üzerinden silinmelidir.",
-        )
 
-    # Etkiyi geri al (delta'yı tersine çevir)
-    reverse_delta = -float(mv.get("delta", 0) or 0)
-    if reverse_delta != 0:
-        await apply_delta(
-            org_id,
-            reverse_delta,
-            reason="manual_movement_delete",
-            ref_type="capital_movement",
-            ref_id=movement_id,
-            description=f"Manuel hareket silindi: {mv.get('description', '')}",
-            allow_negative=True,
-            user_id=current_user.get("user_id"),
-        )
+    reason = mv.get("reason", "")
+    if reason in _DELETABLE_REASONS:
+        # Manuel hareket — basitçe tersine çevir ve sil
+        reverse_delta = -float(mv.get("delta", 0) or 0)
+        if reverse_delta != 0:
+            await apply_delta(
+                org_id,
+                reverse_delta,
+                reason="manual_movement_delete",
+                ref_type="capital_movement",
+                ref_id=movement_id,
+                description=f"Manuel hareket silindi: {mv.get('description', '')}",
+                allow_negative=True,
+                user_id=current_user.get("user_id"),
+            )
+        await db.capital_movements.delete_one({"id": movement_id, "org_id": org_id})
+        return {"success": True, "type": "manual"}
 
-    await db.capital_movements.delete_one({"id": movement_id, "org_id": org_id})
-    return {"success": True}
+    if reason in _TX_LINKED_REASONS:
+        # Transaction-bağlı: ilgili tx'i soft-delete et — etki olarak kasa otomatik düzeltilir
+        tx_id = mv.get("ref_id")
+        if not tx_id:
+            raise HTTPException(status_code=400, detail="İlişkili işlem bulunamadı")
+        tx = await db.transactions.find_one({"id": tx_id, "org_id": org_id})
+        if not tx:
+            # Tx zaten yok → sadece movement kaydını sil
+            await db.capital_movements.delete_one({"id": movement_id, "org_id": org_id})
+            return {"success": True, "type": "orphan_cleanup"}
+
+        # Aktif tx ise reverse-delta uygula
+        if tx.get("capital_applied") and not tx.get("deleted"):
+            from capital_service import apply_delta as _apply
+            from routes.transactions import _tx_delta
+            reverse_delta = -_tx_delta(tx)
+            if reverse_delta != 0:
+                await _apply(
+                    org_id, reverse_delta,
+                    reason="transaction_delete",
+                    ref_type="transaction", ref_id=tx_id,
+                    description=f"Kasa görünümünden silindi: {tx.get('category', '')}",
+                    allow_negative=True,
+                    user_id=current_user.get("user_id"),
+                )
+            await db.transactions.update_one(
+                {"id": tx_id},
+                {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat()}},
+            )
+        return {"success": True, "type": "tx_linked"}
+
+    # Diğer otomatik kayıtlar — silinemez
+    raise HTTPException(
+        status_code=400,
+        detail="Bu otomatik kayıt silinemez (bütünlük için korunur).",
+    )

@@ -275,7 +275,7 @@ const AppContent = () => {
         msg = 'Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
       }
       const fullMsg = status ? `[HTTP ${status}] ${msg}` : msg;
-      alert(`Satış kaydedilemedi:\n\n${fullMsg}\n\nSayfayı yenilemek (Ctrl+Shift+R) genellikle bu hatayı çözer. Sorun devam ederse bu mesajı bize iletin.`);
+      alert(`Satış kaydedilemedi:\n\n${fullMsg}`);
       // ✅ Hata fırlat ki SaleModal "Satış Tamamlandı" ekranına geçmesin
       throw error;
     }

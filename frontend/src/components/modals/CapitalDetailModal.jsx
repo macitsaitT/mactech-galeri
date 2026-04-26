@@ -26,7 +26,7 @@ const REASON_LABEL = {
 };
 
 const CapitalDetailModal = ({ isOpen, onClose }) => {
-  const { capital, cars, refreshCapital } = useApp();
+  const { capital, cars, refreshCapital, fetchData } = useApp();
   const [tab, setTab] = useState('cash');
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -48,6 +48,7 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
       // Local + global state'i yenile
       reload();
       if (typeof refreshCapital === 'function') await refreshCapital();
+      if (typeof fetchData === 'function') await fetchData();
     } catch (e) {
       alert(e?.response?.data?.detail || 'Silinemedi');
     }
@@ -154,7 +155,12 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   );
 };
 
-const DELETABLE_REASONS = new Set(['manual_deposit', 'manual_withdrawal', 'manual_set', 'capital_initialize']);
+const DELETABLE_REASONS = new Set([
+  // Manuel hareketler
+  'manual_deposit', 'manual_withdrawal', 'manual_set', 'capital_initialize',
+  // Transaction-bağlı hareketler (silindiğinde ilgili tx de soft-delete edilir)
+  'transaction_create', 'transaction_update', 'transaction_restore',
+]);
 
 const CashTab = ({ movements, loading, onDelete }) => {
   if (loading) {
