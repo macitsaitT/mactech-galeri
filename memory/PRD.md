@@ -93,3 +93,16 @@
 - ✅ `notifications` router prefix bug fix (`/api/api/notifications` → `/api/notifications`) — Dashboard 404 regresyonu çözüldü.
 - ✅ InventoryPage missing `</div>` JSX fix.
 - ✅ Test sonuçları: Backend 13/14 (93%) → 14/14, Frontend 100%.
+
+### 2026-02 (Iter 33) — 9-madde finansal & UI iyileştirme paketi
+- ✅ **Madde 1**: Müşteri toplu silme (CustomersPage seçim modu + bulk delete).
+- ✅ **Madde 2**: Sermaye Raporu (ReportModal yeni `capital` rapor tipi: Kasa Girişi/Çıkışı/Net Akış/Son Bakiye + hareket tablosu).
+- ✅ **Madde 3**: Kasa Detay modalında manuel hareketler (deposit/withdrawal/set/initialize) silinebilir; backend reverse-delta uygular. Transaction-bağlı hareketler korunur.
+- ✅ **Madde 4**: Satış onayla bug → kök neden `apply_delta` insufficient_capital blocking. Tüm transactions create/update/restore'a `allow_negative=True` eklendi → kasa eksiye düşse bile masraf/satış kaydedilir.
+- ✅ **Madde 5**: Net Kâr formülü Çalışan Payı'nı **dahil** (düşüyor). Kullanıcı çalışan payını gerçek satış gideri olarak kabul ediyor.
+- ✅ **Madde 6**: Satış iptal akışı düzeltildi — müşteri SİLMİYOR (eskiden soft-delete idi), type'ı 'Potansiyel'e döndürüyor; araç masrafları korunur.
+- ✅ **Madde 7**: Gelir-Gider raporunda araç filtresi zaten `Araç` rapor tipinde mevcut (plaka arama + dropdown).
+- ✅ **Madde 8**: Araç masrafları zaten Dashboard'da `Toplam Gider`'e + Net Kâr hesabına yansıyor; doğrulandı.
+- ✅ **Madde 9**: Satılan Araçlar sayfasında satış tarihi aralık filtresi (data-testid: sold-date-filter).
+- ✅ Yan fix: `/api/notifications` Mixed Content (HTTP redirect) → frontend trailing slash ile direkt çağırıyor.
+- ✅ Test sonuçları: Backend 9/9 (100%), Frontend 95% (yan-fix sonrası ~100%).

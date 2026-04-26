@@ -260,7 +260,9 @@ export const invoicesAPI = {
 
 // ==================== NOTIFICATIONS ====================
 export const notificationsAPI = {
-  getNotifications: (unreadOnly = false) => api.get('/notifications', { params: { unread_only: unreadOnly } }),
+  // Sondaki '/' önemli — backend prefix `/notifications`, route `/` olduğu için '/notifications'
+  // çağrısı 307 redirect üretiyor ve proxy bazı durumlarda HTTP'ye düşürüyor (Mixed Content).
+  getNotifications: (unreadOnly = false) => api.get('/notifications/', { params: { unread_only: unreadOnly } }),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
   deleteNotification: (notificationId) => api.delete(`/notifications/${notificationId}`),
   createReminder: (data) => api.post('/notifications/reminders', data),
