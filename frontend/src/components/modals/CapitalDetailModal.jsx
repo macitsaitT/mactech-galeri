@@ -38,15 +38,15 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
 
   const cashAmount = Number(capital?.amount || 0);
 
-  const reload = async () => {
-    setLoading(true);
+  const reload = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await capitalAPI.movements(500);
       setMovements(res.data?.movements || []);
     } catch {
-      setMovements([]);
+      if (!silent) setMovements([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -58,8 +58,8 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
       await capitalAPI.deleteMovement(mv.id);
       // Optimistic update — listeden çıkar (görsel olarak hemen kaybolsun)
       setMovements(prev => prev.filter(m => m.id !== mv.id));
-      // Arka planda gerçek state'i çek
-      reload();
+      // Arka planda gerçek state'i çek (silent — loading state göstermez)
+      reload(true);
       if (typeof refreshCapital === 'function') refreshCapital();
       if (typeof fetchData === 'function') fetchData();
     } catch (err) {
@@ -91,7 +91,7 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     // Radix Dialog focus-trap modal'ı kapatamaz. Kullanıcı dilediğinde "İptal" der.
 
     // Arka planda gerçek state'i çek
-    reload();
+    reload(true);
     if (typeof refreshCapital === 'function') refreshCapital();
     if (typeof fetchData === 'function') fetchData();
 
@@ -142,12 +142,6 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
         className="w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto"
-        onInteractOutside={(e) => {
-          // ✅ Modal içindeki etkileşimler (disabled button auto-blur, focus jumps vb.) modal'ı kapatmasın.
-          // Sadece kullanıcı dışarıya tıklarsa veya Esc'e basarsa kapansın (bunlar onPointerDownOutside / onEscapeKeyDown).
-          e.preventDefault();
-        }}
-        onFocusOutside={(e) => { e.preventDefault(); }}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
