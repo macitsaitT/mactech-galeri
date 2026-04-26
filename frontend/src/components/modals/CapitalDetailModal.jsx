@@ -76,13 +76,6 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     setErrorMsg('');
     const ids = Array.from(selectedIds);
 
-    // ✅ Focus'u tıklanan butondan kaldır (button DOM'dan çıkacağı için
-    // Radix Dialog focus-trap modal'ı kapatmasın diye).
-    if (e?.currentTarget?.blur) e.currentTarget.blur();
-    if (typeof document !== 'undefined' && document.activeElement?.blur) {
-      document.activeElement.blur();
-    }
-
     let okCount = 0;
     let failCount = 0;
     const results = await Promise.allSettled(
@@ -93,11 +86,9 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     // Optimistic — silinenleri listeden çıkar
     setMovements(prev => prev.filter(m => !ids.includes(m.id)));
     setBulkDeleting(false);
-    // ✅ selectionMode'u bir sonraki tick'te kapat — toolbar re-render Radix focus-trap'i tetiklemez
-    setTimeout(() => {
-      setSelectionMode(false);
-      setSelectedIds(new Set());
-    }, 0);
+    setSelectedIds(new Set());
+    // ✅ selectionMode AÇIK kalıyor — bulk-delete-btn DOM'da ve focus'lu kalır,
+    // Radix Dialog focus-trap modal'ı kapatamaz. Kullanıcı dilediğinde "İptal" der.
 
     // Arka planda gerçek state'i çek
     reload();
