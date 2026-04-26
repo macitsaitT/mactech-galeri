@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp, Wallet } from 'lucide-react';
+import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp, Wallet, CalendarDays } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDate, openPrintableHTML } from '../../utils/helpers';
 import { fileAPI, usersAPI, capitalAPI } from '../../services/api';
@@ -17,6 +17,7 @@ const reportTypes = [
   { id: 'sold', label: 'Satılan', icon: Tag },
   { id: 'profitloss', label: 'Kâr/Zarar', icon: TrendingUp },
   { id: 'capital', label: 'Sermaye', icon: Wallet },
+  { id: 'yearend', label: 'Yıl Sonu', icon: CalendarDays },
   { id: 'deposit', label: 'Kapora', icon: Key },
   { id: 'car', label: 'Araç', icon: Car },
 ];
@@ -28,6 +29,7 @@ const reportTitles = {
   sold: 'Satış Raporu',
   profitloss: 'Stok Araç Kâr/Zarar Raporu',
   capital: 'Sermaye / Kasa Hareket Raporu',
+  yearend: 'Yıl Sonu Kapanış Raporu',
   deposit: 'Kapora Raporu',
   car: 'Araç Raporu',
 };
@@ -213,6 +215,18 @@ const ReportModal = ({ isOpen, onClose }) => {
   const [employees, setEmployees] = useState([]);
   // ✅ Sermaye raporu için kasa hareketleri
   const [capitalMovements, setCapitalMovements] = useState([]);
+  // ✅ Yıl Sonu Raporu için yıl seçimi (tarih aralığını otomatik ayarlar)
+  const [yearendYear, setYearendYear] = useState(() => new Date().getFullYear());
+
+  // Yıl Sonu seçildiğinde startDate/endDate'i o yıla otomatik ayarla
+  useEffect(() => {
+    if (reportType === 'yearend') {
+      setStartDate(`${yearendYear}-01-01`);
+      setEndDate(`${yearendYear}-12-31`);
+      // Sermaye hareketlerini de yükle (Yıl Sonu içinde gösterilecek)
+      capitalAPI.movements(2000).then(res => setCapitalMovements(res.data?.movements || [])).catch(() => {});
+    }
+  }, [reportType, yearendYear]);
 
   const userRole = user?.role || 'admin';
 
@@ -394,6 +408,101 @@ const ReportModal = ({ isOpen, onClose }) => {
     const lastBalance = capitalRows.length > 0 ? Number(capitalRows[0].balance_after || 0) : 0;
     return { inflow, outflow, net: inflow - outflow, lastBalance };
   }, [capitalRows]);
+
+  // ✅ Yıl Sonu Raporu — kapsamlı yıl özeti
+  const yearendData = useMemo(() => {
+    if (reportType !== 'yearend') return null;
+    const yStart = `${yearendYear}-01-01`;
+    const yEnd = `${yearendYear}-12-31`;
+
+    // O yıl içinde satılan araçlar
+    const soldCars = activeCars.filter(c =>
+      c.status === 'Satıldı' && c.sold_date && c.sold_date >= yStart && c.sold_date <= yEnd
+    );
+    const carRows = soldCars.map(car => {
+      const carExpenses = activeTransactions.filter(t =>
+        t.car_id === car.id &&
+        t.type === 'expense' &&
+        t.category !== 'Araç Alımı' &&
+        t.category !== 'Araç Sahibine Ödeme' &&
+        t.category !== 'Çalışan Payı'
+      ).reduce((s, t) => s + (t.amount || 0), 0);
+      const employeeShare = activeTransactions.filter(t =>
+        t.car_id === car.id && t.type === 'expense' && t.category === 'Çalışan Payı'
+      ).reduce((s, t) => s + (t.amount || 0), 0);
+      const purchasePrice = car.ownership === 'stock' ? Number(car.purchase_price || 0) : 0;
+      const ownerPay = activeTransactions.filter(t =>
+        t.car_id === car.id && t.type === 'expense' && t.category === 'Araç Sahibine Ödeme'
+      ).reduce((s, t) => s + (t.amount || 0), 0);
+      const totalCost = purchasePrice + ownerPay + carExpenses + employeeShare;
+      const salePrice = Number(car.sale_price || 0);
+      const profit = salePrice - totalCost;
+      return {
+        id: car.id,
+        plate: car.plate,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        sold_date: car.sold_date,
+        purchasePrice,
+        ownerPay,
+        carExpenses,
+        employeeShare,
+        totalCost,
+        salePrice,
+        profit,
+        ownership: car.ownership,
+        sold_by_name: car.sold_by_name || '-',
+      };
+    }).sort((a, b) => new Date(a.sold_date) - new Date(b.sold_date));
+
+    // Yıl içinde tüm transactions
+    const yTx = activeTransactions.filter(t => t.date && t.date >= yStart && t.date <= yEnd);
+    const businessExpense = yTx
+      .filter(t => t.type === 'expense' && !t.car_id)
+      .reduce((s, t) => s + (t.amount || 0), 0);
+    const businessIncome = yTx
+      .filter(t => t.type === 'income' && !t.car_id)
+      .reduce((s, t) => s + (t.amount || 0), 0);
+
+    const totals = carRows.reduce((acc, c) => ({
+      sold: acc.sold + 1,
+      purchase: acc.purchase + c.purchasePrice + c.ownerPay,
+      sales: acc.sales + c.salePrice,
+      carExpenses: acc.carExpenses + c.carExpenses,
+      employeeShare: acc.employeeShare + c.employeeShare,
+      grossProfit: acc.grossProfit + c.profit,
+    }), { sold: 0, purchase: 0, sales: 0, carExpenses: 0, employeeShare: 0, grossProfit: 0 });
+
+    const netResult = totals.grossProfit + businessIncome - businessExpense;
+
+    // Stokta kalan araçlar (yıl sonu)
+    const remainingStock = activeCars.filter(c =>
+      c.status !== 'Satıldı' && c.ownership === 'stock'
+    );
+    const remainingValue = remainingStock.reduce((s, c) => s + Number(c.purchase_price || 0), 0);
+
+    // Kasa giriş/çıkış (yıl içinde manuel hareketler)
+    const yearMovements = (capitalMovements || []).filter(m => {
+      const d = (m.created_at || '').slice(0, 10);
+      return d && d >= yStart && d <= yEnd;
+    });
+    const manualInflow = yearMovements.filter(m => m.reason === 'manual_deposit' || m.reason === 'capital_initialize').reduce((s, m) => s + Math.max(0, Number(m.delta || 0)), 0);
+    const manualOutflow = yearMovements.filter(m => m.reason === 'manual_withdrawal').reduce((s, m) => s + Math.abs(Number(m.delta || 0)), 0);
+
+    return {
+      year: yearendYear,
+      carRows,
+      totals,
+      businessExpense,
+      businessIncome,
+      netResult,
+      remainingStock: remainingStock.length,
+      remainingValue,
+      manualInflow,
+      manualOutflow,
+    };
+  }, [reportType, yearendYear, activeCars, activeTransactions, capitalMovements]);
 
   const fetchLogoAsDataUrl = () => {
     return new Promise((resolve) => {
@@ -734,6 +843,159 @@ const ReportModal = ({ isOpen, onClose }) => {
                         </tr>
                       ))}
                     </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : reportType === 'yearend' && yearendData ? (
+            <>
+              {/* Yıl seçici */}
+              <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3">
+                <div className="flex items-center gap-2" data-testid="yearend-year-picker">
+                  <CalendarDays size={18} className="text-primary" />
+                  <span className="text-sm font-semibold text-muted-foreground">Yıl:</span>
+                  <select
+                    value={yearendYear}
+                    onChange={(e) => setYearendYear(Number(e.target.value))}
+                    className="h-9 px-3 bg-background border border-border rounded-lg text-sm font-bold"
+                    data-testid="yearend-year-select"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Vergi/muhasebeci için yıllık kapanış özeti — direkt yazdırılabilir
+                </div>
+              </div>
+
+              {/* Üst Özet Kartları */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6" data-testid="yearend-summary-cards">
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Satılan Araç</p>
+                  <p className="text-sm sm:text-xl font-bold">{yearendData.totals.sold}</p>
+                </div>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Toplam Satış</p>
+                  <p className="text-sm sm:text-xl font-bold text-success">{formatCurrency(yearendData.totals.sales)}</p>
+                </div>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Toplam Maliyet</p>
+                  <p className="text-sm sm:text-xl font-bold text-destructive">{formatCurrency(yearendData.totals.purchase + yearendData.totals.carExpenses + yearendData.totals.employeeShare)}</p>
+                </div>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Brüt Kâr</p>
+                  <p className={`text-sm sm:text-xl font-bold ${yearendData.totals.grossProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {formatCurrency(yearendData.totals.grossProfit)}
+                  </p>
+                </div>
+              </div>
+
+              {/* İşletme Net Sonucu */}
+              <div className="mb-4 sm:mb-6 p-4 border-2 border-primary/40 bg-primary/5 rounded-xl" data-testid="yearend-net-result">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <h3 className="font-heading font-bold text-base sm:text-lg flex items-center gap-2">
+                      <CalendarDays size={20} className="text-primary" /> {yearendData.year} Net İşletme Sonucu
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Brüt Kâr {formatCurrency(yearendData.totals.grossProfit)} + İşletme Geliri {formatCurrency(yearendData.businessIncome)} − İşletme Gideri {formatCurrency(yearendData.businessExpense)}
+                    </p>
+                  </div>
+                  <div className={`text-2xl sm:text-3xl font-extrabold tabular-nums ${yearendData.netResult >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {yearendData.netResult >= 0 ? '+' : ''}{formatCurrency(yearendData.netResult)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detay 4'lü grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6 text-xs sm:text-sm">
+                <div className="p-2.5 border border-border rounded-lg">
+                  <p className="text-[10px] uppercase text-muted-foreground">Çalışan Payı</p>
+                  <p className="font-bold text-destructive">{formatCurrency(yearendData.totals.employeeShare)}</p>
+                </div>
+                <div className="p-2.5 border border-border rounded-lg">
+                  <p className="text-[10px] uppercase text-muted-foreground">Araç Giderleri</p>
+                  <p className="font-bold text-destructive">{formatCurrency(yearendData.totals.carExpenses)}</p>
+                </div>
+                <div className="p-2.5 border border-border rounded-lg">
+                  <p className="text-[10px] uppercase text-muted-foreground">İşletme Gideri</p>
+                  <p className="font-bold text-destructive">{formatCurrency(yearendData.businessExpense)}</p>
+                </div>
+                <div className="p-2.5 border border-border rounded-lg">
+                  <p className="text-[10px] uppercase text-muted-foreground">İşletme Geliri</p>
+                  <p className="font-bold text-success">{formatCurrency(yearendData.businessIncome)}</p>
+                </div>
+              </div>
+
+              {/* Yıl Sonu Stok */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6 text-xs sm:text-sm">
+                <div className="p-3 border border-border rounded-lg">
+                  <p className="text-[10px] uppercase text-muted-foreground">Yıl Sonu Stok ({yearendData.remainingStock} araç)</p>
+                  <p className="font-bold text-primary text-base">{formatCurrency(yearendData.remainingValue)}</p>
+                </div>
+                <div className="p-3 border border-border rounded-lg">
+                  <p className="text-[10px] uppercase text-muted-foreground">Manuel Kasa Giriş / Çıkış</p>
+                  <p className="font-bold text-sm">
+                    <span className="text-success">+{formatCurrency(yearendData.manualInflow)}</span>
+                    {' / '}
+                    <span className="text-destructive">-{formatCurrency(yearendData.manualOutflow)}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Satılan Araçlar Detay Tablosu */}
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-semibold mb-2 sm:mb-3 border-b border-border pb-2 text-sm sm:text-base flex items-center gap-2">
+                  <Tag size={16} className="text-primary" /> Yıl İçinde Satılan Araçlar ({yearendData.carRows.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[800px]" data-testid="yearend-cars-table">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-2 text-xs sm:text-sm font-medium text-muted-foreground">Tarih</th>
+                        <th className="text-left p-2 text-xs sm:text-sm font-medium text-muted-foreground">Araç</th>
+                        <th className="text-left p-2 text-xs sm:text-sm font-medium text-muted-foreground">Plaka</th>
+                        <th className="text-right p-2 text-xs sm:text-sm font-medium text-muted-foreground">Alış</th>
+                        <th className="text-right p-2 text-xs sm:text-sm font-medium text-muted-foreground">Giderler</th>
+                        <th className="text-right p-2 text-xs sm:text-sm font-medium text-muted-foreground">Çal. Payı</th>
+                        <th className="text-right p-2 text-xs sm:text-sm font-medium text-muted-foreground">Satış</th>
+                        <th className="text-right p-2 text-xs sm:text-sm font-medium text-muted-foreground">Kâr/Zarar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {yearendData.carRows.length === 0 ? (
+                        <tr><td colSpan={8} className="text-center p-6 text-muted-foreground text-sm">{yearendData.year} yılında satılan araç yok.</td></tr>
+                      ) : yearendData.carRows.map(c => (
+                        <tr key={c.id} className="border-b border-border hover:bg-muted/30">
+                          <td className="p-2 text-xs sm:text-sm">{formatDate(c.sold_date)}</td>
+                          <td className="p-2 text-xs sm:text-sm font-medium">{c.brand} {c.model} {c.year ? `(${c.year})` : ''}</td>
+                          <td className="p-2 text-xs sm:text-sm text-muted-foreground">{c.plate?.toUpperCase()}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums">{formatCurrency(c.purchasePrice + c.ownerPay)}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums text-destructive">{c.carExpenses > 0 ? formatCurrency(c.carExpenses) : '-'}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums text-destructive">{c.employeeShare > 0 ? formatCurrency(c.employeeShare) : '-'}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums text-success">{formatCurrency(c.salePrice)}</td>
+                          <td className={`p-2 text-xs sm:text-sm text-right tabular-nums font-bold ${c.profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {c.profit >= 0 ? '+' : ''}{formatCurrency(c.profit)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    {yearendData.carRows.length > 0 && (
+                      <tfoot>
+                        <tr className="border-t-2 border-border bg-muted/30 font-bold">
+                          <td className="p-2 text-xs sm:text-sm" colSpan={3}>TOPLAM</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums">{formatCurrency(yearendData.totals.purchase)}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums text-destructive">{formatCurrency(yearendData.totals.carExpenses)}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums text-destructive">{formatCurrency(yearendData.totals.employeeShare)}</td>
+                          <td className="p-2 text-xs sm:text-sm text-right tabular-nums text-success">{formatCurrency(yearendData.totals.sales)}</td>
+                          <td className={`p-2 text-xs sm:text-sm text-right tabular-nums ${yearendData.totals.grossProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {yearendData.totals.grossProfit >= 0 ? '+' : ''}{formatCurrency(yearendData.totals.grossProfit)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
                   </table>
                 </div>
               </div>
