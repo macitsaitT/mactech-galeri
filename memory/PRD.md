@@ -78,7 +78,18 @@
 - [ ] AI vehicle valuation, push notification service (FCM)
 
 ## Tech Stack
-- Frontend: React, Tailwind CSS, Shadcn/UI, Recharts
+- Frontend: React, Tailwind CSS, Shadcn/UI, Recharts, jspdf, html2canvas
 - Backend: FastAPI, Python, MongoDB, slowapi, python-docx, reportlab
 - Auth: JWT + Emergent Google OAuth
 - Storage: Emergent Object Storage
+
+## Changelog (Recent)
+### 2026-02 (Iter 30)
+- ✅ Şubeler / Çoklu Galeri modülü tamamlandı: backend CRUD (`/api/branches`), frontend `BranchesManager` (Ayarlar sayfasında).
+- ✅ `Car` modeline opsiyonel `branch_id` alanı eklendi → şube delete-guard çalışıyor.
+- ✅ Stok/Konsinye/Satılan sayfalarına **Kart/Liste görünüm toggle** eklendi (`viewMode`, localStorage'da kalıcı). Yeni `VehicleListRow` component.
+- ✅ Dashboard: **Vade Hatırlatıcı Bar** (yaklaşan/geciken taksitler — WhatsApp Gönder) + **Ciro Karşılaştırma Kartı** (Bu Ay / Geçen Ay / Geçen Yıl Aynı Ay).
+- ✅ Çoklu Araç Paylaşma (`MultiShareModal`) ve Konsinye Sözleşme PDF (`consignmentPdf.js`) entegrasyonu.
+- ✅ `notifications` router prefix bug fix (`/api/api/notifications` → `/api/notifications`) — Dashboard 404 regresyonu çözüldü.
+- ✅ InventoryPage missing `</div>` JSX fix.
+- ✅ Test sonuçları: Backend 13/14 (93%) → 14/14, Frontend 100%.

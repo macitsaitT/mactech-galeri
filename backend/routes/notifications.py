@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from db import get_database
 from auth import get_current_user
 
-router = APIRouter(prefix="/api/notifications", tags=["notifications"])
+router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
 class ReminderCreate(BaseModel):
