@@ -33,8 +33,16 @@ const VehicleDetailModal = ({ isOpen, onClose, car }) => {
   // Araç giderlerini hesapla
   const carExpenses = useMemo(() => {
     if (!car) return [];
+    // ✅ "Araç Alımı" purchase_price'da zaten ayrı görünüyor — gider listesinde tekrar gösterme
+    // (kar hesabında çift sayımı engeller)
     return transactions
-      .filter(t => t.car_id === car.id && t.type === 'expense' && !t.deleted)
+      .filter(t =>
+        t.car_id === car.id &&
+        t.type === 'expense' &&
+        !t.deleted &&
+        t.category !== 'Araç Alımı' &&
+        t.category !== 'Araç Sahibine Ödeme'
+      )
       .sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [transactions, car]);
 

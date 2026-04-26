@@ -228,9 +228,16 @@ const Dashboard = ({ onOpenReport }) => {
     return filteredSoldCars.reduce((sum, car) => {
       const salePrice = Number(car.sale_price || 0);
       const purchaseCost = car.ownership === 'stock' ? Number(car.purchase_price || 0) : 0;
-      // Araca bağlı giderler (boya, lastik, bakım vb.) — genel işletme giderleri değil
+      // Araca bağlı giderler — Alış (purchaseCost'ta var), Çalışan Payı / Sahibine Ödeme / Kapora İadesi hariç
       const vehicleExpenses = activeTransactions
-        .filter(t => t.car_id === car.id && t.type === 'expense' && t.category !== 'Kapora İadesi')
+        .filter(t =>
+          t.car_id === car.id &&
+          t.type === 'expense' &&
+          t.category !== 'Araç Alımı' &&
+          t.category !== 'Araç Sahibine Ödeme' &&
+          t.category !== 'Çalışan Payı' &&
+          t.category !== 'Kapora İadesi'
+        )
         .reduce((s, t) => s + (t.amount || 0), 0);
       const profit = salePrice - purchaseCost - vehicleExpenses;
       return sum + Math.max(0, profit); // ✅ Zararlı satış kartı eksiye düşürmesin

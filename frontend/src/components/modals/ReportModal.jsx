@@ -323,8 +323,12 @@ const ReportModal = ({ isOpen, onClose }) => {
       c.status === 'Satıldı' && c.sold_date && c.sold_date >= startDate && c.sold_date <= endDate
     );
     return soldCars.map(car => {
-      const carExpenses = activeTransactions.filter(t => 
-        t.car_id === car.id && t.type === 'expense'
+      // ✅ Araç Alımı kategorisi purchase_price'da zaten sayılıyor → çift sayımı önle
+      const carExpenses = activeTransactions.filter(t =>
+        t.car_id === car.id &&
+        t.type === 'expense' &&
+        t.category !== 'Araç Alımı' &&
+        t.category !== 'Araç Sahibine Ödeme'
       ).reduce((s, t) => s + (t.amount || 0), 0);
       const purchasePrice = car.purchase_price || 0;
       const salePrice = car.sale_price || 0;

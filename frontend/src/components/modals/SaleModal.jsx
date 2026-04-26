@@ -185,12 +185,13 @@ ${companyName}`;
   const ownerPayment = car.ownership === 'consignment' ? (car.purchase_price || 0) : 0;
 
   // ✅ Araca ait birikmiş giderleri (boya, bakım, lastik, sigorta, yedek parça vb.)
-  // hesapla. 'Araç Sahibine Ödeme' ve 'Çalışan Payı' burada hariç — zaten özet kalemlerinde ayrı.
+  // Alış maliyeti, çalışan payı, sahibine ödeme ayrı kalemlerde gösterildiği için hariç.
   const vehicleExpenses = (transactions || [])
     .filter(t => (
       t.car_id === car.id &&
       t.type === 'expense' &&
       !t.deleted &&
+      t.category !== 'Araç Alımı' &&
       t.category !== 'Araç Sahibine Ödeme' &&
       t.category !== 'Çalışan Payı' &&
       t.category !== 'Kapora İadesi'
