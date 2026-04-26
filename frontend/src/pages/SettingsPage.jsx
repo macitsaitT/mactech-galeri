@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatPhoneInput } from '../utils/helpers';
 import { fileAPI } from '../services/api';
+import BranchesManager from '../components/settings/BranchesManager';
 import {
   Settings,
   User,
@@ -215,6 +216,9 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Profile Form */}
+      <BranchesManager />
 
       {/* Profile Form */}
       <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-5 space-y-4">

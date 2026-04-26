@@ -216,6 +216,14 @@ export const installmentsAPI = {
     }),
 };
 
+// ==================== BRANCHES (Şubeler / Çoklu Galeri) ====================
+export const branchesAPI = {
+  list: () => api.get('/branches'),
+  create: (data) => api.post('/branches', data),
+  update: (id, data) => api.put(`/branches/${id}`, data),
+  delete: (id) => api.delete(`/branches/${id}`),
+};
+
 // ==================== USERS ====================
 export const usersAPI = {
   getAll: () => api.get('/users'),

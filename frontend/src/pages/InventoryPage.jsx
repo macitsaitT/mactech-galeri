@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import VehicleCard from '../components/vehicles/VehicleCard';
+import VehicleListRow from '../components/vehicles/VehicleListRow';
 import ShareCardModal from '../components/modals/ShareCardModal';
 import MultiShareModal from '../components/modals/MultiShareModal';
-import { Search, SlidersHorizontal, Car, Download, CheckCircle, Share2, X as XIcon, Check } from 'lucide-react';
+import { Search, SlidersHorizontal, Car, Download, CheckCircle, Share2, X as XIcon, Check, LayoutGrid, List } from 'lucide-react';
 import { exportAPI } from '../services/api';
 import { downloadBlob, formatCurrency } from '../utils/helpers';
 import { generateConsignmentPDF } from '../utils/consignmentPdf';
@@ -15,6 +16,13 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
   const [exporting, setExporting] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [shareCarId, setShareCarId] = useState(null);
+  // ✅ Görünüm modu (kart / liste) — localStorage'da kalıcı
+  const [viewMode, setViewMode] = useState(() => {
+    try { return localStorage.getItem('inventory_view_mode') || 'grid'; } catch { return 'grid'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('inventory_view_mode', viewMode); } catch { /* ignore */ }
+  }, [viewMode]);
   // ✅ Çoklu seçim modu (Stok Kataloğu paylaşımı için)
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -142,6 +150,27 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
           )}
         </p>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Görünüm Toggle (Kart / Liste) */}
+          <div className="flex items-center bg-card border border-border rounded-lg p-0.5" data-testid="view-mode-toggle">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1 px-2.5 h-9 rounded-md text-xs font-semibold transition-colors ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              data-testid="view-mode-grid-btn"
+              title="Kart Görünümü"
+            >
+              <LayoutGrid size={14} /> Kart
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1 px-2.5 h-9 rounded-md text-xs font-semibold transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              data-testid="view-mode-list-btn"
+              title="Liste Görünümü"
+            >
+              <List size={14} /> Liste
+            </button>
+          </div>
           {viewType === 'inventory' && !selectionMode && (
             <button
               onClick={() => setSelectionMode(true)}
@@ -212,7 +241,10 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={viewMode === 'grid'
+          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+          : 'flex flex-col gap-3'
+        }>
           {filteredCars.map((car) => (
             <div key={car.id} className={`relative ${selectionMode ? 'cursor-pointer' : ''}`} onClick={selectionMode ? () => toggleSelected(car.id) : undefined}>
               {selectionMode && (
@@ -221,18 +253,33 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
                 </div>
               )}
               <div className={selectionMode && selectedIds.has(car.id) ? 'ring-2 ring-primary rounded-xl' : ''}>
-                <VehicleCard
-                  car={car}
-                  onEdit={selectionMode ? undefined : onEditCar}
-                  onDelete={selectionMode ? undefined : onDeleteCar}
-                  onView={selectionMode ? undefined : onViewCar}
-                  onExpenses={selectionMode ? undefined : onExpenses}
-                  onDeposit={selectionMode ? undefined : onDeposit}
-                  onSale={selectionMode ? undefined : onSale}
-                  onCancelSale={selectionMode ? undefined : onCancelSale}
-                  onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
-                  onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
-                />
+                {viewMode === 'grid' ? (
+                  <VehicleCard
+                    car={car}
+                    onEdit={selectionMode ? undefined : onEditCar}
+                    onDelete={selectionMode ? undefined : onDeleteCar}
+                    onView={selectionMode ? undefined : onViewCar}
+                    onExpenses={selectionMode ? undefined : onExpenses}
+                    onDeposit={selectionMode ? undefined : onDeposit}
+                    onSale={selectionMode ? undefined : onSale}
+                    onCancelSale={selectionMode ? undefined : onCancelSale}
+                    onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
+                    onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
+                  />
+                ) : (
+                  <VehicleListRow
+                    car={car}
+                    onEdit={selectionMode ? undefined : onEditCar}
+                    onDelete={selectionMode ? undefined : onDeleteCar}
+                    onView={selectionMode ? undefined : onViewCar}
+                    onExpenses={selectionMode ? undefined : onExpenses}
+                    onDeposit={selectionMode ? undefined : onDeposit}
+                    onSale={selectionMode ? undefined : onSale}
+                    onCancelSale={selectionMode ? undefined : onCancelSale}
+                    onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
+                    onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
+                  />
+                )}
               </div>
             </div>
           ))}
