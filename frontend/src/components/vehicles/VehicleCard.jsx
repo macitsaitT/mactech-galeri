@@ -35,6 +35,7 @@ const VehicleCard = ({
   onSale,
   onCancelSale,
   onShare,
+  onConsignmentPdf,
   showActions = true 
 }) => {
   const statusColor = getStatusColor(car.status);
@@ -100,6 +101,12 @@ const VehicleCard = ({
                   <Share2 size={16} className="mr-2" />
                   WhatsApp Paylaş
                 </DropdownMenuItem>
+                {car.ownership === 'consignment' && (
+                  <DropdownMenuItem onClick={() => onConsignmentPdf?.(car)} data-testid={`consign-pdf-${car.id}`}>
+                    <FileText size={16} className="mr-2" />
+                    Konsinye Sözleşmesi
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onEdit?.(car)} data-testid={`edit-${car.id}`}>
                   <Edit size={16} className="mr-2" />
                   Düzenle

@@ -1,13 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
 import {
   Car, TrendingUp, Wallet, Package, ShoppingCart, CreditCard, FileText, Calendar,
   BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter, Plus,
-  Coins, Car as CarIcon
+  Coins, Car as CarIcon, AlertTriangle, Clock, MessageCircle, ArrowRight
 } from 'lucide-react';
 import CapitalModal from '../components/modals/CapitalModal';
 import CapitalDetailModal from '../components/modals/CapitalDetailModal';
+import { installmentsAPI } from '../services/api';
+import { computeUpcomingPayments, buildPaymentReminderText } from '../utils/installmentReminders';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, AreaChart, Area
@@ -424,6 +426,10 @@ const Dashboard = ({ onOpenReport }) => {
       <CapitalModal isOpen={capitalModalOpen} onClose={() => setCapitalModalOpen(false)} />
       <CapitalDetailModal isOpen={capitalDetailOpen} onClose={() => setCapitalDetailOpen(false)} />
 
+      {/* ✅ Vade Hatırlatıcı + Ciro Karşılaştırma */}
+      <PaymentRemindersBar />
+      <RevenueComparisonCard transactions={activeTransactions} />
+
       {/* Date Range Filter */}
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4" data-testid="date-filter">
         <div className="flex items-center gap-2 mb-3">
@@ -719,3 +725,171 @@ const Dashboard = ({ onOpenReport }) => {
 };
 
 export default Dashboard;
+
+// ✅ Vade Hatırlatıcı Bar — yaklaşan/geciken taksitleri üstte gösterir
+const PaymentRemindersBar = () => {
+  const { customers } = useApp();
+  const [items, setItems] = useState([]);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    installmentsAPI.list()
+      .then(res => {
+        if (!alive) return;
+        const inst = res.data || [];
+        setItems(computeUpcomingPayments(inst, { daysAhead: 7 }));
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  if (items.length === 0) return null;
+
+  const sendWA = (item) => {
+    const customer = customers.find(c => c.id === item.customer_id);
+    const phone = (customer?.phone || '').replace(/\D/g, '');
+    const text = encodeURIComponent(buildPaymentReminderText(item));
+    const url = phone ? `https://wa.me/${phone.startsWith('90') ? phone : '90' + phone}?text=${text}` : `https://wa.me/?text=${text}`;
+    window.open(url, '_blank');
+  };
+
+  const overdue = items.filter(i => i.status === 'overdue').length;
+  const upcoming = items.filter(i => i.status === 'upcoming').length;
+
+  return (
+    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 overflow-hidden" data-testid="payment-reminders">
+      <button
+        type="button"
+        onClick={() => setCollapsed(c => !c)}
+        className="w-full flex items-center justify-between gap-3 p-4 hover:bg-amber-500/10 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <AlertTriangle size={20} className="text-amber-500 shrink-0" />
+          <div className="text-left">
+            <div className="font-semibold text-sm">
+              {overdue > 0 && <span className="text-destructive">{overdue} geciken</span>}
+              {overdue > 0 && upcoming > 0 && ', '}
+              {upcoming > 0 && <span className="text-amber-500">{upcoming} yaklaşan</span>} taksit
+            </div>
+            <div className="text-xs text-muted-foreground">Hatırlatma metni hazır — tek tıkla gönder</div>
+          </div>
+        </div>
+        <ArrowRight size={18} className={`text-muted-foreground transition-transform ${collapsed ? '' : 'rotate-90'}`} />
+      </button>
+      {!collapsed && (
+        <div className="border-t border-amber-500/20 divide-y divide-border">
+          {items.map(item => {
+            const isOverdue = item.status === 'overdue';
+            return (
+              <div
+                key={`${item.installment_id}-${item.term_index}`}
+                className="flex items-center justify-between gap-3 p-3 text-sm"
+                data-testid={`reminder-${item.installment_id}`}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {isOverdue ? (
+                    <AlertTriangle size={16} className="text-destructive shrink-0" />
+                  ) : (
+                    <Clock size={16} className="text-amber-500 shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="font-semibold truncate">{item.customer_name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {item.term_index}. taksit · {new Date(item.due_date).toLocaleDateString('tr-TR')} ·
+                      <span className={`ml-1 font-semibold ${isOverdue ? 'text-destructive' : 'text-amber-500'}`}>
+                        {isOverdue ? `${Math.abs(item.days_diff)} gün gecikme` : `${item.days_diff} gün sonra`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-bold text-sm">{formatCurrency(item.amount)}</span>
+                  <button
+                    type="button"
+                    onClick={() => sendWA(item)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors"
+                    data-testid={`send-reminder-${item.installment_id}`}
+                  >
+                    <MessageCircle size={13} /> Gönder
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ✅ Ciro Karşılaştırma Kartı (Bu Ay vs Geçen Ay vs Geçen Yıl Aynı Ay)
+const RevenueComparisonCard = ({ transactions }) => {
+  const data = useMemo(() => {
+    const sumIncome = (start, end) =>
+      transactions
+        .filter(t => t.type === 'income' && t.date >= start && t.date <= end)
+        .reduce((s, t) => s + (t.amount || 0), 0);
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+
+    const fmt = (d) => d.toISOString().split('T')[0];
+    const monthRange = (year, month) => {
+      const start = new Date(year, month, 1);
+      const end = new Date(year, month + 1, 0);
+      return { start: fmt(start), end: fmt(end) };
+    };
+
+    const thisMonth = monthRange(y, m);
+    const lastMonth = monthRange(m === 0 ? y - 1 : y, m === 0 ? 11 : m - 1);
+    const lastYearSame = monthRange(y - 1, m);
+
+    const a = sumIncome(thisMonth.start, thisMonth.end);
+    const b = sumIncome(lastMonth.start, lastMonth.end);
+    const c = sumIncome(lastYearSame.start, lastYearSame.end);
+
+    const pct = (cur, ref) => (ref > 0 ? ((cur - ref) / ref) * 100 : (cur > 0 ? 100 : 0));
+
+    return {
+      thisMonth: a,
+      lastMonth: b,
+      lastYearSame: c,
+      vsLastMonth: pct(a, b),
+      vsLastYear: pct(a, c),
+    };
+  }, [transactions]);
+
+  const Stat = ({ label, value, comparison, comparisonLabel }) => {
+    const positive = comparison > 0;
+    const negative = comparison < 0;
+    return (
+      <div className="flex-1 rounded-xl border border-border bg-card/40 p-3.5 min-w-0">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+        <div className="mt-1 text-lg sm:text-xl font-extrabold tabular-nums truncate">{formatCurrency(value)}</div>
+        {comparisonLabel && (
+          <div className={`mt-1 flex items-center gap-1 text-[11px] font-semibold ${positive ? 'text-success' : negative ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {positive ? <ArrowUpRight size={13} /> : negative ? <ArrowDownRight size={13} /> : null}
+            <span>{Math.abs(comparison).toFixed(1)}%</span>
+            <span className="text-muted-foreground font-normal">vs {comparisonLabel}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-5" data-testid="revenue-comparison">
+      <div className="flex items-center gap-2 mb-3">
+        <BarChart3 size={18} className="text-primary" />
+        <h3 className="font-heading font-semibold text-base">Ciro Karşılaştırma</h3>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Stat label="Bu Ay" value={data.thisMonth} comparison={data.vsLastMonth} comparisonLabel="geçen ay" />
+        <Stat label="Geçen Ay" value={data.lastMonth} />
+        <Stat label="Geçen Yıl Aynı Ay" value={data.lastYearSame} comparison={data.vsLastYear} comparisonLabel="geçen yıl" />
+      </div>
+    </div>
+  );
+};
