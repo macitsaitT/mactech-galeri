@@ -140,7 +140,15 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => {
+          // ✅ Modal içindeki etkileşimler (disabled button auto-blur, focus jumps vb.) modal'ı kapatmasın.
+          // Sadece kullanıcı dışarıya tıklarsa veya Esc'e basarsa kapansın (bunlar onPointerDownOutside / onEscapeKeyDown).
+          e.preventDefault();
+        }}
+        onFocusOutside={(e) => { e.preventDefault(); }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet size={22} className="text-primary" />
@@ -278,9 +286,14 @@ const CashTab = ({
           </button>
           <button
             type="button"
-            onClick={(e) => onBulkDelete(e)}
-            disabled={selectedIds.size === 0 || bulkDeleting}
-            className={`flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold disabled:opacity-50 transition-colors ${selectionMode ? '' : 'hidden'}`}
+            onClick={(e) => {
+              if (selectedIds.size === 0 || bulkDeleting) { e.preventDefault(); e.stopPropagation(); return; }
+              onBulkDelete(e);
+            }}
+            aria-disabled={selectedIds.size === 0 || bulkDeleting}
+            className={`flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold transition-colors ${
+              (selectedIds.size === 0 || bulkDeleting) ? 'opacity-50 cursor-not-allowed' : ''
+            } ${selectionMode ? '' : 'hidden'}`}
             data-testid="bulk-delete-btn"
           >
             {bulkDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
