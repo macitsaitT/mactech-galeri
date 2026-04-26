@@ -15,6 +15,9 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
   const [sortBy, setSortBy] = useState('newest');
   const [exporting, setExporting] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  // ✅ Satılan araçlar için tarih filtresi
+  const [soldStart, setSoldStart] = useState('');
+  const [soldEnd, setSoldEnd] = useState('');
   const [shareCarId, setShareCarId] = useState(null);
   // ✅ Görünüm modu (kart / liste) — localStorage'da kalıcı
   const [viewMode, setViewMode] = useState(() => {
@@ -62,6 +65,13 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
         break;
       case 'sold':
         result = result.filter(c => c.status === 'Satıldı');
+        // ✅ Tarih filtresi
+        if (soldStart) {
+          result = result.filter(c => c.sold_date && c.sold_date >= soldStart);
+        }
+        if (soldEnd) {
+          result = result.filter(c => c.sold_date && c.sold_date <= soldEnd);
+        }
         break;
       default:
         break;
@@ -96,7 +106,7 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
     }
 
     return result;
-  }, [cars, viewType, searchQuery, sortBy]);
+  }, [cars, viewType, searchQuery, sortBy, soldStart, soldEnd]);
 
   const getTitle = () => {
     switch (viewType) {
@@ -140,6 +150,38 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
           </select>
         </div>
       </div>
+
+      {/* Satılan Araçlar - Tarih Filtresi */}
+      {viewType === 'sold' && (
+        <div className="flex flex-wrap items-center gap-2 -mt-2" data-testid="sold-date-filter">
+          <span className="text-xs font-semibold text-muted-foreground">Satış Tarihi:</span>
+          <input
+            type="date"
+            value={soldStart}
+            onChange={(e) => setSoldStart(e.target.value)}
+            className="h-9 px-2 bg-card border border-border rounded-lg text-sm"
+            data-testid="sold-start-date"
+          />
+          <span className="text-muted-foreground text-xs">-</span>
+          <input
+            type="date"
+            value={soldEnd}
+            onChange={(e) => setSoldEnd(e.target.value)}
+            className="h-9 px-2 bg-card border border-border rounded-lg text-sm"
+            data-testid="sold-end-date"
+          />
+          {(soldStart || soldEnd) && (
+            <button
+              type="button"
+              onClick={() => { setSoldStart(''); setSoldEnd(''); }}
+              className="h-9 px-2.5 rounded-lg border border-border text-xs hover:bg-muted text-muted-foreground"
+              data-testid="sold-clear-date"
+            >
+              Temizle
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Results count + Toplu Paylaş + Export */}
       <div className="flex flex-wrap items-center justify-between gap-2">

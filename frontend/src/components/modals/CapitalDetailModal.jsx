@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Wallet, Coins, Car as CarIcon, ArrowDownCircle, ArrowUpCircle, RefreshCw, X } from 'lucide-react';
+import { Wallet, Coins, Car as CarIcon, ArrowDownCircle, ArrowUpCircle, RefreshCw, X, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useApp } from '../../context/AppContext';
 import { capitalAPI } from '../../services/api';
@@ -26,12 +26,32 @@ const REASON_LABEL = {
 };
 
 const CapitalDetailModal = ({ isOpen, onClose }) => {
-  const { capital, cars } = useApp();
+  const { capital, cars, refreshCapital } = useApp();
   const [tab, setTab] = useState('cash');
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const cashAmount = Number(capital?.amount || 0);
+
+  const reload = () => {
+    setLoading(true);
+    capitalAPI.movements(200)
+      .then(res => setMovements(res.data?.movements || []))
+      .catch(() => setMovements([]))
+      .finally(() => setLoading(false));
+  };
+
+  const handleDeleteMovement = async (mv) => {
+    if (!window.confirm(`Bu hareketi silmek istediğinize emin misiniz?\n\n${mv.description || ''}\nTutar: ${formatCurrency(mv.delta)}`)) return;
+    try {
+      await capitalAPI.deleteMovement(mv.id);
+      // Local + global state'i yenile
+      reload();
+      if (typeof refreshCapital === 'function') await refreshCapital();
+    } catch (e) {
+      alert(e?.response?.data?.detail || 'Silinemedi');
+    }
+  };
 
   // Stok'ta olan (henüz satılmamış, silinmemiş) araçların alış değerleri
   const stockCars = useMemo(() => {
@@ -51,11 +71,8 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (!isOpen) return;
-    setLoading(true);
-    capitalAPI.movements(200)
-      .then(res => setMovements(res.data?.movements || []))
-      .catch(() => setMovements([]))
-      .finally(() => setLoading(false));
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (
@@ -116,7 +133,7 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
         {/* Tab içerik */}
         <div className="mt-4">
           {tab === 'cash' && (
-            <CashTab movements={movements} loading={loading} />
+            <CashTab movements={movements} loading={loading} onDelete={handleDeleteMovement} />
           )}
           {tab === 'inventory' && (
             <InventoryTab cars={stockCars} totalValue={vehicleValue} />
@@ -137,7 +154,9 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   );
 };
 
-const CashTab = ({ movements, loading }) => {
+const DELETABLE_REASONS = new Set(['manual_deposit', 'manual_withdrawal', 'manual_set', 'capital_initialize']);
+
+const CashTab = ({ movements, loading, onDelete }) => {
   if (loading) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Yükleniyor...</div>;
   }
@@ -153,34 +172,50 @@ const CashTab = ({ movements, loading }) => {
       <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
         <RefreshCw size={12} /> Son {movements.length} Hareket
       </div>
-      {movements.map((m) => (
-        <div
-          key={m.id}
-          className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 p-3 text-sm"
-          data-testid={`cash-movement-${m.id}`}
-        >
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {m.delta >= 0 ? (
-              <ArrowDownCircle size={16} className="text-success shrink-0" />
-            ) : (
-              <ArrowUpCircle size={16} className="text-destructive shrink-0" />
-            )}
-            <div className="min-w-0">
-              <div className="font-medium truncate">{REASON_LABEL[m.reason] || m.reason}</div>
-              {m.description && (
-                <div className="text-xs text-muted-foreground truncate">{m.description}</div>
+      {movements.map((m) => {
+        const canDelete = DELETABLE_REASONS.has(m.reason);
+        return (
+          <div
+            key={m.id}
+            className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 p-3 text-sm"
+            data-testid={`cash-movement-${m.id}`}
+          >
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {m.delta >= 0 ? (
+                <ArrowDownCircle size={16} className="text-success shrink-0" />
+              ) : (
+                <ArrowUpCircle size={16} className="text-destructive shrink-0" />
               )}
-              <div className="text-[10px] text-muted-foreground">{formatDate(m.created_at)}</div>
+              <div className="min-w-0">
+                <div className="font-medium truncate">{REASON_LABEL[m.reason] || m.reason}</div>
+                {m.description && (
+                  <div className="text-xs text-muted-foreground truncate">{m.description}</div>
+                )}
+                <div className="text-[10px] text-muted-foreground">{formatDate(m.created_at)}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="text-right">
+                <div className={`font-bold ${m.delta >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {m.delta >= 0 ? '+' : ''}{formatCurrency(m.delta)}
+                </div>
+                <div className="text-[10px] text-muted-foreground">Bakiye: {formatCurrency(m.balance_after)}</div>
+              </div>
+              {canDelete && onDelete && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(m)}
+                  className="w-8 h-8 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 flex items-center justify-center transition-colors"
+                  data-testid={`delete-movement-${m.id}`}
+                  title="Bu manuel hareketi sil"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           </div>
-          <div className="text-right shrink-0">
-            <div className={`font-bold ${m.delta >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {m.delta >= 0 ? '+' : ''}{formatCurrency(m.delta)}
-            </div>
-            <div className="text-[10px] text-muted-foreground">Bakiye: {formatCurrency(m.balance_after)}</div>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

@@ -143,3 +143,47 @@ async def list_movements(limit: int = 100, current_user: dict = Depends(get_curr
         .to_list(max(1, min(limit, 500)))
     )
     return {"movements": movements}
+
+
+# Yalnızca manuel kasa hareketleri silinebilir (transaction'lardan üretilenler değil)
+_DELETABLE_REASONS = {
+    "manual_deposit",
+    "manual_withdrawal",
+    "manual_set",
+    "capital_initialize",
+}
+
+
+@router.delete("/capital/movements/{movement_id}")
+async def delete_movement(movement_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Manuel kasa hareketini sil ve etkisini kasadan geri al.
+    Yalnızca `_DELETABLE_REASONS` içindeki manuel hareketler silinebilir;
+    transaction-bağlı hareketler (transaction_create vb.) ilgili işlem üzerinden yönetilir.
+    """
+    org_id = current_user.get("org_id", current_user["user_id"])
+    mv = await db.capital_movements.find_one({"id": movement_id, "org_id": org_id}, {"_id": 0})
+    if not mv:
+        raise HTTPException(status_code=404, detail="Kasa hareketi bulunamadı")
+    if mv.get("reason") not in _DELETABLE_REASONS:
+        raise HTTPException(
+            status_code=400,
+            detail="Bu hareket transaction'a bağlıdır. İlgili gelir/gider işlemi üzerinden silinmelidir.",
+        )
+
+    # Etkiyi geri al (delta'yı tersine çevir)
+    reverse_delta = -float(mv.get("delta", 0) or 0)
+    if reverse_delta != 0:
+        await apply_delta(
+            org_id,
+            reverse_delta,
+            reason="manual_movement_delete",
+            ref_type="capital_movement",
+            ref_id=movement_id,
+            description=f"Manuel hareket silindi: {mv.get('description', '')}",
+            allow_negative=True,
+            user_id=current_user.get("user_id"),
+        )
+
+    await db.capital_movements.delete_one({"id": movement_id, "org_id": org_id})
+    return {"success": True}

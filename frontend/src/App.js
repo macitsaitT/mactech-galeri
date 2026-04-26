@@ -348,6 +348,7 @@ const AppContent = () => {
     });
 
     // Soft-delete all sale-related transactions for this car
+    // Not: Araca yapılmış normal masraflar (Boya, Bakım vb.) silinmez — araç tekrar stokta olduğunda da bu masraflar tarihinde kalır.
     const saleCategories = ['Araç Satışı', 'Çalışan Payı', 'Araç Sahibine Ödeme'];
     const relatedTxs = transactions.filter(
       t => t.car_id === car.id && saleCategories.includes(t.category) && !t.deleted
@@ -356,9 +357,17 @@ const AppContent = () => {
       await deleteTransaction(tx.id, false);
     }
 
-    // Soft-delete linked customer if exists
+    // ✅ Müşteri silinmez — başka araçlarla da ilişkili olabilir.
+    // Eğer "Satış Yapıldı" durumundaysa ve bu müşterinin başka satışı yoksa "Potansiyel"e döndür.
     if (car.customer_id) {
-      await deleteCustomer(car.customer_id, false);
+      try {
+        const otherSales = transactions.some(
+          t => t.customer_id === car.customer_id && t.car_id !== car.id && !t.deleted && t.category === 'Araç Satışı'
+        );
+        if (!otherSales) {
+          await updateCustomer(car.customer_id, { type: 'Potansiyel' });
+        }
+      } catch (e) { /* ignore */ }
     }
   };
 

@@ -225,19 +225,20 @@ const Dashboard = ({ onOpenReport }) => {
 
   // ✅ Net Kâr: SADECE satılan araçlardan elde edilen kâr.
   // İşletme giderleri (kira, maaş, fatura vb.) buraya yansımaz; kart eksiye düşmez.
-  // Formül: her satılan araç için (sale_price - alış_maliyeti - aracın_kendi_giderleri)
+  // Formül: her satılan araç için (sale_price - alış_maliyeti - aracın_kendi_giderleri - çalışan_payı)
   const netProfit = useMemo(() => {
     return filteredSoldCars.reduce((sum, car) => {
       const salePrice = Number(car.sale_price || 0);
       const purchaseCost = car.ownership === 'stock' ? Number(car.purchase_price || 0) : 0;
-      // Araca bağlı giderler — Alış (purchaseCost'ta var), Çalışan Payı / Sahibine Ödeme / Kapora İadesi hariç
+      // ✅ Çalışan Payı dahil edilir (gerçek satışla doğrudan ilişkili gider).
+      // Sadece "Araç Alımı" (purchaseCost'ta var), "Araç Sahibine Ödeme" (consignment alış maliyeti)
+      // ve "Kapora İadesi" (gelir karşı kalemi) hariç tutulur.
       const vehicleExpenses = activeTransactions
         .filter(t =>
           t.car_id === car.id &&
           t.type === 'expense' &&
           t.category !== 'Araç Alımı' &&
           t.category !== 'Araç Sahibine Ödeme' &&
-          t.category !== 'Çalışan Payı' &&
           t.category !== 'Kapora İadesi'
         )
         .reduce((s, t) => s + (t.amount || 0), 0);

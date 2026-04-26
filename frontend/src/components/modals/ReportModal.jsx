@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp } from 'lucide-react';
+import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp, Wallet } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDate, openPrintableHTML } from '../../utils/helpers';
-import { fileAPI, usersAPI } from '../../services/api';
+import { fileAPI, usersAPI, capitalAPI } from '../../services/api';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ const reportTypes = [
   { id: 'stock', label: 'Stok', icon: Package },
   { id: 'sold', label: 'Satılan', icon: Tag },
   { id: 'profitloss', label: 'Kâr/Zarar', icon: TrendingUp },
+  { id: 'capital', label: 'Sermaye', icon: Wallet },
   { id: 'deposit', label: 'Kapora', icon: Key },
   { id: 'car', label: 'Araç', icon: Car },
 ];
@@ -26,6 +27,7 @@ const reportTitles = {
   stock: 'Stok Raporu',
   sold: 'Satış Raporu',
   profitloss: 'Stok Araç Kâr/Zarar Raporu',
+  capital: 'Sermaye / Kasa Hareket Raporu',
   deposit: 'Kapora Raporu',
   car: 'Araç Raporu',
 };
@@ -209,6 +211,8 @@ const ReportModal = ({ isOpen, onClose }) => {
   const [selectedCarId, setSelectedCarId] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState('all');
   const [employees, setEmployees] = useState([]);
+  // ✅ Sermaye raporu için kasa hareketleri
+  const [capitalMovements, setCapitalMovements] = useState([]);
 
   const userRole = user?.role || 'admin';
 
@@ -217,6 +221,14 @@ const ReportModal = ({ isOpen, onClose }) => {
       usersAPI.getEmployees().then(res => setEmployees(res.data || [])).catch(() => {});
     }
   }, [isOpen, userRole]);
+
+  useEffect(() => {
+    if (isOpen && reportType === 'capital') {
+      capitalAPI.movements(500)
+        .then(res => setCapitalMovements(res.data?.movements || []))
+        .catch(() => setCapitalMovements([]));
+    }
+  }, [isOpen, reportType]);
 
   const companyName = user?.company_name || 'MACTech';
   const companyPhone = user?.phone || '05401250404';
@@ -363,6 +375,25 @@ const ReportModal = ({ isOpen, onClose }) => {
       totalProfit: acc.totalProfit + c.profit,
     }), { totalPurchase: 0, totalSale: 0, totalExpenses: 0, totalProfit: 0 });
   }, [profitLossData]);
+
+  // ✅ Sermaye raporu — tarih aralığında kalan kasa hareketleri
+  const capitalRows = useMemo(() => {
+    if (reportType !== 'capital') return [];
+    return capitalMovements.filter(m => {
+      const d = (m.created_at || '').slice(0, 10);
+      return d && d >= startDate && d <= endDate;
+    });
+  }, [capitalMovements, reportType, startDate, endDate]);
+
+  const capitalTotals = useMemo(() => {
+    let inflow = 0, outflow = 0;
+    capitalRows.forEach(m => {
+      const v = Number(m.delta || 0);
+      if (v > 0) inflow += v; else outflow += Math.abs(v);
+    });
+    const lastBalance = capitalRows.length > 0 ? Number(capitalRows[0].balance_after || 0) : 0;
+    return { inflow, outflow, net: inflow - outflow, lastBalance };
+  }, [capitalRows]);
 
   const fetchLogoAsDataUrl = () => {
     return new Promise((resolve) => {
@@ -636,6 +667,73 @@ const ReportModal = ({ isOpen, onClose }) => {
                         </tr>
                       </tfoot>
                     )}
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : reportType === 'capital' ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Kasa Girişi</p>
+                  <p className="text-sm sm:text-xl font-bold text-success">+{formatCurrency(capitalTotals.inflow)}</p>
+                </div>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Kasa Çıkışı</p>
+                  <p className="text-sm sm:text-xl font-bold text-destructive">-{formatCurrency(capitalTotals.outflow)}</p>
+                </div>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Net Akış</p>
+                  <p className={`text-sm sm:text-xl font-bold ${capitalTotals.net >= 0 ? 'text-success' : 'text-destructive'}`}>{capitalTotals.net >= 0 ? '+' : ''}{formatCurrency(capitalTotals.net)}</p>
+                </div>
+                <div className="p-2 sm:p-4 border border-border rounded-lg text-center">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mb-0.5 sm:mb-1">Son Bakiye</p>
+                  <p className="text-sm sm:text-xl font-bold">{formatCurrency(capitalTotals.lastBalance)}</p>
+                </div>
+              </div>
+
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-semibold mb-2 sm:mb-3 border-b border-border pb-2 text-sm sm:text-base flex items-center gap-2">
+                  <Wallet size={16} className="text-primary" /> Kasa Hareketleri ({capitalRows.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[600px]" data-testid="capital-table">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-2 sm:p-3 text-xs sm:text-sm font-medium text-muted-foreground">Tarih</th>
+                        <th className="text-left p-2 sm:p-3 text-xs sm:text-sm font-medium text-muted-foreground">Tür</th>
+                        <th className="text-left p-2 sm:p-3 text-xs sm:text-sm font-medium text-muted-foreground">Açıklama</th>
+                        <th className="text-right p-2 sm:p-3 text-xs sm:text-sm font-medium text-muted-foreground">Tutar</th>
+                        <th className="text-right p-2 sm:p-3 text-xs sm:text-sm font-medium text-muted-foreground">Bakiye</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {capitalRows.length === 0 ? (
+                        <tr><td colSpan={5} className="text-center p-6 text-muted-foreground text-sm">Bu tarih aralığında kasa hareketi bulunamadı.</td></tr>
+                      ) : capitalRows.map((m) => (
+                        <tr key={m.id} className="border-b border-border hover:bg-muted/30">
+                          <td className="p-2 sm:p-3 text-xs sm:text-sm">{formatDate((m.created_at || '').slice(0, 10))}</td>
+                          <td className="p-2 sm:p-3 text-xs sm:text-sm">{({
+                            manual_deposit: 'Kasa Girişi',
+                            manual_withdrawal: 'Kasa Çıkışı',
+                            manual_set: 'Bakiye Düzenleme',
+                            capital_initialize: 'İlk Kurulum',
+                            transaction_create: 'İşlem',
+                            transaction_update: 'Güncelleme',
+                            transaction_delete: 'İşlem Silme',
+                            transaction_restore: 'Geri Yükleme',
+                            employee_share_sync: 'Çalışan Payı',
+                            employee_share_create: 'Çalışan Payı',
+                            manual_movement_delete: 'Manuel Silme',
+                          }[m.reason]) || m.reason}</td>
+                          <td className="p-2 sm:p-3 text-xs sm:text-sm text-muted-foreground truncate max-w-xs">{m.description || '-'}</td>
+                          <td className={`p-2 sm:p-3 text-xs sm:text-sm text-right tabular-nums font-semibold ${m.delta >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            {m.delta >= 0 ? '+' : ''}{formatCurrency(m.delta)}
+                          </td>
+                          <td className="p-2 sm:p-3 text-xs sm:text-sm text-right tabular-nums">{formatCurrency(m.balance_after)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
                   </table>
                 </div>
               </div>

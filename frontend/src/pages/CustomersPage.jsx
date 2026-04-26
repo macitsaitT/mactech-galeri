@@ -13,7 +13,9 @@ import {
   Download,
   MessageCircle,
   CheckCircle,
-  CreditCard
+  CreditCard,
+  Check,
+  X as XIcon
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -173,11 +175,40 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, in
 };
 
 const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
-  const { customers, cars } = useApp();
+  const { customers, cars, deleteCustomer } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [exporting, setExporting] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  // ✅ Toplu seçim & silme
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const toggleSelected = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`${selectedIds.size} müşteriyi silmek istediğinize emin misiniz? (Çöp kutusuna gönderilecek)`)) return;
+    setBulkDeleting(true);
+    try {
+      for (const id of selectedIds) {
+        await deleteCustomer(id, false);
+      }
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+    } catch (e) {
+      alert('Toplu silme hatası: ' + (e?.response?.data?.detail || e.message || 'Bilinmeyen'));
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   // ✅ Vadeli satışlar - tüm müşteriler için tek seferde çek
   const [installments, setInstallments] = useState([]);
@@ -276,12 +307,15 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
         </button>
       </div>
 
-      {/* Stats + Export */}
+      {/* Stats + Bulk Actions + Export */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm flex-wrap">
           <span className="text-muted-foreground">
             Toplam: <strong className="text-foreground">{filteredCustomers.length}</strong>
           </span>
+          {selectionMode && selectedIds.size > 0 && (
+            <span className="text-primary font-semibold" data-testid="selected-count">{selectedIds.size} seçildi</span>
+          )}
           <span className="text-warning">
             Pot: {customers.filter(c => !c.deleted && c.type === 'Potansiyel').length}
           </span>
@@ -292,32 +326,61 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
             Satış: {customers.filter(c => !c.deleted && c.type === 'Satış Yapıldı').length}
           </span>
         </div>
-        <button
-          onClick={async () => {
-            setExporting(true);
-            setDownloadSuccess(false);
-            try {
-              const res = await exportAPI.customers();
-              downloadBlob(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'musteriler.docx');
-              setDownloadSuccess(true);
-              setTimeout(() => setDownloadSuccess(false), 4000);
-            } catch (e) {
-              console.error(e);
-              alert('Dosya indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
-            } finally {
-              setExporting(false);
-            }
-          }}
-          disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
-          data-testid="export-customers-btn"
-        >
-          {downloadSuccess ? (
-            <><CheckCircle size={16} className="text-success" /> İndirildi!</>
+        <div className="flex items-center gap-2 flex-wrap">
+          {!selectionMode ? (
+            <button
+              onClick={() => { setSelectionMode(true); setSelectedIds(new Set()); }}
+              className="flex items-center gap-1.5 px-3 h-10 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold hover:bg-destructive/10 transition-colors"
+              data-testid="customer-bulk-toggle-btn"
+            >
+              <Trash2 size={14} /> Toplu Sil
+            </button>
           ) : (
-            <><Download size={16} className={exporting ? 'animate-bounce' : ''} /> {exporting ? 'İndiriliyor...' : 'Word'}</>
+            <>
+              <button
+                onClick={() => { setSelectionMode(false); setSelectedIds(new Set()); }}
+                className="flex items-center gap-1.5 px-3 h-10 rounded-lg border border-border text-muted-foreground text-xs hover:bg-muted transition-colors"
+                data-testid="customer-bulk-cancel-btn"
+              >
+                <XIcon size={14} /> İptal
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedIds.size === 0 || bulkDeleting}
+                className="flex items-center gap-1.5 px-3 h-10 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold disabled:opacity-50 transition-colors"
+                data-testid="customer-bulk-delete-btn"
+              >
+                <Trash2 size={14} /> {bulkDeleting ? 'Siliniyor...' : `Sil (${selectedIds.size})`}
+              </button>
+            </>
           )}
-        </button>
+          <button
+            onClick={async () => {
+              setExporting(true);
+              setDownloadSuccess(false);
+              try {
+                const res = await exportAPI.customers();
+                downloadBlob(new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'musteriler.docx');
+                setDownloadSuccess(true);
+                setTimeout(() => setDownloadSuccess(false), 4000);
+              } catch (e) {
+                console.error(e);
+                alert('Dosya indirme hatası: ' + (e.message || 'Bilinmeyen hata'));
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+            data-testid="export-customers-btn"
+          >
+            {downloadSuccess ? (
+              <><CheckCircle size={16} className="text-success" /> İndirildi!</>
+            ) : (
+              <><Download size={16} className={exporting ? 'animate-bounce' : ''} /> {exporting ? 'İndiriliyor...' : 'Word'}</>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Grid */}
@@ -334,15 +397,27 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCustomers.map((customer) => (
-            <CustomerCard
+            <div
               key={customer.id}
-              customer={customer}
-              cars={activeCars}
-              onEdit={onEditCustomer}
-              onDelete={onDeleteCustomer}
-              onOpenInstallments={handleOpenInstallments}
-              installmentSummary={summaryByCustomer[customer.id]}
-            />
+              className={`relative ${selectionMode ? 'cursor-pointer' : ''}`}
+              onClick={selectionMode ? () => toggleSelected(customer.id) : undefined}
+            >
+              {selectionMode && (
+                <div className={`absolute top-3 left-3 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedIds.has(customer.id) ? 'bg-destructive border-destructive' : 'bg-background/80 border-border'}`}>
+                  {selectedIds.has(customer.id) && <Check size={14} className="text-destructive-foreground" />}
+                </div>
+              )}
+              <div className={selectionMode && selectedIds.has(customer.id) ? 'ring-2 ring-destructive rounded-xl' : ''}>
+                <CustomerCard
+                  customer={customer}
+                  cars={activeCars}
+                  onEdit={selectionMode ? undefined : onEditCustomer}
+                  onDelete={selectionMode ? undefined : onDeleteCustomer}
+                  onOpenInstallments={selectionMode ? undefined : handleOpenInstallments}
+                  installmentSummary={summaryByCustomer[customer.id]}
+                />
+              </div>
+            </div>
           ))}
         </div>
       )}

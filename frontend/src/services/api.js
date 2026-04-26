@@ -193,6 +193,7 @@ export const capitalAPI = {
   initialize: (startingAmount, description = '') =>
     api.post('/capital/initialize', { starting_amount: startingAmount, description }),
   movements: (limit = 100) => api.get(`/capital/movements?limit=${limit}`),
+  deleteMovement: (movementId) => api.delete(`/capital/movements/${movementId}`),
 };
 
 // ==================== INSTALLMENTS (Vadeli Satış / Borç Takibi) ====================
