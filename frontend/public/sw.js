@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mactech-crm-v4-fixed'; // VERSION UPDATED - SW cache temizlenir
+const CACHE_NAME = 'mactech-crm-v5-sale-fix'; // VERSION UPDATED - SW cache temizlenir
 const STATIC_ASSETS = [
   '/',
   '/index.html',

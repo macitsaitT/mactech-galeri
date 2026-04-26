@@ -260,9 +260,22 @@ const AppContent = () => {
       // post-success ekranını gösterir, kullanıcı oradan kendi kapatır.
     } catch (error) {
       console.error('Satış hatası:', error);
+      console.error('Response:', error?.response);
+      console.error('Response data:', error?.response?.data);
+      const status = error?.response?.status;
       const detail = error?.response?.data?.detail;
-      const msg = (detail && typeof detail === 'object' && detail.message) || detail || 'Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
-      alert(typeof msg === 'string' ? msg : 'Satış kaydedilirken bir hata oluştu.');
+      let msg;
+      if (typeof detail === 'string') {
+        msg = detail;
+      } else if (detail && typeof detail === 'object') {
+        msg = detail.message || JSON.stringify(detail);
+      } else if (error?.message) {
+        msg = error.message;
+      } else {
+        msg = 'Satış kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.';
+      }
+      const fullMsg = status ? `[HTTP ${status}] ${msg}` : msg;
+      alert(`Satış kaydedilemedi:\n\n${fullMsg}\n\nSayfayı yenilemek (Ctrl+Shift+R) genellikle bu hatayı çözer. Sorun devam ederse bu mesajı bize iletin.`);
       // ✅ Hata fırlat ki SaleModal "Satış Tamamlandı" ekranına geçmesin
       throw error;
     }
