@@ -116,3 +116,13 @@
   - Yıl Sonu Stok değeri + Manuel Kasa Giriş/Çıkış özeti
   - Tüm satılan araçlar tablosu (Tarih, Plaka, Alış, Giderler, Çalışan Payı, Satış, Kâr/Zarar) + TOPLAM footer
 - ✅ Test: Frontend 100% (9/9) PASS.
+
+### 2026-02 (Iter 35) — Production 422 bug fix + Genişletilmiş kasa silme
+- 🔴 **KRITIK BUG FIX**: `PUT /api/customers/{id}` partial update desteklemiyordu → satış akışındaki `updateCustomer({type:'Satış Yapıldı'})` çağrısı **422 'name field required'** ile patlıyordu. Backend artık sadece gönderilen alanları günceller (allowed: name, phone, type, tags, notes, interested_car_ids).
+- ✅ `DELETE /api/capital/movements/{id}` genişletildi:
+  - Manuel hareketler (`manual_*`, `capital_initialize`) → bakiye revert + sil
+  - **Transaction-bağlı** hareketler (`transaction_create/update/restore`) → ilgili tx soft-delete edilir + kasa otomatik düzeltilir (kullanıcı eski yarım kalmış satışları temizleyebilsin)
+  - Otomatik kayıtlar (`transaction_delete`, `employee_share_sync`) korunuyor (bütünlük için)
+- ✅ Frontend: CapitalDetailModal'da `DELETABLE_REASONS` genişletildi, silme sonrası `fetchData()` ile global state yenileniyor.
+- ✅ Frontend: Satış hatası alert'inde "Ctrl+Shift+R" önerisi kaldırıldı (gereksizdi).
+- ✅ Test: Backend 8/8 (100%) PASS — production satış akışı uçtan uca doğrulandı.
