@@ -75,18 +75,21 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     setBulkDeleting(true);
     setErrorMsg('');
     const ids = Array.from(selectedIds);
+
+    // ✅ Selection mode'u önce kapat (focus-trap quirk: butonun disabled olması ve toolbar'ın
+    // re-render olması Radix Dialog'da focus loss → modal unmount oluyordu).
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+
     let okCount = 0;
     let failCount = 0;
-    // Paralel ama hata olursa diğerleri devam etsin
     const results = await Promise.allSettled(
       ids.map(id => capitalAPI.deleteMovement(id))
     );
     results.forEach(r => { if (r.status === 'fulfilled') okCount++; else failCount++; });
 
     // Optimistic — silinenleri listeden çıkar
-    setMovements(prev => prev.filter(m => !selectedIds.has(m.id)));
-    setSelectedIds(new Set());
-    setSelectionMode(false);
+    setMovements(prev => prev.filter(m => !ids.includes(m.id)));
     setBulkDeleting(false);
 
     // Arka planda gerçek state'i çek (hata olsa bile)
@@ -138,7 +141,7 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
