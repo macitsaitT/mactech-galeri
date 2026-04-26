@@ -299,6 +299,12 @@ const ReportModal = ({ isOpen, onClose }) => {
       case 'business':
         filtered = filtered.filter(t => !t.car_id);
         break;
+      case 'general':
+        // ✅ Genel raporda da opsiyonel araç filtresi (boşsa tüm işlemler)
+        if (selectedCarId) {
+          filtered = filtered.filter(t => t.car_id === selectedCarId);
+        }
+        break;
       case 'car':
         if (selectedCarId) {
           filtered = filtered.filter(t => t.car_id === selectedCarId);
@@ -610,7 +616,7 @@ const ReportModal = ({ isOpen, onClose }) => {
                   return (
                     <button
                       key={type.id}
-                      onClick={() => { setReportType(type.id); if (type.id !== 'car') { setSelectedCarId(''); setPlateSearch(''); } }}
+                      onClick={() => { setReportType(type.id); if (type.id !== 'car' && type.id !== 'general') { setSelectedCarId(''); setPlateSearch(''); } }}
                       className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors flex items-center gap-1 sm:gap-1.5 ${
                         reportType === type.id
                           ? 'bg-primary text-primary-foreground'
@@ -626,7 +632,7 @@ const ReportModal = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          {reportType === 'car' && (
+          {(reportType === 'car' || reportType === 'general') && (
             <div className="flex flex-wrap items-end gap-4">
               <div>
                 <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Plaka Ara</span>
@@ -636,9 +642,11 @@ const ReportModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Araç Seç</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">
+                  {reportType === 'general' ? 'Araç Filtresi (opsiyonel)' : 'Araç Seç'}
+                </span>
                 <select value={selectedCarId} onChange={(e) => setSelectedCarId(e.target.value)} className="h-9 px-3 bg-background border border-border rounded-lg text-sm w-full" data-testid="car-select-dropdown">
-                  <option value="">-- Araç Seçiniz ({filteredCarsForDropdown.length} araç) --</option>
+                  <option value="">{reportType === 'general' ? `-- Tüm Araçlar (${filteredCarsForDropdown.length}) --` : `-- Araç Seçiniz (${filteredCarsForDropdown.length} araç) --`}</option>
                   {filteredCarsForDropdown.map((car) => (
                     <option key={car.id} value={car.id}>{car.plate?.toUpperCase()} - {car.brand} {car.model} ({car.year})</option>
                   ))}
