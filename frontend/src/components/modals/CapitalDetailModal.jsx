@@ -142,6 +142,11 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
         className="w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        onFocusOutside={(e) => {
+          // ✅ Sadece focus event'larında modal'ı kapatma. Backdrop click ve Esc hâlâ çalışır
+          // (onInteractOutside ve onEscapeKeyDown eklenmedi).
+          e.preventDefault();
+        }}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -236,21 +241,12 @@ const CashTab = ({
   selectionMode, setSelectionMode, selectedIds, toggleSelected, toggleSelectAll,
   onBulkDelete, bulkDeleting, errorMsg,
 }) => {
-  if (loading) {
-    return <div className="py-8 text-center text-sm text-muted-foreground">Yükleniyor...</div>;
-  }
-  if (!movements.length) {
-    return (
-      <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Henüz nakit hareketi yok.
-      </div>
-    );
-  }
   const allSelected = movements.length > 0 && selectedIds.size === movements.length;
+  // ✅ Early return YOK — toolbar her zaman render edilir, böylece bulk-delete-btn DOM'da kalır
+  // ve Radix Dialog focus-trap modal'ı kapatamaz (focus toolbar'ın bir parent'ında kalır).
   return (
     <div className="space-y-1.5">
-      {/* Toolbar — bütün butonlar her zaman DOM'da, conditional `hidden` ile gizleniyor.
-          Bu sayede tıklanan button DOM'dan kaybolmaz → Radix Dialog focus-trap modal'ı kapatmaz. */}
+      {/* Toolbar — bütün butonlar her zaman DOM'da, conditional `hidden` ile gizleniyor. */}
       <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
         <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <RefreshCw size={12} /> Son {movements.length} Hareket
@@ -310,7 +306,14 @@ const CashTab = ({
         </div>
       )}
 
-      {movements.map((m) => {
+      {/* Empty / Loading / List */}
+      {loading ? (
+        <div className="py-8 text-center text-sm text-muted-foreground">Yükleniyor...</div>
+      ) : movements.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          Henüz nakit hareketi yok.
+        </div>
+      ) : movements.map((m) => {
         const isSelected = selectedIds.has(m.id);
         return (
           <div
