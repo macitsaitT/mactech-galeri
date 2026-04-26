@@ -39,11 +39,13 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     try {
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#0b0b0c',
-        scale: 2,
+        scale: 3, // ✅ Yüksek çözünürlük (yaklaşık 1080×1458)
         useCORS: true,
         logging: false,
+        allowTaint: true,
       });
-      return canvas.toDataURL('image/jpeg', 0.92);
+      // ✅ PNG → kayıpsız, WhatsApp galeride canlı görsel olarak gözükür
+      return canvas.toDataURL('image/png');
     } catch (e) {
       console.error('Image generation error:', e);
       return null;
@@ -52,56 +54,80 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     }
   };
 
+  const dataUrlToFile = async (dataUrl, filename) => {
+    const blob = await (await fetch(dataUrl)).blob();
+    return new File([blob], filename, { type: 'image/png' });
+  };
+
   const handleDownload = async () => {
     const dataUrl = await generateImage();
     if (!dataUrl) return alert('Görsel oluşturulamadı.');
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = `${(car.plate || car.id || 'arac').toString().replace(/\s+/g, '_')}-paylasim.jpg`;
+    a.download = `${(car.plate || car.id || 'arac').toString().replace(/\s+/g, '_')}-paylasim.png`;
     a.click();
   };
 
+  // ✅ Sade metin — emoji yerine basit etiketler (WhatsApp/Telegram'da temiz görünür)
   const buildText = () => {
-    const lines = [
+    const items = [
       `${(car.brand || '')} ${(car.model || '')} ${(car.year || '')}`.trim(),
-      car.package_info ? `📦 ${car.package_info}` : null,
-      car.engine_type ? `⚙️ ${car.engine_type}` : null,
-      car.gear ? `🔁 ${car.gear}` : null,
-      car.fuel_type ? `⛽ ${car.fuel_type}` : null,
-      typeof car.km !== 'undefined' && car.km !== null ? `📍 ${Number(car.km).toLocaleString('tr-TR')} km` : null,
-      car.color ? `🎨 ${car.color}` : null,
-      car.sale_price ? `💰 ${formatCurrency(car.sale_price)}` : null,
-      '',
-      `${user?.company_name || 'MACTech Galeri'}`,
-      user?.phone ? `📞 ${user.phone}` : null,
+      car.package_info ? `Paket: ${car.package_info}` : null,
+      car.engine_type ? `Motor: ${car.engine_type}` : null,
+      car.gear ? `Vites: ${car.gear}` : null,
+      car.fuel_type ? `Yakıt: ${car.fuel_type}` : null,
+      typeof car.km !== 'undefined' && car.km !== null ? `KM: ${Number(car.km).toLocaleString('tr-TR')}` : null,
+      car.color ? `Renk: ${car.color}` : null,
+      car.sale_price ? `Fiyat: ${formatCurrency(car.sale_price)}` : null,
     ].filter(Boolean);
-    return lines.join('\n');
+    const head = `*${(car.brand || '')} ${(car.model || '')}*${car.year ? ` (${car.year})` : ''}`;
+    const body = items.slice(1).map(s => `• ${s}`).join('\n');
+    const foot = [
+      '',
+      `_${user?.company_name || 'MACTech Galeri'}_`,
+      user?.phone ? user.phone : null,
+    ].filter(Boolean).join('\n');
+    return `${head}\n${body}${foot}`;
   };
 
-  const handleWhatsApp = async () => {
-    // Önce görseli kullanıcıya indirt, sonra WhatsApp metni aç
-    await handleDownload();
-    const text = encodeURIComponent(buildText());
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-  };
-
-  const handleNativeShare = async () => {
+  // ✅ Tek tık: native paylaşım (mobilde WhatsApp seçilince fotoğraf "galeri görseli" olarak iletilir,
+  //    document/file olarak değil). Web Share API yoksa fallback indir + wa.me text.
+  const handleSmartShare = async () => {
     const dataUrl = await generateImage();
-    if (!dataUrl) return;
-    try {
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'arac.jpg', { type: 'image/jpeg' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: `${car.brand} ${car.model}`, text: buildText() });
-      } else {
-        // Fallback: indir
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = 'arac-paylasim.jpg';
-        a.click();
+    if (!dataUrl) return alert('Görsel oluşturulamadı.');
+
+    const file = await dataUrlToFile(dataUrl, `${(car.plate || 'arac').toString().replace(/\s+/g, '_')}.png`);
+    const text = buildText();
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `${car.brand} ${car.model}`,
+          text,
+        });
+        return;
+      } catch (e) {
+        if (e?.name === 'AbortError') return; // kullanıcı vazgeçti
+        console.warn('Native share failed, fallback to download', e);
       }
-    } catch (e) {
-      console.error('share failed', e);
+    }
+    // Fallback: indir + wa.me metnini aç
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${(car.plate || 'arac').toString().replace(/\s+/g, '_')}-paylasim.png`;
+    a.click();
+    setTimeout(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }, 600);
+  };
+
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(buildText());
+      alert('Metin kopyalandı.');
+    } catch (_) {
+      alert('Kopyalanamadı.');
     }
   };
 
@@ -117,15 +143,15 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
           </DialogTitle>
         </DialogHeader>
 
-        {/* Card preview - html2canvas ile JPG'ye çevrilecek */}
+        {/* Card preview - 1080x1458 oranında, html2canvas scale=3 ile */}
         <div className="my-3 overflow-hidden rounded-xl border border-border">
           <div
             ref={cardRef}
             className="relative w-full bg-[#0b0b0c] text-white"
-            style={{ aspectRatio: '4 / 5.4', maxWidth: 540 }}
+            style={{ aspectRatio: '1080 / 1458', maxWidth: 540, fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' }}
           >
             {/* Üst foto */}
-            <div className="relative h-[48%] w-full overflow-hidden">
+            <div className="relative h-[55%] w-full overflow-hidden">
               {photoUrl ? (
                 <img src={photoUrl} alt={car.model} className="h-full w-full object-cover" crossOrigin="anonymous" />
               ) : (
@@ -133,44 +159,58 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                   Fotoğraf yüklü değil
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/95 to-transparent" />
-              {/* Plaka badge */}
-              {car.plate && (
-                <div className="absolute left-3 top-3 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs font-bold tracking-wider">
-                  {(car.plate || '').toUpperCase()}
+              {/* Üst altın şerit + galerinizin adı */}
+              <div className="absolute inset-x-0 top-0 px-4 py-2.5 bg-gradient-to-b from-black/85 to-transparent flex items-center justify-between">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
+                  {user?.company_name || 'MACTech Galeri'}
                 </div>
-              )}
+                {car.plate && (
+                  <div className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-extrabold tracking-wider">
+                    {(car.plate || '').toUpperCase()}
+                  </div>
+                )}
+              </div>
+              {/* Alt yumuşak gradyan (başlığa geçiş) */}
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0b0b0c] to-transparent" />
             </div>
 
             {/* Başlık + özellikler */}
-            <div className="p-3.5 sm:p-4 space-y-2">
+            <div className="px-5 pt-4 pb-5 space-y-3">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-primary/80">{user?.company_name || 'MACTech Galeri'}</div>
-                <div className="mt-0.5 text-xl font-extrabold leading-tight">
+                <div className="text-2xl sm:text-[26px] font-extrabold leading-tight tracking-tight">
                   {car.brand} {car.model}
                 </div>
-                <div className="text-xs text-white/70">
-                  {[car.year, car.package_info].filter(Boolean).join(' · ')}
+                <div className="mt-0.5 text-xs text-white/70">
+                  {[car.year, car.package_info].filter(Boolean).join('  ·  ')}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-white/85">
+              {/* Özellik grid'i — emoji yerine etiket+değer satırları */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                 {car.km !== undefined && car.km !== null && (
-                  <span>📍 {Number(car.km).toLocaleString('tr-TR')} km</span>
+                  <Spec label="KM" value={`${Number(car.km).toLocaleString('tr-TR')}`} />
                 )}
-                {car.fuel_type && <span>⛽ {car.fuel_type}</span>}
-                {car.gear && <span>🔁 {car.gear}</span>}
-                {car.engine_type && <span>⚙️ {car.engine_type}</span>}
-                {car.color && <span>🎨 {car.color}</span>}
+                {car.fuel_type && <Spec label="Yakıt" value={car.fuel_type} />}
+                {car.gear && <Spec label="Vites" value={car.gear} />}
+                {car.engine_type && <Spec label="Motor" value={car.engine_type} />}
+                {car.color && <Spec label="Renk" value={car.color} />}
+                {car.year && <Spec label="Model Yılı" value={String(car.year)} />}
               </div>
 
-              {/* ✅ Hasar Durumu özet şeridi */}
+              {/* Hasar Durumu özet şeridi */}
               <ExpertiseSummaryStrip parts={car.expertise_parts || car.expertiseParts || {}} />
 
               {car.sale_price > 0 && (
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wider text-white/60">Fiyat</span>
-                  <span className="text-xl font-extrabold text-primary">{formatCurrency(car.sale_price)}</span>
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/55 font-semibold">Fiyat</span>
+                  <span className="text-2xl font-extrabold text-primary">{formatCurrency(car.sale_price)}</span>
+                </div>
+              )}
+
+              {/* Alt iletişim şeridi */}
+              {(user?.phone || user?.email) && (
+                <div className="text-[10px] text-white/55 text-center pt-1">
+                  {[user?.phone, user?.email].filter(Boolean).join('  ·  ')}
                 </div>
               )}
             </div>
@@ -181,14 +221,17 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
         <div className="space-y-2">
           <button
             type="button"
-            onClick={handleWhatsApp}
+            onClick={handleSmartShare}
             disabled={generating}
-            className="w-full h-11 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-            data-testid="share-card-whatsapp-btn"
+            className="w-full h-12 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+            data-testid="share-card-smart-btn"
           >
-            <MessageCircle size={18} />
-            WhatsApp'ta Paylaş (görseli indir + metin)
+            <Share2 size={18} />
+            {generating ? 'Hazırlanıyor...' : "Paylaş (WhatsApp / Sosyal Medya)"}
           </button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Paylaş'a basınca cihazınızın paylaşım menüsü açılır — WhatsApp seçince fotoğraf <b>galeri görseli</b> olarak gönderilir, dosya olarak değil.
+          </p>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -198,16 +241,16 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
               data-testid="share-card-download-btn"
             >
               <Download size={16} />
-              {generating ? 'Hazırlanıyor...' : 'Görseli İndir'}
+              Görseli İndir (PNG)
             </button>
             <button
               type="button"
-              onClick={handleNativeShare}
-              disabled={generating}
-              className="h-11 rounded-lg border border-border hover:bg-muted text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-              data-testid="share-card-native-btn"
+              onClick={handleCopyText}
+              className="h-11 rounded-lg border border-border hover:bg-muted text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+              data-testid="share-card-copy-text-btn"
             >
-              <Share2 size={16} /> Cihazla Paylaş
+              <MessageCircle size={16} />
+              Metni Kopyala
             </button>
           </div>
           <button
@@ -222,6 +265,14 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     </Dialog>
   );
 };
+
+// Mini özellik satırı — sade etiket + değer
+const Spec = ({ label, value }) => (
+  <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-1.5">
+    <span className="text-[10px] uppercase tracking-wider text-white/55 font-medium">{label}</span>
+    <span className="font-semibold text-white/95 truncate text-right">{value}</span>
+  </div>
+);
 
 export default ShareCardModal;
 
