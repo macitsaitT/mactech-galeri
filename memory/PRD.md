@@ -126,3 +126,12 @@
 - ✅ Frontend: CapitalDetailModal'da `DELETABLE_REASONS` genişletildi, silme sonrası `fetchData()` ile global state yenileniyor.
 - ✅ Frontend: Satış hatası alert'inde "Ctrl+Shift+R" önerisi kaldırıldı (gereksizdi).
 - ✅ Test: Backend 8/8 (100%) PASS — production satış akışı uçtan uca doğrulandı.
+
+### 2026-02 (Iter 36) — Kasa Görünümü Tam Temizlik
+- ✅ `DELETE /api/capital/movements/{id}` davranışı genişletildi: artık **HER hareket türü** silinebilir.
+  - Manuel: bakiye revert + sil
+  - TX-bağlı (`transaction_create/update/restore/delete`): tx **HARD-delete** + ilgili **TÜM** movement'lar (create + delete + employee_share_sync vb.) hard-delete → kasada hiç iz kalmaz.
+  - Otomatik kayıtlar (cleanup_revert, audit): bakiye etkilenmeden sadece sil.
+- ✅ Yeni `POST /api/capital/movements/cleanup-deleted` endpoint: **soft-delete edilmiş tüm transaction'ları** ve onlara ait tüm capital_movements kayıtlarını tek seferde temizler. Kullanıcı "İptal Edilenleri Temizle" butonu ile çağırır.
+- ✅ Frontend: CapitalDetailModal'da artık her hareketin yanında çöp kutusu butonu (DELETABLE_REASONS kaldırıldı). Eğer iptal edilmiş hareketler varsa üstte "İptal Edilenleri Temizle (N)" butonu görünür.
+- ✅ Test: Backend tx-linked silme + cleanup-deleted endpoint canlı doğrulandı (TX hard-delete, 8 movement temizlendi).

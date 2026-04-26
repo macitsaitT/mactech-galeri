@@ -42,7 +42,7 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   };
 
   const handleDeleteMovement = async (mv) => {
-    if (!window.confirm(`Bu hareketi silmek istediğinize emin misiniz?\n\n${mv.description || ''}\nTutar: ${formatCurrency(mv.delta)}`)) return;
+    if (!window.confirm(`Bu hareketi silmek istediğinize emin misiniz?\n\n${mv.description || ''}\nTutar: ${formatCurrency(mv.delta)}\n\nNot: Bir işleme bağlıysa, ilgili tüm kayıtlar (gelir/gider + kasa hareketleri) tamamen silinir.`)) return;
     try {
       await capitalAPI.deleteMovement(mv.id);
       // Local + global state'i yenile
@@ -51,6 +51,21 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
       if (typeof fetchData === 'function') await fetchData();
     } catch (e) {
       alert(e?.response?.data?.detail || 'Silinemedi');
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (!window.confirm('Tüm iptal edilmiş işlemlerin kasadaki izini temizlemek istediğinize emin misiniz?\n\nBu, soft-delete edilmiş gelir/gider kayıtlarını ve bunlara ait tüm kasa hareketlerini KALICI olarak siler. Kasa bakiyesi etkilenmez.')) return;
+    try {
+      const res = await capitalAPI.cleanupDeleted();
+      const removedTx = res?.data?.transactions_removed || 0;
+      const removedMv = res?.data?.movements_removed || 0;
+      reload();
+      if (typeof refreshCapital === 'function') await refreshCapital();
+      if (typeof fetchData === 'function') await fetchData();
+      alert(`Temizlik tamamlandı:\n${removedTx} işlem ve ${removedMv} kasa hareketi silindi.`);
+    } catch (e) {
+      alert(e?.response?.data?.detail || 'Temizlik başarısız');
     }
   };
 
@@ -134,7 +149,7 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
         {/* Tab içerik */}
         <div className="mt-4">
           {tab === 'cash' && (
-            <CashTab movements={movements} loading={loading} onDelete={handleDeleteMovement} />
+            <CashTab movements={movements} loading={loading} onDelete={handleDeleteMovement} onCleanup={handleCleanup} />
           )}
           {tab === 'inventory' && (
             <InventoryTab cars={stockCars} totalValue={vehicleValue} />
@@ -155,14 +170,13 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   );
 };
 
-const DELETABLE_REASONS = new Set([
-  // Manuel hareketler
-  'manual_deposit', 'manual_withdrawal', 'manual_set', 'capital_initialize',
-  // Transaction-bağlı hareketler (silindiğinde ilgili tx de soft-delete edilir)
-  'transaction_create', 'transaction_update', 'transaction_restore',
-]);
+// ✅ Tüm hareketler artık silinebilir (transaction-bağlı + manuel + otomatik kayıtlar dahil).
+// Backend silinen tx'in TÜM ilişkili movement kayıtlarını hard-delete eder.
 
-const CashTab = ({ movements, loading, onDelete }) => {
+const CashTab = ({ movements, loading, onDelete, onCleanup }) => {
+  const deletedTxMovements = movements.filter(m => m.reason === 'transaction_delete' || m.reason === 'cleanup_revert');
+  const hasCleanupCandidates = deletedTxMovements.length > 0;
+
   if (loading) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Yükleniyor...</div>;
   }
@@ -175,11 +189,23 @@ const CashTab = ({ movements, loading, onDelete }) => {
   }
   return (
     <div className="space-y-1.5">
-      <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
-        <RefreshCw size={12} /> Son {movements.length} Hareket
+      <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+        <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          <RefreshCw size={12} /> Son {movements.length} Hareket
+        </div>
+        {hasCleanupCandidates && onCleanup && (
+          <button
+            type="button"
+            onClick={onCleanup}
+            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 text-xs font-semibold transition-colors"
+            data-testid="cleanup-deleted-btn"
+            title="Tüm iptal edilmiş satış/işlem kayıtlarını kasa görünümünden temizle"
+          >
+            <Trash2 size={12} /> İptal Edilenleri Temizle ({deletedTxMovements.length})
+          </button>
+        )}
       </div>
       {movements.map((m) => {
-        const canDelete = DELETABLE_REASONS.has(m.reason);
         return (
           <div
             key={m.id}
@@ -207,13 +233,13 @@ const CashTab = ({ movements, loading, onDelete }) => {
                 </div>
                 <div className="text-[10px] text-muted-foreground">Bakiye: {formatCurrency(m.balance_after)}</div>
               </div>
-              {canDelete && onDelete && (
+              {onDelete && (
                 <button
                   type="button"
                   onClick={() => onDelete(m)}
                   className="w-8 h-8 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 flex items-center justify-center transition-colors"
                   data-testid={`delete-movement-${m.id}`}
-                  title="Bu manuel hareketi sil"
+                  title="Bu hareketi (ve ilişkili tüm kayıtları) sil"
                 >
                   <Trash2 size={14} />
                 </button>
