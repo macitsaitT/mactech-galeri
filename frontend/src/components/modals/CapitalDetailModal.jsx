@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Wallet, Coins, Car as CarIcon, ArrowDownCircle, ArrowUpCircle, RefreshCw, X, Trash2 } from 'lucide-react';
+import { Wallet, Coins, Car as CarIcon, ArrowDownCircle, ArrowUpCircle, RefreshCw, X, Trash2, Check, Loader2, CheckSquare, Square } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useApp } from '../../context/AppContext';
 import { capitalAPI } from '../../services/api';
@@ -30,42 +30,88 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   const [tab, setTab] = useState('cash');
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(false);
+  // ✅ Multi-select state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const cashAmount = Number(capital?.amount || 0);
 
-  const reload = () => {
+  const reload = async () => {
     setLoading(true);
-    capitalAPI.movements(200)
-      .then(res => setMovements(res.data?.movements || []))
-      .catch(() => setMovements([]))
-      .finally(() => setLoading(false));
-  };
-
-  const handleDeleteMovement = async (mv) => {
-    if (!window.confirm(`Bu hareketi silmek istediğinize emin misiniz?\n\n${mv.description || ''}\nTutar: ${formatCurrency(mv.delta)}\n\nNot: Bir işleme bağlıysa, ilgili tüm kayıtlar (gelir/gider + kasa hareketleri) tamamen silinir.`)) return;
     try {
-      await capitalAPI.deleteMovement(mv.id);
-      // Local + global state'i yenile
-      reload();
-      if (typeof refreshCapital === 'function') await refreshCapital();
-      if (typeof fetchData === 'function') await fetchData();
-    } catch (e) {
-      alert(e?.response?.data?.detail || 'Silinemedi');
+      const res = await capitalAPI.movements(500);
+      setMovements(res.data?.movements || []);
+    } catch {
+      setMovements([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCleanup = async () => {
-    if (!window.confirm('Tüm iptal edilmiş işlemlerin kasadaki izini temizlemek istediğinize emin misiniz?\n\nBu, soft-delete edilmiş gelir/gider kayıtlarını ve bunlara ait tüm kasa hareketlerini KALICI olarak siler. Kasa bakiyesi etkilenmez.')) return;
+  // ✅ Tek tek silme (legacy — selection mode dışında çağrılır)
+  const handleDeleteMovement = async (e, mv) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    setErrorMsg('');
     try {
-      const res = await capitalAPI.cleanupDeleted();
-      const removedTx = res?.data?.transactions_removed || 0;
-      const removedMv = res?.data?.movements_removed || 0;
+      await capitalAPI.deleteMovement(mv.id);
+      // Optimistic update — listeden çıkar (görsel olarak hemen kaybolsun)
+      setMovements(prev => prev.filter(m => m.id !== mv.id));
+      // Arka planda gerçek state'i çek
       reload();
-      if (typeof refreshCapital === 'function') await refreshCapital();
-      if (typeof fetchData === 'function') await fetchData();
-      alert(`Temizlik tamamlandı:\n${removedTx} işlem ve ${removedMv} kasa hareketi silindi.`);
-    } catch (e) {
-      alert(e?.response?.data?.detail || 'Temizlik başarısız');
+      if (typeof refreshCapital === 'function') refreshCapital();
+      if (typeof fetchData === 'function') fetchData();
+    } catch (err) {
+      const detail = err?.response?.data?.detail || err?.message || 'Silinemedi';
+      setErrorMsg(typeof detail === 'string' ? detail : 'Silinemedi');
+    }
+  };
+
+  // ✅ Toplu silme
+  const handleBulkDelete = async (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    setErrorMsg('');
+    const ids = Array.from(selectedIds);
+    let okCount = 0;
+    let failCount = 0;
+    // Paralel ama hata olursa diğerleri devam etsin
+    const results = await Promise.allSettled(
+      ids.map(id => capitalAPI.deleteMovement(id))
+    );
+    results.forEach(r => { if (r.status === 'fulfilled') okCount++; else failCount++; });
+
+    // Optimistic — silinenleri listeden çıkar
+    setMovements(prev => prev.filter(m => !selectedIds.has(m.id)));
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+    setBulkDeleting(false);
+
+    // Arka planda gerçek state'i çek (hata olsa bile)
+    reload();
+    if (typeof refreshCapital === 'function') refreshCapital();
+    if (typeof fetchData === 'function') fetchData();
+
+    if (failCount > 0) {
+      setErrorMsg(`${okCount} hareket silindi, ${failCount} tanesi silinemedi.`);
+    }
+  };
+
+  const toggleSelected = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === movements.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(movements.map(m => m.id)));
     }
   };
 
@@ -149,7 +195,19 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
         {/* Tab içerik */}
         <div className="mt-4">
           {tab === 'cash' && (
-            <CashTab movements={movements} loading={loading} onDelete={handleDeleteMovement} onCleanup={handleCleanup} />
+            <CashTab
+              movements={movements}
+              loading={loading}
+              onDelete={handleDeleteMovement}
+              selectionMode={selectionMode}
+              setSelectionMode={(v) => { setSelectionMode(v); setSelectedIds(new Set()); setErrorMsg(''); }}
+              selectedIds={selectedIds}
+              toggleSelected={toggleSelected}
+              toggleSelectAll={toggleSelectAll}
+              onBulkDelete={handleBulkDelete}
+              bulkDeleting={bulkDeleting}
+              errorMsg={errorMsg}
+            />
           )}
           {tab === 'inventory' && (
             <InventoryTab cars={stockCars} totalValue={vehicleValue} />
@@ -170,13 +228,11 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
   );
 };
 
-// ✅ Tüm hareketler artık silinebilir (transaction-bağlı + manuel + otomatik kayıtlar dahil).
-// Backend silinen tx'in TÜM ilişkili movement kayıtlarını hard-delete eder.
-
-const CashTab = ({ movements, loading, onDelete, onCleanup }) => {
-  const deletedTxMovements = movements.filter(m => m.reason === 'transaction_delete' || m.reason === 'cleanup_revert');
-  const hasCleanupCandidates = deletedTxMovements.length > 0;
-
+const CashTab = ({
+  movements, loading, onDelete,
+  selectionMode, setSelectionMode, selectedIds, toggleSelected, toggleSelectAll,
+  onBulkDelete, bulkDeleting, errorMsg,
+}) => {
   if (loading) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Yükleniyor...</div>;
   }
@@ -187,32 +243,88 @@ const CashTab = ({ movements, loading, onDelete, onCleanup }) => {
       </div>
     );
   }
+  const allSelected = movements.length > 0 && selectedIds.size === movements.length;
   return (
     <div className="space-y-1.5">
+      {/* Toolbar */}
       <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
         <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <RefreshCw size={12} /> Son {movements.length} Hareket
+          {selectionMode && selectedIds.size > 0 && (
+            <span className="ml-2 px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
+              {selectedIds.size} seçildi
+            </span>
+          )}
         </div>
-        {hasCleanupCandidates && onCleanup && (
-          <button
-            type="button"
-            onClick={onCleanup}
-            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive/10 text-destructive border border-destructive/30 hover:bg-destructive/20 text-xs font-semibold transition-colors"
-            data-testid="cleanup-deleted-btn"
-            title="Tüm iptal edilmiş satış/işlem kayıtlarını kasa görünümünden temizle"
-          >
-            <Trash2 size={12} /> İptal Edilenleri Temizle ({deletedTxMovements.length})
-          </button>
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {!selectionMode ? (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectionMode(true); }}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
+              data-testid="enter-selection-mode-btn"
+            >
+              <CheckSquare size={12} /> Seç
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSelectAll(); }}
+                className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
+                data-testid="toggle-select-all-btn"
+              >
+                {allSelected ? <Square size={12} /> : <CheckSquare size={12} />}
+                {allSelected ? 'Hiçbirini Seçme' : 'Tümünü Seç'}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => onBulkDelete(e)}
+                disabled={selectedIds.size === 0 || bulkDeleting}
+                className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold disabled:opacity-50 transition-colors"
+                data-testid="bulk-delete-btn"
+              >
+                {bulkDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                {bulkDeleting ? 'Siliniyor...' : `Sil (${selectedIds.size})`}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectionMode(false); }}
+                className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs hover:bg-muted transition-colors text-muted-foreground"
+                data-testid="exit-selection-mode-btn"
+              >
+                <X size={12} /> İptal
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {errorMsg && (
+        <div className="p-2.5 mb-2 rounded-lg bg-destructive/10 text-destructive text-xs" data-testid="capital-error-msg">
+          {errorMsg}
+        </div>
+      )}
+
       {movements.map((m) => {
+        const isSelected = selectedIds.has(m.id);
         return (
           <div
             key={m.id}
-            className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 p-3 text-sm"
+            onClick={selectionMode ? () => toggleSelected(m.id) : undefined}
+            className={`flex items-center justify-between gap-3 rounded-lg border p-3 text-sm transition-colors ${
+              selectionMode ? 'cursor-pointer' : ''
+            } ${isSelected ? 'border-primary bg-primary/10' : 'border-border bg-muted/20'}`}
             data-testid={`cash-movement-${m.id}`}
           >
             <div className="flex items-center gap-2 min-w-0 flex-1">
+              {selectionMode && (
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
+                  isSelected ? 'bg-primary border-primary' : 'bg-background border-border'
+                }`}>
+                  {isSelected && <Check size={12} className="text-primary-foreground" />}
+                </div>
+              )}
               {m.delta >= 0 ? (
                 <ArrowDownCircle size={16} className="text-success shrink-0" />
               ) : (
@@ -233,13 +345,13 @@ const CashTab = ({ movements, loading, onDelete, onCleanup }) => {
                 </div>
                 <div className="text-[10px] text-muted-foreground">Bakiye: {formatCurrency(m.balance_after)}</div>
               </div>
-              {onDelete && (
+              {!selectionMode && onDelete && (
                 <button
                   type="button"
-                  onClick={() => onDelete(m)}
+                  onClick={(e) => onDelete(e, m)}
                   className="w-8 h-8 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 flex items-center justify-center transition-colors"
                   data-testid={`delete-movement-${m.id}`}
-                  title="Bu hareketi (ve ilişkili tüm kayıtları) sil"
+                  title="Bu hareketi sil"
                 >
                   <Trash2 size={14} />
                 </button>

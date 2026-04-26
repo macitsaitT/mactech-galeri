@@ -30,9 +30,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('crm_token');
-      localStorage.removeItem('crm_user');
-      window.location.href = '/login';
+      // ✅ Eğer kullanıcı zaten /login'de değilse logout et.
+      // Ayrıca açık bir modal/işlem varsa kullanıcı çalışmasını kaybetmesin diye
+      // sadece auth endpoint'lerinde hard redirect yap.
+      const url = error?.config?.url || '';
+      const isAuthEndpoint = url.includes('/auth/');
+      if (isAuthEndpoint) {
+        localStorage.removeItem('crm_token');
+        localStorage.removeItem('crm_user');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }

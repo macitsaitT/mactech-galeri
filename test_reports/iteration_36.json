@@ -1,0 +1,50 @@
+{
+  "summary": "Iter 36: Frontend test of CapitalDetailModal multi-select + bulk delete in Sermaye Detay modal. 17/19 checks PASS. CRITICAL FINDINGS: (1) NO page reload happens on bulk delete or single delete — URL unchanged, framenavigated count unchanged → primary user-reported bug fixed. (2) BUT the modal itself unexpectedly CLOSES after bulk delete completes (modal disappears, returning user to dashboard). Selection-mode toolbar (Seç / Tümünü Seç / Sil(N) / İptal) all render correctly with proper data-testid. Tümünü Seç toggle works (deselect all on 2nd click). Backend deletes succeed (verified via capital decrease 3.338.900 → 3.338.830 = -70 = sum of two TEST_seed deltas). No window.confirm popup observed. No 'capital-error-msg' shown. Single-row delete via trash icon also reload-free.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CapitalDetailModal", "issue": "After successful bulk delete, the entire Sermaye Detay modal closes / unmounts (cannot find [data-testid=\"total-capital-amount\"] anymore). Spec says 'sonrasında selection mode kapanıyor ve liste güncelleniyor' — implying modal should stay open. Likely cause: Radix Dialog onOpenChange triggers when focused button (bulk-delete-btn) becomes disabled during bulkDeleting=true and then unmounts when selection mode toolbar re-renders, losing focus. Fix idea: in handleBulkDelete keep selectionMode true until after bulkDeleting flips back to false, or call a refocus on the dialog content; or move focus to enter-selection-mode-btn before re-rendering toolbar.", "selector": "[data-testid=\"total-capital-amount\"]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login → Dashboard render OK",
+    "Capital Detail modal opens via [data-testid=\"capital-amount-display\"] (NOT open-capital-modal-btn — that opens Kasa İşlemi action modal)",
+    "'Seç' button (enter-selection-mode-btn) visible on cash tab",
+    "Selection mode shows toggle-select-all-btn, bulk-delete-btn, exit-selection-mode-btn",
+    "Individual delete buttons (delete-movement-*) are HIDDEN in selection mode (count=0)",
+    "Selecting 2 rows → 'Sil (2)' label updates correctly",
+    "Tümünü Seç → 'Sil (36)' (all 36 selected); 2nd click → 'Sil (0)' (deselects)",
+    "Bulk delete: URL unchanged, NO new framenavigated event → NO page reload",
+    "Bulk delete: 2 targeted manual_deposit movements removed from DOM optimistically",
+    "Bulk delete: backend confirmed delete (capital ₺3.338.900 → ₺3.338.830, Δ=-70 = 30+40 of TEST_seed_iter36_3+4)",
+    "No 'capital-error-msg' displayed after delete",
+    "Single-row delete (delete-movement-*) also: URL same, no nav events, no reload",
+    "No window.confirm/alert popup observed (hot-fix verified)"
+  ],
+  "failed_tests": [
+    "Modal stays open after bulk delete — modal closes/unmounts post-delete",
+    "Selection mode auto-close into 'Seç' button reappearance — N/A because modal already closed; cannot verify"
+  ],
+  "test_report_links": ["/app/test_reports/iter36_capital_modal.png"],
+  "action_items": [
+    "Investigate why CapitalDetailModal unmounts after handleBulkDelete completes. Likely Radix Dialog focus-trap losing focus when bulk-delete-btn is disabled during bulkDeleting=true and toolbar re-renders. Try: (a) keep focus on dialog content via dialogContentRef.current?.focus() at end of handleBulkDelete; or (b) set selectionMode=false BEFORE awaiting Promise.allSettled so the 'Sil' button isn't the focused element when the toolbar swaps to 'Seç'; or (c) wrap state updates in flushSync to avoid intermediate dialog onOpenChange callback.",
+    "Optional: spec says 'Selection mode dışında bireysel çöp kutuları gizli' — confirmed only when selectionMode=true individual trash hidden. Working as intended."
+  ],
+  "critical_code_review_comments": [
+    "CapitalDetailModal.handleBulkDelete: Order of state updates causes dialog re-render race. When bulkDeleting flips false AND selectionMode flips false in same render, focused element (bulk-delete-btn) is removed from DOM → Radix Dialog focus management may interpret as outside-click → onOpenChange(false) → modal closes. Suggest: setBulkDeleting(false) only AFTER setSelectionMode(false) has rendered; or call requestAnimationFrame before second setState.",
+    "handleDeleteMovement: passes mv object but only uses mv.id — could simplify signature to (e, id).",
+    "Both delete handlers call reload() + refreshCapital() + fetchData() in sequence — three overlapping fetches. Consolidate to single refresh call via context to avoid race-y states.",
+    "CashTab line 314: row click handler is set even when selectionMode=true; if user accidentally clicks on the delete button area while NOT in selection mode, e.preventDefault/stopPropagation in onDelete handles it correctly. Good.",
+    "Movement row uses cursor-pointer class only when selectionMode=true — good UX hint."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "89% (17/19) — main goal (no-reload bulk delete) PASS, secondary goal (modal stays open) FAIL"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "Seeded 4 manual_deposit capital movements via POST /api/capital/adjust with descriptions TEST_seed_iter36_1..4 (₺10/₺20/₺30/₺40). Test deleted #3 and #4 via UI bulk delete; 1 deleted via single-trash. #1 may remain (cleanup not strictly needed; tiny amounts).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Critical regression test target: (1) Open Sermaye Detay via [data-testid=\"capital-amount-display\"] — NOT open-capital-modal-btn (that's the action/adjust modal). (2) Verify modal stays open AFTER bulk delete completes — currently closes. (3) Run page.on('framenavigated') listener to detect any window.location.href reload. (4) URL during testing was https://image-gallery-live.preview.emergentagent.com/login (login page is the parent route; SPA renders dashboard there since no /dashboard route). Backend delete is fully working from iter35 — no need to re-test backend.",
+  "rca_of_the_issue": "User-reported prod bug 'sayfa yenileniyor + silmiyor' is FIXED on the no-reload axis: axios 401 interceptor now restricts redirect to /auth/ endpoints only, window.confirm removed, e.preventDefault+stopPropagation on every button click, optimistic update via setMovements(prev=>prev.filter(...)). Bulk delete fires DELETEs in parallel via Promise.allSettled. NEW issue discovered: CapitalDetailModal closes itself after bulk delete completes — likely Radix Dialog focus-trap reacting to disabled button + toolbar swap. Not a page reload, but UX regression vs spec which says modal should stay open showing updated list."
+}
