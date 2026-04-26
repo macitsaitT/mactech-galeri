@@ -39,7 +39,10 @@ async def create_transaction(transaction: TransactionCreate, current_user: dict 
         "capital_applied": True,  # ✅ Bu işlem kasa bakiyesini etkiler
     })
 
-    # ✅ Önce kasa atomik kontrol/güncelleme (expense ise yeterlilik koşulu)
+    # ✅ Önce kasa atomik kontrol/güncelleme
+    # Not: allow_negative=True → kullanıcı kasayı negatife düşürse bile masraf/işlem
+    # her halükârda kaydedilir. Aksi durumda araç masrafları (boya, bakım vb.)
+    # kasada nakit yoksa kayda geçmiyordu. Kullanıcı dilerse "İlk Kurulum" ile senkronlar.
     delta = _tx_delta(transaction_doc)
     await apply_delta(
         org_id,
@@ -48,6 +51,7 @@ async def create_transaction(transaction: TransactionCreate, current_user: dict 
         ref_type="transaction",
         ref_id=transaction_id,
         description=f"{transaction_doc.get('category', '')}: {transaction_doc.get('description', '')}",
+        allow_negative=True,
         user_id=current_user["user_id"],
     )
 
@@ -85,6 +89,7 @@ async def update_transaction(transaction_id: str, updates: dict, current_user: d
             reason="transaction_update",
             ref_type="transaction", ref_id=transaction_id,
             description=f"Güncelleme: {new_doc.get('category', '')}",
+            allow_negative=True,
             user_id=current_user["user_id"],
         )
         # ✅ Uygulandıysa flag ayarla
@@ -163,6 +168,7 @@ async def restore_transaction(transaction_id: str, current_user: dict = Depends(
             reason="transaction_restore",
             ref_type="transaction", ref_id=transaction_id,
             description=f"İşlem geri yüklendi: {existing.get('category', '')}",
+            allow_negative=True,
             user_id=current_user["user_id"],
         )
 
