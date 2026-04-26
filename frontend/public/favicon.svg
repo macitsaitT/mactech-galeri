@@ -1,29 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#F4D58D" />
+      <stop offset="50%" style="stop-color:#E0B458" />
+      <stop offset="100%" style="stop-color:#B8862B" />
+    </linearGradient>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#161616" />
+      <stop offset="100%" style="stop-color:#0a0a0a" />
     </linearGradient>
   </defs>
-  
-  <!-- Background circle -->
-  <circle cx="50" cy="50" r="48" fill="#1a1a1a"/>
-  
-  <!-- Car icon -->
-  <!-- Car body -->
-  <path d="M 25 55 L 30 45 L 40 40 L 60 40 L 70 45 L 75 55 L 75 65 L 70 70 L 30 70 L 25 65 Z" 
-        fill="url(#goldGradient)" stroke="#FFD700" stroke-width="1.5"/>
-  
-  <!-- Car windows -->
-  <path d="M 33 45 L 38 42 L 47 42 L 47 50 L 33 50 Z" fill="#1a1a1a" opacity="0.7"/>
-  <path d="M 53 42 L 62 42 L 67 45 L 67 50 L 53 50 Z" fill="#1a1a1a" opacity="0.7"/>
-  
-  <!-- Wheels -->
-  <circle cx="35" cy="70" r="7" fill="#2a2a2a" stroke="#FFD700" stroke-width="2"/>
-  <circle cx="35" cy="70" r="3" fill="#FFD700"/>
-  <circle cx="65" cy="70" r="7" fill="#2a2a2a" stroke="#FFD700" stroke-width="2"/>
-  <circle cx="65" cy="70" r="3" fill="#FFD700"/>
-  
-  <!-- Headlight -->
-  <circle cx="73" cy="52" r="2" fill="#FFD700" opacity="0.8"/>
+
+  <!-- Yuvarlak köşeli siyah kare arka plan -->
+  <rect x="6" y="6" width="88" height="88" rx="18" ry="18" fill="url(#bgGradient)" stroke="#3a2c0e" stroke-width="1.5"/>
+
+  <!-- Altın M harfi (Bold, geniş tasarım) -->
+  <path d="M 22 76 L 22 24 L 34 24 L 50 56 L 66 24 L 78 24 L 78 76 L 68 76 L 68 42 L 54 70 L 46 70 L 32 42 L 32 76 Z"
+        fill="url(#goldGradient)"
+        stroke="#7a5413" stroke-width="0.8"
+        stroke-linejoin="round"/>
 </svg>
