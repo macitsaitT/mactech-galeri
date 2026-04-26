@@ -1,0 +1,46 @@
+{
+  "summary": "Iter 38 RETEST of CapitalDetailModal bulk-delete fix (3rd attempt). Primary no-reload bug STAYS FIXED (URL unchanged, 0 framenavigated events). However, the modal-stays-open bug is STILL NOT FIXED. After clicking bulk-delete-btn with 34 selected rows, the modal unmounts and the dashboard becomes visible behind. The 'all-buttons-always-in-DOM' (hidden via class) approach + setTimeout(setSelectionMode, 0) + explicit blur() did not resolve the focus-trap close. RCA below — the explicit blur() in the handler is now the trigger.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CapitalDetailModal.handleBulkDelete", "issue": "Modal still closes after bulk delete completes. New RCA: handleBulkDelete now calls e.currentTarget.blur() and document.activeElement?.blur() explicitly. blur() moves focus to <body>, which is OUTSIDE the Radix DialogContent. Radix Dialog's FocusScope detects focus has left the dialog and dispatches onOpenChange(false) → onClose() → modal unmounts. The 'all-buttons-in-DOM' fix worked (button no longer unmounts) but the explicit blur() defeats that fix. setTimeout(setSelectionMode, 0) also doesn't help because by the time the timer fires, modal is already gone.", "selector": "[data-testid=\"total-capital-amount\"]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login → Dashboard loads",
+    "Capital detail modal opens via [data-testid=capital-amount-display]",
+    "All toolbar buttons are present in DOM at all times (enter/select-all/bulk-delete/exit each count=1) — DOM-presence fix VERIFIED",
+    "'Seç' button enters selection mode; bulk-delete-btn becomes visible, enter button hidden via class",
+    "Tümünü Seç correctly labels Sil button as 'Sil (34)' for 34 rows",
+    "Bulk delete: URL unchanged before/after, 0 framenavigated events → NO PAGE RELOAD (PRIMARY GOAL STAYS FIXED across 3 iters)"
+  ],
+  "failed_tests": [
+    "Bulk delete: modal-stays-open RETEST FAIL — total-capital-amount becomes invisible after delete completes; dashboard visible behind",
+    "Selection mode auto-exit regression — N/A (modal already gone)",
+    "Single-row delete regression while modal open — N/A (modal closed before reaching this step)",
+    "Tab switch (cash↔inventory) regression — N/A (modal closed before reaching this step)",
+    "Kapat (X) close regression — N/A (modal already closed)"
+  ],
+  "test_report_links": ["/app/.screenshots/iter38_final.png"],
+  "action_items": [
+    "PRIMARY FIX: Add onInteractOutside={(e) => e.preventDefault()} AND onFocusOutside={(e) => e.preventDefault()} to <DialogContent> in CapitalDetailModal.jsx. This is the standard Radix workaround. Even with explicit blur(), the FocusScope will not close the dialog because we explicitly preventDefault on focus-outside events. Modal will then ONLY close via the onClose() that we explicitly call (Kapat button, X button, or programmatic).",
+    "SECONDARY: Remove the explicit e.currentTarget.blur() and document.activeElement?.blur() calls in handleBulkDelete — they are the current trigger. Without those blurs and with the all-in-DOM toolbar, focus stays on the (now disabled-with-Loader2) bulk-delete-btn during the await, and Radix won't close.",
+    "Optionally consolidate reload() + refreshCapital() + fetchData() trio into a single call after Promise.allSettled."
+  ],
+  "critical_code_review_comments": [
+    "CapitalDetailModal.jsx line 81-84: explicit blur() of activeElement defeats the purpose of keeping the button in DOM. Either remove the blur OR add onFocusOutside preventDefault to DialogContent.",
+    "The setTimeout(()=>setSelectionMode(false), 0) on line 97 does not help the focus problem because focus loss happens synchronously from blur(), not from a re-render.",
+    "Recommend a one-line fix on DialogContent: <DialogContent onFocusOutside={(e)=>e.preventDefault()} onInteractOutside={(e)=>e.preventDefault()} ...> — this prevents Radix focus-trap from closing on focus loss; modal becomes 'controlled-only' (closes only when our onClose runs).",
+    "Triple state refresh (reload+refreshCapital+fetchData) after every delete is redundant; pick one source of truth."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "55% (6/11) — primary no-reload PASS for 3rd straight iter; modal-stays-open RETEST FAIL for 3rd straight iter"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "Existing user already had 34 cash movements; no new seed needed.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 38 retest result: same outcome as iter 37 — bulk-delete no-reload solid, modal-stays-open broken. The 'all buttons always in DOM' approach DOES work (verified all 4 toolbar buttons present at all times via .count()). But the explicit blur() in handleBulkDelete (line 81-84) moves focus to <body>, which Radix FocusScope treats as focus-outside and closes the dialog. Two compatible fixes (apply BOTH or either): (1) Remove the explicit blur() lines — focus will remain on the now-disabled 'Siliniyor...' button which IS still inside the dialog. (2) Add onFocusOutside={(e)=>e.preventDefault()} and onInteractOutside={(e)=>e.preventDefault()} to DialogContent. Standard Radix pattern. After fix, run same playwright flow: login → click capital-amount-display → enter-selection-mode-btn → toggle-select-all-btn → bulk-delete-btn → wait 3s → assert total-capital-amount still visible. 34 movements existed at start of this run; user has fewer now after partial deletes.",
+  "rca_of_the_issue": "Even with all toolbar buttons kept in DOM (no unmount), the handler explicitly calls e.currentTarget.blur() and document.activeElement?.blur() (lines 81-84). blur() moves focus to <body>, which is outside the Radix DialogContent. Radix Dialog's FocusScope listens for focus leaving its content and dispatches onOpenChange(false), which our parent honors by calling onClose() → modal unmounts. Solutions: (a) drop the explicit blur calls; (b) add onFocusOutside/onInteractOutside preventDefault on DialogContent so Radix can no longer auto-close on focus loss."
+}

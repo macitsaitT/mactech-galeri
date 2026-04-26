@@ -76,10 +76,12 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     setErrorMsg('');
     const ids = Array.from(selectedIds);
 
-    // ✅ Selection mode'u önce kapat (focus-trap quirk: butonun disabled olması ve toolbar'ın
-    // re-render olması Radix Dialog'da focus loss → modal unmount oluyordu).
-    setSelectionMode(false);
-    setSelectedIds(new Set());
+    // ✅ Focus'u tıklanan butondan kaldır (button DOM'dan çıkacağı için
+    // Radix Dialog focus-trap modal'ı kapatmasın diye).
+    if (e?.currentTarget?.blur) e.currentTarget.blur();
+    if (typeof document !== 'undefined' && document.activeElement?.blur) {
+      document.activeElement.blur();
+    }
 
     let okCount = 0;
     let failCount = 0;
@@ -91,8 +93,13 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     // Optimistic — silinenleri listeden çıkar
     setMovements(prev => prev.filter(m => !ids.includes(m.id)));
     setBulkDeleting(false);
+    // ✅ selectionMode'u bir sonraki tick'te kapat — toolbar re-render Radix focus-trap'i tetiklemez
+    setTimeout(() => {
+      setSelectionMode(false);
+      setSelectedIds(new Set());
+    }, 0);
 
-    // Arka planda gerçek state'i çek (hata olsa bile)
+    // Arka planda gerçek state'i çek
     reload();
     if (typeof refreshCapital === 'function') refreshCapital();
     if (typeof fetchData === 'function') fetchData();
@@ -249,7 +256,8 @@ const CashTab = ({
   const allSelected = movements.length > 0 && selectedIds.size === movements.length;
   return (
     <div className="space-y-1.5">
-      {/* Toolbar */}
+      {/* Toolbar — bütün butonlar her zaman DOM'da, conditional `hidden` ile gizleniyor.
+          Bu sayede tıklanan button DOM'dan kaybolmaz → Radix Dialog focus-trap modal'ı kapatmaz. */}
       <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
         <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <RefreshCw size={12} /> Son {movements.length} Hareket
@@ -260,46 +268,41 @@ const CashTab = ({
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          {!selectionMode ? (
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectionMode(true); }}
-              className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
-              data-testid="enter-selection-mode-btn"
-            >
-              <CheckSquare size={12} /> Seç
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSelectAll(); }}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
-                data-testid="toggle-select-all-btn"
-              >
-                {allSelected ? <Square size={12} /> : <CheckSquare size={12} />}
-                {allSelected ? 'Hiçbirini Seçme' : 'Tümünü Seç'}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => onBulkDelete(e)}
-                disabled={selectedIds.size === 0 || bulkDeleting}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold disabled:opacity-50 transition-colors"
-                data-testid="bulk-delete-btn"
-              >
-                {bulkDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                {bulkDeleting ? 'Siliniyor...' : `Sil (${selectedIds.size})`}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectionMode(false); }}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs hover:bg-muted transition-colors text-muted-foreground"
-                data-testid="exit-selection-mode-btn"
-              >
-                <X size={12} /> İptal
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectionMode(true); }}
+            className={`flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors ${selectionMode ? 'hidden' : ''}`}
+            data-testid="enter-selection-mode-btn"
+          >
+            <CheckSquare size={12} /> Seç
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSelectAll(); }}
+            className={`flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors ${selectionMode ? '' : 'hidden'}`}
+            data-testid="toggle-select-all-btn"
+          >
+            {allSelected ? <Square size={12} /> : <CheckSquare size={12} />}
+            {allSelected ? 'Hiçbirini Seçme' : 'Tümünü Seç'}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => onBulkDelete(e)}
+            disabled={selectedIds.size === 0 || bulkDeleting}
+            className={`flex items-center gap-1.5 px-3 h-8 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold disabled:opacity-50 transition-colors ${selectionMode ? '' : 'hidden'}`}
+            data-testid="bulk-delete-btn"
+          >
+            {bulkDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+            {bulkDeleting ? 'Siliniyor...' : `Sil (${selectedIds.size})`}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectionMode(false); }}
+            className={`flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-xs hover:bg-muted transition-colors text-muted-foreground ${selectionMode ? '' : 'hidden'}`}
+            data-testid="exit-selection-mode-btn"
+          >
+            <X size={12} /> İptal
+          </button>
         </div>
       </div>
 
