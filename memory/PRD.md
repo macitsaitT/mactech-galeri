@@ -106,3 +106,13 @@
 - ✅ **Madde 9**: Satılan Araçlar sayfasında satış tarihi aralık filtresi (data-testid: sold-date-filter).
 - ✅ Yan fix: `/api/notifications` Mixed Content (HTTP redirect) → frontend trailing slash ile direkt çağırıyor.
 - ✅ Test sonuçları: Backend 9/9 (100%), Frontend 95% (yan-fix sonrası ~100%).
+
+### 2026-02 (Iter 34) — Yıl Sonu Kapanış Raporu
+- ✅ ReportModal'a yeni `yearend` rapor tipi eklendi (vergi/muhasebeci için yıllık özet PDF):
+  - Yıl picker (son 10 yıl, default bu yıl)
+  - 4'lü üst özet (Satılan Araç, Toplam Satış, Toplam Maliyet, Brüt Kâr)
+  - **Net İşletme Sonucu** kartı: `Brüt Kâr + İşletme Geliri − İşletme Gideri`
+  - Detay 4'lü grid (Çalışan Payı, Araç Giderleri, İşletme Gideri, İşletme Geliri)
+  - Yıl Sonu Stok değeri + Manuel Kasa Giriş/Çıkış özeti
+  - Tüm satılan araçlar tablosu (Tarih, Plaka, Alış, Giderler, Çalışan Payı, Satış, Kâr/Zarar) + TOPLAM footer
+- ✅ Test: Frontend 100% (9/9) PASS.
