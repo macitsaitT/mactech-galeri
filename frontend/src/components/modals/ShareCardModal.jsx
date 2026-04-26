@@ -4,6 +4,7 @@ import { Share2, Download, MessageCircle, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
+import { statusConfig, carParts } from '../CarExpertiseDiagram';
 
 /**
  * WhatsApp Paylaşım Kartı - araç fotoğrafı + temel özelliklerden zarif bir görsel kart üretir.
@@ -121,10 +122,10 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
           <div
             ref={cardRef}
             className="relative w-full bg-[#0b0b0c] text-white"
-            style={{ aspectRatio: '4 / 5', maxWidth: 540 }}
+            style={{ aspectRatio: '4 / 5.4', maxWidth: 540 }}
           >
             {/* Üst foto */}
-            <div className="relative h-[55%] w-full overflow-hidden">
+            <div className="relative h-[48%] w-full overflow-hidden">
               {photoUrl ? (
                 <img src={photoUrl} alt={car.model} className="h-full w-full object-cover" crossOrigin="anonymous" />
               ) : (
@@ -132,7 +133,7 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                   Fotoğraf yüklü değil
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/95 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/95 to-transparent" />
               {/* Plaka badge */}
               {car.plate && (
                 <div className="absolute left-3 top-3 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs font-bold tracking-wider">
@@ -141,11 +142,11 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
               )}
             </div>
 
-            {/* Alt detay */}
-            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 space-y-2.5">
+            {/* Başlık + özellikler */}
+            <div className="p-3.5 sm:p-4 space-y-2">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-primary/80">{user?.company_name || 'MACTech Galeri'}</div>
-                <div className="mt-0.5 text-2xl font-extrabold leading-tight">
+                <div className="mt-0.5 text-xl font-extrabold leading-tight">
                   {car.brand} {car.model}
                 </div>
                 <div className="text-xs text-white/70">
@@ -153,7 +154,7 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-white/85">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-white/85">
                 {car.km !== undefined && car.km !== null && (
                   <span>📍 {Number(car.km).toLocaleString('tr-TR')} km</span>
                 )}
@@ -162,6 +163,9 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                 {car.engine_type && <span>⚙️ {car.engine_type}</span>}
                 {car.color && <span>🎨 {car.color}</span>}
               </div>
+
+              {/* ✅ Hasar Durumu özet şeridi */}
+              <ExpertiseSummaryStrip parts={car.expertise_parts || car.expertiseParts || {}} />
 
               {car.sale_price > 0 && (
                 <div className="pt-2 border-t border-white/10 flex items-center justify-between">
@@ -220,3 +224,42 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
 };
 
 export default ShareCardModal;
+
+// ✅ Tanıtım kartı için kompakt hasar durumu şeridi
+const ExpertiseSummaryStrip = ({ parts }) => {
+  const counts = { lokal: 0, boyali: 0, degisen: 0, orijinal: 0 };
+  carParts.forEach(p => {
+    const s = parts[p.id] || 'orijinal';
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  const totalIssue = counts.lokal + counts.boyali + counts.degisen;
+
+  if (totalIssue === 0) {
+    return (
+      <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] flex items-center justify-between text-emerald-300">
+        <span className="font-semibold">EKSPERTİZ</span>
+        <span>✓ Tüm parçalar orijinal</span>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5">
+      <div className="flex items-center justify-between text-[10px] mb-1">
+        <span className="font-semibold tracking-wider text-white/80">EKSPERTİZ</span>
+        <span className="text-white/60">{carParts.length - counts.orijinal}/{carParts.length} parça</span>
+      </div>
+      <div className="flex items-center gap-2 text-[10px]">
+        {[
+          ['lokal',   counts.lokal],
+          ['boyali',  counts.boyali],
+          ['degisen', counts.degisen],
+        ].filter(([, n]) => n > 0).map(([k, n]) => (
+          <span key={k} className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: statusConfig[k].bg }} />
+            <span className="text-white/85">{statusConfig[k].name}: <b>{n}</b></span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
