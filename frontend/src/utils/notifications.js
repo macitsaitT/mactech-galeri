@@ -8,25 +8,46 @@ export const requestNotificationPermission = async () => {
   return permission === 'granted';
 };
 
-export const sendLocalNotification = (title, body, tag = 'default') => {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+export const sendLocalNotification = async (title, body, tag = 'default') => {
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  const notification = new Notification(title, {
-    body,
-    icon: '/logo-mactech.png',
-    badge: '/logo-mactech.png',
-    tag,
-    vibrate: [200, 100, 200],
-    requireInteraction: false
-  });
+    // ✅ Önce Service Worker üzerinden dene (mobil Chrome zorunlu).
+    // Bu yapılmazsa "Failed to construct 'Notification': Illegal constructor" hatası satışı/işlemi patlatıyordu.
+    if ('serviceWorker' in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg && typeof reg.showNotification === 'function') {
+          await reg.showNotification(title, {
+            body,
+            icon: '/logo-mactech.png',
+            badge: '/logo-mactech.png',
+            tag,
+            vibrate: [200, 100, 200],
+            requireInteraction: false,
+          });
+          return;
+        }
+      } catch (_) { /* SW yoksa aşağıdaki direct constructor fallback'e düş */ }
+    }
 
-  notification.onclick = () => {
-    window.focus();
-    notification.close();
-  };
-
-  // Auto close after 8 seconds
-  setTimeout(() => notification.close(), 8000);
+    // Direct constructor (sadece desktop'ta çalışır)
+    try {
+      const notification = new Notification(title, {
+        body,
+        icon: '/logo-mactech.png',
+        badge: '/logo-mactech.png',
+        tag,
+        requireInteraction: false,
+      });
+      notification.onclick = () => { window.focus(); notification.close(); };
+      setTimeout(() => notification.close(), 8000);
+    } catch (_) {
+      // Mobil cihazlarda direct constructor "Illegal constructor" verir; sessizce yut.
+    }
+  } catch (_) {
+    // Bildirim hatası asla ana akışı (satış vb.) bozmamalı.
+  }
 };
 
 // Track which notifications have been sent (to avoid duplicates)
@@ -138,28 +159,33 @@ export const checkUpcomingAppointments = (appointments) => {
 
 // Event-based notifications
 export const notifyEvent = (type, data) => {
-  const messages = {
-    car_sold: {
-      title: 'Araç Satıldı',
-      body: `${data?.brand || ''} ${data?.model || ''} ${data?.plate ? '(' + data.plate + ')' : ''} satış tamamlandı.`
-    },
-    deposit_received: {
-      title: 'Kapora Alındı',
-      body: `${data?.brand || ''} ${data?.model || ''} için kapora kaydedildi.`
-    },
-    new_appointment: {
-      title: 'Yeni Randevu',
-      body: `${data?.title || 'Randevu'} - ${data?.date || ''} ${data?.time || ''}`
-    },
-    new_customer: {
-      title: 'Yeni Müşteri',
-      body: `${data?.name || 'Müşteri'} kaydedildi.`
-    }
-  };
+  try {
+    const messages = {
+      car_sold: {
+        title: 'Araç Satıldı',
+        body: `${data?.brand || ''} ${data?.model || ''} ${data?.plate ? '(' + data.plate + ')' : ''} satış tamamlandı.`
+      },
+      deposit_received: {
+        title: 'Kapora Alındı',
+        body: `${data?.brand || ''} ${data?.model || ''} için kapora kaydedildi.`
+      },
+      new_appointment: {
+        title: 'Yeni Randevu',
+        body: `${data?.title || 'Randevu'} - ${data?.date || ''} ${data?.time || ''}`
+      },
+      new_customer: {
+        title: 'Yeni Müşteri',
+        body: `${data?.name || 'Müşteri'} kaydedildi.`
+      }
+    };
 
-  const msg = messages[type];
-  if (msg) {
-    sendLocalNotification(msg.title, msg.body, type);
+    const msg = messages[type];
+    if (msg) {
+      // sendLocalNotification artık async — Promise rejection'ı sessizce yut
+      Promise.resolve(sendLocalNotification(msg.title, msg.body, type)).catch(() => {});
+    }
+  } catch (_) {
+    // Bildirim hatası asla ana akışı bozmamalı
   }
 };
 
