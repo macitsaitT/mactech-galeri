@@ -198,12 +198,10 @@ const ReportModal = ({ isOpen, onClose }) => {
   const { user, cars, transactions } = useApp();
   const reportRef = useRef(null);
 
-  const [startDate, setStartDate] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    return d.toISOString().split('T')[0];
-  });
-  const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  // ✅ Tarih filtresi kaldırıldı — tüm zamanlar varsayılan.
+  // (Yıl Sonu raporu kendi yıl picker'ı ile bu tarihleri override eder.)
+  const [startDate, setStartDate] = useState('2000-01-01');
+  const [endDate, setEndDate] = useState(() => '2099-12-31');
   const [reportType, setReportType] = useState('general');
   const [plateSearch, setPlateSearch] = useState('');
   const [selectedCarId, setSelectedCarId] = useState('');
@@ -214,13 +212,17 @@ const ReportModal = ({ isOpen, onClose }) => {
   // ✅ Yıl Sonu Raporu için yıl seçimi (tarih aralığını otomatik ayarlar)
   const [yearendYear, setYearendYear] = useState(() => new Date().getFullYear());
 
-  // Yıl Sonu seçildiğinde startDate/endDate'i o yıla otomatik ayarla
+  // Yıl Sonu seçildiğinde startDate/endDate'i o yıla otomatik ayarla.
+  // Yıl Sonu'ndan başka tipe geçildiğinde "tüm zamanlar" varsayılanına dön.
   useEffect(() => {
     if (reportType === 'yearend') {
       setStartDate(`${yearendYear}-01-01`);
       setEndDate(`${yearendYear}-12-31`);
       // Sermaye hareketlerini de yükle (Yıl Sonu içinde gösterilecek)
       capitalAPI.movements(2000).then(res => setCapitalMovements(res.data?.movements || [])).catch(() => {});
+    } else {
+      setStartDate('2000-01-01');
+      setEndDate('2099-12-31');
     }
   }, [reportType, yearendYear]);
 
@@ -526,7 +528,9 @@ const ReportModal = ({ isOpen, onClose }) => {
 
   const doPrint = async () => {
     const logoDataUrl = await fetchLogoAsDataUrl();
-    const dateRange = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+    const dateRange = reportType === 'yearend'
+      ? `${yearendYear} Yılı`
+      : (startDate === '2000-01-01' ? 'Tüm Zamanlar' : `${formatDate(startDate)} - ${formatDate(endDate)}`);
     const empName = selectedEmployee !== 'all' ? employees.find(e => e.id === selectedEmployee)?.name : null;
     const title = empName ? `${reportTitles[reportType]} - ${empName}` : reportTitles[reportType];
     const html = buildPrintHTML({
@@ -578,14 +582,8 @@ const ReportModal = ({ isOpen, onClose }) => {
         {/* Filters */}
         <div className="space-y-2 sm:space-y-3 py-2 sm:py-3 border-b border-border">
           <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-2 sm:gap-3">
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-0.5 sm:mb-1">Tarih Aralığı</span>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-8 sm:h-9 px-1.5 sm:px-3 bg-background border border-border rounded-lg text-xs sm:text-sm flex-1 min-w-0" data-testid="report-start-date" />
-                <span className="text-muted-foreground text-xs">-</span>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-8 sm:h-9 px-1.5 sm:px-3 bg-background border border-border rounded-lg text-xs sm:text-sm flex-1 min-w-0" data-testid="report-end-date" />
-              </div>
-            </div>
+            {/* Tarih aralığı filtresi kaldırıldı (kullanıcı isteği). Tüm raporlar artık
+                tüm zamanlar üzerinden hesaplanır. Yıl Sonu raporu kendi yıl picker'ını kullanır. */}
             {(userRole === 'admin' || userRole === 'muhasebe') && employees.length > 1 && (
               <div>
                 <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">Çalışan</span>
@@ -662,7 +660,9 @@ const ReportModal = ({ isOpen, onClose }) => {
                   <span className="text-primary"> - {employees.find(e => e.id === selectedEmployee).name}</span>
                 )}
               </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">{formatDate(startDate)} - {formatDate(endDate)}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                {reportType === 'yearend' ? `${yearendYear} Yılı` : (startDate === '2000-01-01' ? 'Tüm Zamanlar' : `${formatDate(startDate)} - ${formatDate(endDate)}`)}
+              </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
               {logoPath ? (
