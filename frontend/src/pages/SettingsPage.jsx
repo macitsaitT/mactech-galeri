@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { formatPhoneInput } from '../utils/helpers';
 import { fileAPI } from '../services/api';
 import BranchesManager from '../components/settings/BranchesManager';
+import DataRecoveryPanel from '../components/settings/DataRecoveryPanel';
 import {
   Settings,
   User,
@@ -216,6 +217,9 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Profile Form */}
+      <DataRecoveryPanel />
 
       {/* Profile Form */}
       <BranchesManager />

@@ -235,6 +235,13 @@ export const branchesAPI = {
   delete: (id) => api.delete(`/branches/${id}`),
 };
 
+// ==================== DATA RECOVERY (Acil veri kurtarma) ====================
+export const recoveryAPI = {
+  status: () => api.get('/recovery/status'),
+  restoreAll: () => api.post('/recovery/restore-all-deleted'),
+  migrate: (sourceOrgId) => api.post('/recovery/migrate-orphan-data', null, { params: { source_org_id: sourceOrgId } }),
+};
+
 // ==================== USERS ====================
 export const usersAPI = {
   getAll: () => api.get('/users'),
