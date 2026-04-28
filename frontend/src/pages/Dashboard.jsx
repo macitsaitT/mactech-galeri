@@ -223,27 +223,32 @@ const Dashboard = ({ onOpenReport }) => {
   const totalExpense = filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
   const soldCount = filteredSoldCars.length;
 
-  // ✅ Net Kâr: SADECE satılan araçlardan elde edilen kâr.
-  // İşletme giderleri (kira, maaş, fatura vb.) buraya yansımaz; kart eksiye düşmez.
-  // Formül: her satılan araç için (sale_price - alış_maliyeti - aracın_kendi_giderleri - çalışan_payı)
+  // ✅ Net Kâr: Satılan araçlardan elde edilen TOPLAM net kâr (zararlar dahil).
+  // Formül: her satılan araç için (sale_price − alış_maliyeti − sahibine_ödeme − araç_giderleri − çalışan_payı)
+  // Sermaye değişimi ile uyumlu olması için zararlı satışlar da gerçek değeriyle yansır.
   const netProfit = useMemo(() => {
     return filteredSoldCars.reduce((sum, car) => {
       const salePrice = Number(car.sale_price || 0);
+      // Alış maliyeti — stock için purchase_price, consignment için "Araç Sahibine Ödeme" tx
       const purchaseCost = car.ownership === 'stock' ? Number(car.purchase_price || 0) : 0;
-      // ✅ Çalışan Payı dahil edilir (gerçek satışla doğrudan ilişkili gider).
-      // Sadece "Araç Alımı" (purchaseCost'ta var), "Araç Sahibine Ödeme" (consignment alış maliyeti)
-      // ve "Kapora İadesi" (gelir karşı kalemi) hariç tutulur.
+      const ownerPay = car.ownership === 'consignment'
+        ? activeTransactions
+            .filter(t => t.car_id === car.id && t.type === 'expense' && t.category === 'Araç Sahibine Ödeme' && !t.deleted)
+            .reduce((s, t) => s + (t.amount || 0), 0)
+        : 0;
+      // Araç bazlı diğer giderler — Alış (purchaseCost'ta), Sahibine Ödeme (ownerPay'de) ve Kapora İadesi hariç
       const vehicleExpenses = activeTransactions
         .filter(t =>
           t.car_id === car.id &&
           t.type === 'expense' &&
+          !t.deleted &&
           t.category !== 'Araç Alımı' &&
           t.category !== 'Araç Sahibine Ödeme' &&
           t.category !== 'Kapora İadesi'
         )
         .reduce((s, t) => s + (t.amount || 0), 0);
-      const profit = salePrice - purchaseCost - vehicleExpenses;
-      return sum + Math.max(0, profit); // ✅ Zararlı satış kartı eksiye düşürmesin
+      const profit = salePrice - purchaseCost - ownerPay - vehicleExpenses;
+      return sum + profit; // Zararlar da düşülür (sermaye ile uyumlu)
     }, 0);
   }, [filteredSoldCars, activeTransactions]);
 
@@ -486,7 +491,6 @@ const Dashboard = ({ onOpenReport }) => {
         <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color="success" />
         <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : undefined} />
         <StatCard title="STOK / KONSİNYE" value={`${stockCars.length} / ${consignmentCars.length}`} icon={Package} color="default" subtitle={`${depositCars.length} kapora`} />
-        <StatCard title="KASA DURUMU" value={formatCurrency(kasaDurumu)} icon={Wallet} color={kasaDurumu >= 0 ? 'warning' : 'destructive'} subtitle="Tüm zamanlar" />
       </div>
 
       {/* Charts Row 1: Bar + Pie */}

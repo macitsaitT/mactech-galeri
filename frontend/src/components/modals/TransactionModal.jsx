@@ -33,15 +33,21 @@ const transactionCategories = {
 };
 
 const TransactionModal = ({ isOpen, onClose }) => {
-  const { addTransaction } = useApp();
+  const { addTransaction, cars } = useApp();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     type: 'expense',
     category: 'Personel Maaşı',
     amount: '',
     description: '',
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    car_id: ''
   });
+
+  // ✅ Aktif (silinmemiş) araçları liste — kullanıcı dilerse araca özgü gelir/gider seçer
+  const carOptions = (cars || [])
+    .filter(c => !c.deleted)
+    .sort((a, b) => (a.plate || '').localeCompare(b.plate || ''));
 
   const handleTypeChange = (type) => {
     setFormData({
@@ -63,7 +69,7 @@ const TransactionModal = ({ isOpen, onClose }) => {
         amount: parseNumber(formData.amount),
         description: formData.description,
         date: formData.date,
-        car_id: null
+        car_id: formData.car_id || null
       });
       
       setFormData({
@@ -71,7 +77,8 @@ const TransactionModal = ({ isOpen, onClose }) => {
         category: 'Personel Maaşı',
         amount: '',
         description: '',
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        car_id: ''
       });
       onClose();
     } catch (error) {
@@ -166,6 +173,28 @@ const TransactionModal = ({ isOpen, onClose }) => {
               placeholder="İşlem açıklaması..."
               data-testid="transaction-description-input"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Araç <span className="text-xs text-muted-foreground">(opsiyonel)</span>
+            </label>
+            <select
+              value={formData.car_id}
+              onChange={(e) => setFormData({ ...formData, car_id: e.target.value })}
+              className="w-full h-12 px-3 bg-background border border-border rounded-lg outline-none focus:border-primary"
+              data-testid="transaction-car-select"
+            >
+              <option value="">— Genel İşletme (araca bağlı değil) —</option>
+              {carOptions.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.plate?.toUpperCase()} — {c.brand} {c.model} {c.year ? `(${c.year})` : ''}
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Araç seçerseniz bu gelir/gider o aracın kâr/zarar hesabına yansır.
+            </p>
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t border-border">

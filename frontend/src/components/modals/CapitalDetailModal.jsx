@@ -61,7 +61,8 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
       // Arka planda gerçek state'i çek (silent — loading state göstermez)
       reload(true);
       if (typeof refreshCapital === 'function') refreshCapital();
-      if (typeof fetchData === 'function') fetchData();
+      // ⚠️ fetchData KULLANILMAZ — App.js'te global loading overlay tetikleniyor
+      // ve modal unmount oluyor (kullanıcı "sayfa yenilendi" sanıyor).
     } catch (err) {
       const detail = err?.response?.data?.detail || err?.message || 'Silinemedi';
       setErrorMsg(typeof detail === 'string' ? detail : 'Silinemedi');
@@ -83,17 +84,13 @@ const CapitalDetailModal = ({ isOpen, onClose }) => {
     );
     results.forEach(r => { if (r.status === 'fulfilled') okCount++; else failCount++; });
 
-    // Optimistic — silinenleri listeden çıkar
     setMovements(prev => prev.filter(m => !ids.includes(m.id)));
     setBulkDeleting(false);
     setSelectedIds(new Set());
-    // ✅ selectionMode AÇIK kalıyor — bulk-delete-btn DOM'da ve focus'lu kalır,
-    // Radix Dialog focus-trap modal'ı kapatamaz. Kullanıcı dilediğinde "İptal" der.
 
-    // Arka planda gerçek state'i çek
     reload(true);
     if (typeof refreshCapital === 'function') refreshCapital();
-    if (typeof fetchData === 'function') fetchData();
+    // ⚠️ fetchData KULLANILMAZ (yukarıdaki nedenle)
 
     if (failCount > 0) {
       setErrorMsg(`${okCount} hareket silindi, ${failCount} tanesi silinemedi.`);

@@ -145,10 +145,12 @@ async def delete_transaction(transaction_id: str, permanent: bool = False, curre
 
     if permanent:
         await db.transactions.delete_one({"id": transaction_id})
+        # Permanent silmede tüm capital_movements de sil
+        await db.capital_movements.delete_many({"org_id": org_id, "ref_id": transaction_id})
     else:
         await db.transactions.update_one(
             {"id": transaction_id},
-            {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat()}},
+            {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat(), "capital_applied": False}},
         )
     return {"success": True}
 

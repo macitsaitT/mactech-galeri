@@ -135,3 +135,11 @@
 - ✅ Yeni `POST /api/capital/movements/cleanup-deleted` endpoint: **soft-delete edilmiş tüm transaction'ları** ve onlara ait tüm capital_movements kayıtlarını tek seferde temizler. Kullanıcı "İptal Edilenleri Temizle" butonu ile çağırır.
 - ✅ Frontend: CapitalDetailModal'da artık her hareketin yanında çöp kutusu butonu (DELETABLE_REASONS kaldırıldı). Eğer iptal edilmiş hareketler varsa üstte "İptal Edilenleri Temizle (N)" butonu görünür.
 - ✅ Test: Backend tx-linked silme + cleanup-deleted endpoint canlı doğrulandı (TX hard-delete, 8 movement temizlendi).
+
+### 2026-02 (Iter 42) — Finansal Doğruluk + Cascade Delete + Modal Stability
+- 🔴 **KRITIK BUG FIX**: `fetchData()` global `setLoading(true)` tetikliyordu → App.js `loading && isAuthenticated` overlay'i tüm app'i unmount ediyordu → Sermaye modal'ı silme sonrası "sayfa yenileniyor" gibi görünüyordu. Fix: `fetchData(silent=true)` parametresi eklendi, modal'lar bunu kullanıyor.
+- ✅ **Net Kâr formülü düzeltildi**: `Math.max(0, profit)` kaldırıldı (zararlı satışlar düşülür) + Konsinye için "Araç Sahibine Ödeme" alış maliyeti olarak hesaba katılır + `!t.deleted` filter eklendi.
+- ✅ **Cascade Delete (Araç → İlgili Her Şey)**: `DELETE /api/cars/{id}` artık ilgili tüm transactions'ları soft-delete eder + AKTİF tx'lerin kasa etkisini reverse eder. Permanent silmede capital_movements de hard-delete. Test: 2 tx oluşturup araç silince kasa -118K doğru revert ✅.
+- ✅ **TransactionModal'a araç seçici** (data-testid: transaction-car-select) — opsiyonel, "Genel İşletme" varsayılan. Araç seçilirse o aracın kâr/zarar hesabına yansır.
+- ✅ Dashboard'dan "Kasa Durumu" kartı kaldırıldı (gereksiz, Sermaye kartı yeterli).
+- ✅ Sermaye Detay modal'ı artık `fetchData` çağırmıyor (sadece local + `refreshCapital`) → kapanma bug'ı kesin çözüldü.

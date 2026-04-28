@@ -45,10 +45,12 @@ export const AppProvider = ({ children }) => {
   }, [theme]);
 
   // Fetch all data
-  const fetchData = useCallback(async () => {
+  // ✅ silent=true → setLoading tetiklenmez (App.js'teki global "Yükleniyor..." overlay'i çıkmaz).
+  // Bu, açık modal'lar (Sermaye, vb.) silme/işlem sonrası unmount olmasın diye kritik.
+  const fetchData = useCallback(async (silent = false) => {
     if (!isAuthenticated) return;
     
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes, ownerRes, capitalRes] = await Promise.all([
         carsAPI.getAll(),
@@ -77,7 +79,7 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [isAuthenticated]);
 

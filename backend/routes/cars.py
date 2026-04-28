@@ -179,14 +179,46 @@ async def delete_car(car_id: str, permanent: bool = False, current_user: dict = 
     existing = await db.cars.find_one({"id": car_id, "org_id": org_id})
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
+
+    # ✅ Cascade: bu araca bağlı AKTİF transaction'ların kasa etkisini geri al,
+    # sonra hem tx'leri hem de kasa hareketlerini sil. Böylece "bir yerden silince ilgili her şey silinir".
+    from capital_service import apply_delta
+    from routes.transactions import _tx_delta
+
+    related_txs = await db.transactions.find(
+        {"car_id": car_id, "org_id": org_id, "deleted": {"$ne": True}}, {"_id": 0}
+    ).to_list(10000)
+
+    for tx in related_txs:
+        if tx.get("capital_applied"):
+            reverse_delta = -_tx_delta(tx)
+            if reverse_delta != 0:
+                await apply_delta(
+                    org_id, reverse_delta,
+                    reason="cascade_delete_car",
+                    ref_type="transaction", ref_id=tx["id"],
+                    description=f"Araç silindi: {existing.get('plate', '')} - {tx.get('category', '')}",
+                    allow_negative=True,
+                    user_id=current_user.get("user_id"),
+                )
+
     if permanent:
+        # Tam temizlik: cars + transactions + capital_movements
         await db.cars.delete_one({"id": car_id})
-        await db.transactions.delete_many({"car_id": car_id, "org_id": org_id})
+        tx_ids = [t["id"] for t in related_txs]
+        if tx_ids:
+            await db.capital_movements.delete_many({"org_id": org_id, "ref_id": {"$in": tx_ids}})
+            await db.transactions.delete_many({"car_id": car_id, "org_id": org_id})
     else:
         now = datetime.now(timezone.utc).isoformat()
         await db.cars.update_one({"id": car_id}, {"$set": {"deleted": True, "deleted_at": now}})
-        await db.transactions.update_many({"car_id": car_id, "org_id": org_id}, {"$set": {"deleted": True, "deleted_at": now}})
-    return {"success": True}
+        # Soft-delete transaction'lar (kasa zaten yukarıda revert edildi)
+        await db.transactions.update_many(
+            {"car_id": car_id, "org_id": org_id},
+            {"$set": {"deleted": True, "deleted_at": now, "capital_applied": False}},
+        )
+
+    return {"success": True, "removed_transactions": len(related_txs)}
 
 
 @router.post("/cars/{car_id}/restore")
