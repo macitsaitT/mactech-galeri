@@ -80,9 +80,14 @@ const UsersPage = () => {
     if (!window.confirm(`${user.email} kullanıcısını silmek istediğinize emin misiniz?`)) return;
     try {
       await usersAPI.delete(user.id);
+      // ✅ Optimistic update — listeden hemen çıkar (UI cache'lenmesin)
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+      // Sonra arka planda gerçek state'i çek
       fetchUsers();
     } catch (err) {
       alert(err.response?.data?.detail || 'Silme hatası');
+      // Hata durumunda da listeyi yenile (real state'e dön)
+      fetchUsers();
     }
   };
 

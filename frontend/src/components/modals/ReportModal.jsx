@@ -13,8 +13,6 @@ import {
 const reportTypes = [
   { id: 'general', label: 'Genel', icon: FileText },
   { id: 'business', label: 'İşletme', icon: Building2 },
-  { id: 'stock', label: 'Stok', icon: Package },
-  { id: 'sold', label: 'Satılan', icon: Tag },
   { id: 'profitloss', label: 'Kâr/Zarar', icon: TrendingUp },
   { id: 'capital', label: 'Sermaye', icon: Wallet },
   { id: 'yearend', label: 'Yıl Sonu', icon: CalendarDays },
@@ -25,8 +23,6 @@ const reportTypes = [
 const reportTitles = {
   general: 'Finansal Durum Raporu',
   business: 'İşletme Raporu',
-  stock: 'Stok Raporu',
-  sold: 'Satış Raporu',
   profitloss: 'Stok Araç Kâr/Zarar Raporu',
   capital: 'Sermaye / Kasa Hareket Raporu',
   yearend: 'Yıl Sonu Kapanış Raporu',

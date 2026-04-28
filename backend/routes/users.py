@@ -85,10 +85,14 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         raise HTTPException(status_code=403, detail="Sadece admin kullanici ekleyebilir")
     clean_email = validate_email(user.email)
     validate_password(user.password)
-    existing = await db.users.find_one({"email": clean_email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Bu email zaten kayitli")
     org_id = current_user.get("org_id", current_user["user_id"])
+
+    # ✅ Email kontrolü org_id'ye scope'lu — multi-tenant pattern.
+    # Aynı email başka bir organizasyonda olabilir; bu org içinde unique olmalı.
+    existing = await db.users.find_one({"email": clean_email, "org_id": org_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu email bu organizasyonda zaten kayitli")
+
     user_id = str(uuid.uuid4())
     
     # Admin kullanıcısının abonelik bilgilerini al
@@ -142,11 +146,16 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
     if user_id == current_user["user_id"]:
         raise HTTPException(status_code=400, detail="Kendinizi silemezsiniz")
     org_id = current_user.get("org_id", current_user["user_id"])
+    # ✅ Önce org_id ile dene (normal akış); bulamazsa sadece id ile dene (legacy/migrated kayıtlar)
     target = await db.users.find_one({"id": user_id, "org_id": org_id})
     if not target:
-        raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
-    await db.users.delete_one({"id": user_id})
-    return {"success": True}
+        # Legacy: belki org_id alanı eski şemada yok
+        target = await db.users.find_one({"id": user_id})
+        if not target:
+            # Zaten yok — idempotent başarılı dön ki frontend listede görünmesin
+            return {"success": True, "already_deleted": True}
+    res = await db.users.delete_one({"id": user_id})
+    return {"success": True, "deleted_count": res.deleted_count}
 
 
 @router.get("/employees")
