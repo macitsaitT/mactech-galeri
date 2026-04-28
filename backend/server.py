@@ -37,6 +37,7 @@ from routes.notifications import router as notifications_router
 from routes.capital import router as capital_router
 from routes.installments import router as installments_router
 from routes.branches import router as branches_router
+from routes.data_recovery import router as recovery_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ api_router.include_router(notifications_router)
 api_router.include_router(capital_router)
 api_router.include_router(installments_router)
 api_router.include_router(branches_router)
+api_router.include_router(recovery_router)
 
 
 @api_router.get("/")
