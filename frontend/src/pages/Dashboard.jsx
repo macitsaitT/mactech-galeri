@@ -484,8 +484,8 @@ const Dashboard = ({ onOpenReport }) => {
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* Stats Grid — 5 kart, hepsi tek satırda eşit dağılım */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />
         <StatCard title="TOPLAM GİDER" value={formatCurrency(totalExpense)} icon={ArrowDownRight} color="destructive" />
         <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color="success" />
