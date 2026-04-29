@@ -73,7 +73,8 @@ const AppContent = () => {
     cars
   } = useApp();
 
-  const [activeView, setActiveView] = useState('dashboard');
+  // ✅ İlk açılışta Stok Araçlar sayfası gösterilsin (kullanıcı isteği)
+  const [activeView, setActiveView] = useState('inventory');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Notification permission + appointment check
