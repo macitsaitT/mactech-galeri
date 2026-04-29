@@ -23,6 +23,8 @@ const FinancePage = () => {
   const [filterType, setFilterType] = useState('all');
   const [dateRange, setDateRange] = useState('all');
   const [filterUser, setFilterUser] = useState('all');
+  // ✅ Plaka/araç filtresi — kullanıcı sadece o aracın gelir/giderlerini görmek istiyor
+  const [filterCarId, setFilterCarId] = useState('all');
   const [orgUsers, setOrgUsers] = useState([]);
   const [exporting, setExporting] = useState(false);
   const [editModal, setEditModal] = useState({ open: false, tx: null });
@@ -43,6 +45,15 @@ const FinancePage = () => {
     // Person filter
     if (filterUser !== 'all') {
       result = result.filter(t => t.created_by === filterUser);
+    }
+
+    // ✅ Car filter — sadece seçilen araca ait işlemler
+    if (filterCarId !== 'all') {
+      if (filterCarId === 'none') {
+        result = result.filter(t => !t.car_id); // sadece genel işletme
+      } else {
+        result = result.filter(t => t.car_id === filterCarId);
+      }
     }
 
     // Type filter
@@ -78,7 +89,7 @@ const FinancePage = () => {
     result.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return result;
-  }, [transactions, searchQuery, filterType, dateRange, filterUser]);
+  }, [transactions, searchQuery, filterType, dateRange, filterUser, filterCarId]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -184,6 +195,25 @@ const FinancePage = () => {
           <option value="today">Bugün</option>
           <option value="week">Son 7 Gün</option>
           <option value="month">Son 30 Gün</option>
+        </select>
+
+        {/* ✅ Car/Plaka Filter — kullanıcı sadece o aracın gelir/giderlerini görmek istiyor */}
+        <select
+          value={filterCarId}
+          onChange={(e) => setFilterCarId(e.target.value)}
+          className="h-12 px-4 bg-card border border-border rounded-lg focus:border-primary outline-none text-sm min-w-[180px]"
+          data-testid="finance-car-filter"
+        >
+          <option value="all">Tüm Araçlar</option>
+          <option value="none">Genel İşletme (araçsız)</option>
+          {(cars || [])
+            .filter(c => !c.deleted)
+            .sort((a, b) => (a.plate || '').localeCompare(b.plate || ''))
+            .map(c => (
+              <option key={c.id} value={c.id}>
+                {c.plate?.toUpperCase()} — {c.brand} {c.model}
+              </option>
+            ))}
         </select>
 
         {/* Person Filter (Muhasebe & Admin) */}
