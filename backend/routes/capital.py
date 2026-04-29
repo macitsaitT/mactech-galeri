@@ -134,16 +134,55 @@ async def initialize_capital(body: CapitalInitialize, current_user: dict = Depen
     }
 
 
+# Silinmiş işlemlerden gelen / silme/temizleme amacıyla atılmış movement'lar
+# raporlarda ve listelerde gösterilmemeli (kullanıcı "iz kalmasın" istiyor).
+_HIDDEN_REASONS = {
+    "transaction_delete",       # Bir tx silindiğinde bakiye revert hareketi
+    "manual_movement_delete",   # Manuel hareket silinince yazılan revert hareketi
+    "cleanup_revert",           # Tx-linked silmede yazılan revert hareketi
+    "cascade_delete_car",       # Araç silindiğinde tx revert hareketi
+}
+
+
 @router.get("/capital/movements")
-async def list_movements(limit: int = 100, current_user: dict = Depends(get_current_user)):
-    """Son kasa hareketleri (denetim)."""
+async def list_movements(
+    limit: int = 100,
+    include_hidden: bool = False,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Son kasa hareketleri.
+    Varsayılan: silinmiş tx'lere bağlı VEYA silme-amaçlı hareketler GİZLENİR
+    (kullanıcı "silinen işlem her yerden silinmeli" dedi).
+    `include_hidden=true` ile denetim için tümü görüntülenebilir.
+    """
     org_id = current_user.get("org_id", current_user["user_id"])
-    movements = (
+    raw = (
         await db.capital_movements.find({"org_id": org_id}, {"_id": 0})
         .sort("created_at", -1)
-        .to_list(max(1, min(limit, 500)))
+        .to_list(max(1, min(limit, 1000)))
     )
-    return {"movements": movements}
+    if include_hidden:
+        return {"movements": raw[:limit]}
+
+    # 1) Silme/temizlik amaçlı reason'ları çıkar
+    filtered = [m for m in raw if m.get("reason") not in _HIDDEN_REASONS]
+
+    # 2) Eğer hareket bir transaction'a bağlıysa (ref_type=transaction) ve o tx
+    #    soft-deleted veya hard-deleted ise — orijinal create hareketini de gizle.
+    tx_ids = list({m.get("ref_id") for m in filtered if m.get("ref_type") == "transaction" and m.get("ref_id")})
+    if tx_ids:
+        existing_active = await db.transactions.find(
+            {"id": {"$in": tx_ids}, "org_id": org_id, "deleted": {"$ne": True}},
+            {"_id": 0, "id": 1},
+        ).to_list(len(tx_ids))
+        active_ids = {t["id"] for t in existing_active}
+        filtered = [
+            m for m in filtered
+            if (m.get("ref_type") != "transaction") or (m.get("ref_id") in active_ids)
+        ]
+
+    return {"movements": filtered[:limit]}
 
 
 # Manuel hareketler — sadece kendisi silinir, bakiye revert edilir
