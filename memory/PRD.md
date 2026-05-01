@@ -2,11 +2,17 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.8.0
-- **Last Updated:** 2026-02-25
-- **Status:** Vadeli Satış + WhatsApp Paylaşım + Net Kâr Optimizasyon
+- **Version:** 5.9.0
+- **Last Updated:** 2026-05-01
+- **Status:** Sidebar UX + Satış Sözleşmesi PDF + White Label Ekspertiz
 
 ## Implementation Status
+
+### v5.9.0 - Sidebar UX, Sözleşme PDF ve White Label (2026-05-01)
+- [x] **Sidebar Kontrast İyileştirmesi (P0)**: Aktif sekme `bg-primary/25` + `font-semibold` + sol primary border + primary renkli ikonlar; inaktif itemlar `text-white/75 font-medium`. Background `#0a0a0a` daha koyu. Quick action butonları `bg-white/10` ile daha belirgin.
+- [x] **Sidebar Kategorizasyonu (P1)**: Menü `Operasyon`, `Finans`, `Yönetim` gruplarına ayrıldı; her grup collapsible (chevron icon). Kullanıcı tercihi `localStorage: mactech_sidebar_collapsed_groups`'da saklanıyor. Aktif view'ın grubu daima açık kalır.
+- [x] **Satış Sözleşmesi PDF (Noter Formatı) (P1)**: `SaleModal` satış tamamlandıktan sonra **"Satış Sözleşmesi PDF Oluştur"** butonu gösteriyor. `utils/salesContract.js` noter formatlı HTML üretiyor: Satıcı/Alıcı/Araç bölümleri, fiyat rakam+yazıyla (numberToTurkishWords), sözleşme hükümleri (6 madde), imza alanları. Kurumsal logo header'a embed.
+- [x] **White Label Ekspertiz PDF (P1)**: Backend `/api/export/expertise/{car_id}` artık owner user'dan `company_name` + `logo_url` çekip PDF'in ilk sayfasında antetli kağıt header'ı oluşturuyor (base64 data-URL destekli).
 
 ### v5.8.0 - Çoklu Özellik Paketi (2026-02-25)
 - [x] **Bug Fix (P0)**: Satış onaylanıp ekrandan çıkmıyordu — App.js modal kapatma çağrısı kaldırıldı, SaleModal kendi flow'unu yönetiyor (Satış Tamamlandı → WhatsApp gönder → kapat). Hata varsa `throw error` ile SaleModal başarısız ekranına geçmiyor.
