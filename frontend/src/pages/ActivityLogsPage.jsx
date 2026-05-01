@@ -104,7 +104,8 @@ const ActivityLogsPage = () => {
     }
   };
 
-  useEffect(() => { loadLogs(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [filters]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadLogs(); }, [filters]);
   useEffect(() => {
     usersAPI.getEmployees().then(r => setEmployees(r.data || [])).catch(() => {});
   }, []);

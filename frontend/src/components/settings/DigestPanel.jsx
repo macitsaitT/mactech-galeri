@@ -32,7 +32,8 @@ const DigestPanel = () => {
       setSettings(res.data);
     } catch { /* ignore */ }
   };
-  useEffect(() => { loadSettings(); /* eslint-disable-next-line */ }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadSettings(); }, []);
 
   const handleSaveSettings = async () => {
     setSaving(true);
