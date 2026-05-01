@@ -4,6 +4,7 @@ import { formatPhoneInput } from '../utils/helpers';
 import { fileAPI } from '../services/api';
 import BranchesManager from '../components/settings/BranchesManager';
 import DataRecoveryPanel from '../components/settings/DataRecoveryPanel';
+import DigestPanel from '../components/settings/DigestPanel';
 import {
   Settings,
   User,
@@ -220,6 +221,9 @@ const SettingsPage = () => {
 
       {/* Profile Form */}
       <DataRecoveryPanel />
+
+      {/* Digest Panel */}
+      <DigestPanel />
 
       {/* Profile Form */}
       <BranchesManager />

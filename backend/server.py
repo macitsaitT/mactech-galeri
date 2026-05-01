@@ -39,6 +39,7 @@ from routes.installments import router as installments_router
 from routes.branches import router as branches_router
 from routes.data_recovery import router as recovery_router
 from routes.activity_logs import router as activity_logs_router
+from routes.digest import router as digest_router, run_weekly_digest_for_all
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ api_router.include_router(installments_router)
 api_router.include_router(branches_router)
 api_router.include_router(recovery_router)
 api_router.include_router(activity_logs_router)
+api_router.include_router(digest_router)
 
 
 @api_router.get("/")
@@ -158,7 +160,33 @@ async def startup():
             })
     logger.info("Permissions migration complete")
 
+    # ✅ Haftalık digest scheduler'ı (APScheduler)
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from apscheduler.triggers.cron import CronTrigger
+
+        sched = AsyncIOScheduler(timezone=os.environ.get("DIGEST_TIMEZONE", "Europe/Istanbul"))
+        day = os.environ.get("DIGEST_SCHEDULE_DAY", "mon")[:3]
+        hour = int(os.environ.get("DIGEST_SCHEDULE_HOUR", "9"))
+        sched.add_job(
+            run_weekly_digest_for_all,
+            CronTrigger(day_of_week=day, hour=hour, minute=0),
+            id="weekly_digest",
+            replace_existing=True,
+        )
+        sched.start()
+        app.state.scheduler = sched
+        logger.info(f"Weekly digest scheduler started ({day} {hour}:00)")
+    except Exception as e:
+        logger.warning(f"Scheduler could not start: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    try:
+        sched = getattr(app.state, "scheduler", None)
+        if sched:
+            sched.shutdown(wait=False)
+    except Exception:
+        pass
     client.close()

@@ -1,0 +1,56 @@
+{
+  "summary": "Iter 44 — P2 testing for 4 backlog items: (1) Transaction CRUD activity logs, (2) ActivityLogsPage date-range filter, (3) EmployeePerformancePage monthly/yearly breakdown recharts, (4) Resend weekly digest + APScheduler Monday 9:00 TR. Backend pytest: 9/9 PASS (tx create/update/delete/permanent-delete logs with correct details.changes shape; activity-logs ?start_date/?end_date filter incl. empty-range 2000 case; /api/stats/sales-breakdown monthly=12-bucket + yearly ≤5 buckets with label/sold_count/revenue/profit; /api/digest/preview admin 200 html>2000 chars + 403 for satis; /api/digest/send-now admin 200 sent=true + 403 for satis). APScheduler startup log 'Weekly digest scheduler started (mon 9:00)' confirmed in /var/log/supervisor/backend.err.log. Frontend: ActivityLogsPage date filter inputs work (API call to /api/activity-logs?start_date&end_date verified); EmployeePerformancePage renders recharts BarChart (85 svg g elements), monthly/yearly toggle works, year-select hides on yearly. Settings DigestPanel: preview iframe now opens + send-now returns real Resend email_id (after bug fix below).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "ActivityLogsPage filter bar", "issues": ["logs-filter-clear button is conditionally rendered (only visible when at least one filter has a value). Acceptable UX, but spec said 'should appear'. Not blocking."]}
+    ]
+  },
+  "passed_tests": [
+    "POST /api/transactions → activity_logs record (action=create, entity_type=transaction, details.type/amount/car_id/customer_id)",
+    "PUT /api/transactions/{id} amount → activity_logs (action=update, details.changes.amount.old=1234.5 / new=2222.0)",
+    "DELETE /api/transactions/{id} soft → activity_logs (action=delete); ?permanent=true → (action=permanent_delete)",
+    "GET /api/activity-logs?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD → filters created_at with $gte/$lte correctly; 2000-range returns count=0",
+    "GET /api/stats/sales-breakdown?period=monthly&year=2026 → data length 12, each {label,sold_count,revenue,profit}",
+    "GET /api/stats/sales-breakdown?period=yearly → last 5 years, each {label,sold_count,revenue,profit}",
+    "GET /api/digest/preview admin → 200 with {stats, html>2000 chars}; stats has sold_count/new_car_count/price_change_count/stock_count",
+    "GET /api/digest/preview satis → 403",
+    "POST /api/digest/send-now admin → 200 {sent:true, email_id, recipient, stats}",
+    "POST /api/digest/send-now satis → 403",
+    "APScheduler startup log confirms 'Weekly digest scheduler started (mon 9:00)' + cron job registered",
+    "Frontend ActivityLogsPage: logs-filter-start/logs-filter-end inputs present; setting range triggers API call with start_date & end_date params",
+    "Frontend EmployeePerformancePage: perf-breakdown-chart + perf-period-monthly + perf-period-yearly + perf-year-select all render; recharts BarChart renders 85 svg g nodes; yearly toggle hides year-select",
+    "Frontend Settings DigestPanel: digest-panel + digest-preview-btn + digest-send-now-btn visible; preview-btn opens digest-preview-iframe; send-now returns digest-result='Gönderildi' with real Resend email_id (d6e80c8d-96a4-4cb8-bf3d-edf515210541)"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter44.py",
+    "/app/test_reports/pytest/iter44.xml"
+  ],
+  "action_items": [
+    "OPTIONAL (UX): Consider making logs-filter-clear permanently visible (disabled when no filters active) for consistency — current implementation hides it entirely when filters are empty, which is acceptable but differs from spec literal wording.",
+    "OPTIONAL: DigestPanel axios error toast 'Önizleme alınamadı' has no details (line 45). Consider logging e.response?.data?.detail to help debugging."
+  ],
+  "critical_code_review_comments": [
+    "FIXED: /app/frontend/src/components/settings/DigestPanel.jsx:15 used localStorage.getItem('token') but the app stores JWT under key 'crm_token' (set by LoginPage/AppContext/SSOCallbackPage). This caused 401 'Invalid token' for both Preview and Test Gönder in the frontend — backend was working correctly, so backend pytest passed. Fixed in-place to getItem('crm_token'). After fix, preview iframe opens correctly and send-now returns real email_id.",
+    "routes/digest.py:216 — current_user.get('role','admin') default 'admin' is a security surface: any user missing role field bypasses the 403 check. Since JWT injects role explicitly and startup migration sets role=admin for missing rows, practically safe, but defensive coding should default to a non-admin sentinel like 'satis' OR raise if role missing.",
+    "routes/digest.py:22 — SENDER_EMAIL fallback to 'onboarding@resend.dev' is fine for dev but production should fail-fast if SENDER_EMAIL env var is missing rather than silently use Resend sandbox sender.",
+    "routes/digest.py:160 — owner lookup uses {$or:[{id:org_id},{org_id, role:admin}]} which returns the first admin found; if multiple admins exist in an org only one (non-deterministic) gets the digest. Consider: fetch all admins and send digest to each, OR explicitly choose the owner (id==org_id).",
+    "routes/stats.py:167 — get_sales_breakdown uses _dt.utcnow() (naive) — consider datetime.now(timezone.utc).year for consistency; works fine now but deprecation warning in py3.12+.",
+    "routes/activity_logs.py:42 — end_date upper bound is '<= YYYY-MM-DDT23:59:59+00:00' which works because stored created_at also uses UTC offset format, but this is fragile string comparison — better: parse to datetime and use proper $lte with datetime object.",
+    "routes/transactions.py:87 — update_transaction accepts arbitrary dict (no Pydantic model), so clients can set forbidden fields like capital_applied, org_id, user_id. Consider an UpdatableFields pydantic model or whitelist."
+  ],
+  "updated_files": [
+    "/app/frontend/src/components/settings/DigestPanel.jsx (one-line token key fix: 'token' → 'crm_token')",
+    "/app/backend/tests/test_iter44.py (new)"
+  ],
+  "success_rate": {"backend": "100% (9/9 pytest)", "frontend": "100% (after DigestPanel localStorage key fix)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "One ephemeral TEST satis user created+torn-down inside pytest fixture for 403 tests. One transaction created+permanently-deleted during tx log tests. Activity logs persisted (audit trail by design).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 44 backlog fully validated. Reusable regression file: /app/backend/tests/test_iter44.py (export REACT_APP_BACKEND_URL before running). Note: login endpoint returns 'token' not 'access_token' — fixtures should accept either. The DigestPanel localStorage key bug was fixed in this iter. Scheduler runs on Monday 09:00 Europe/Istanbul cron; verified by startup log only (real 7-day wait not testable).",
+  "rca_of_the_issue": "Frontend DigestPanel used wrong localStorage key 'token' instead of app-wide 'crm_token'. Repro: login as admin → Settings → click Önizleme or Test Gönder → 401 'Invalid token' rendered in digest-result block. Fix: single-char replace 'token' → 'crm_token' at DigestPanel.jsx:15. Verified post-fix: preview iframe opens and send-now returns Resend email_id."
+}
