@@ -40,6 +40,7 @@ from routes.branches import router as branches_router
 from routes.data_recovery import router as recovery_router
 from routes.activity_logs import router as activity_logs_router
 from routes.digest import router as digest_router, run_weekly_digest_for_all
+from routes.wanted_cars import router as wanted_cars_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,6 +78,7 @@ api_router.include_router(branches_router)
 api_router.include_router(recovery_router)
 api_router.include_router(activity_logs_router)
 api_router.include_router(digest_router)
+api_router.include_router(wanted_cars_router)
 
 
 @api_router.get("/")
@@ -160,23 +162,22 @@ async def startup():
             })
     logger.info("Permissions migration complete")
 
-    # ✅ Haftalık digest scheduler'ı (APScheduler)
+    # ✅ Digest scheduler — saatlik tick, kullanıcı başına day/hour kontrolü digest.py içinde
     try:
         from apscheduler.schedulers.asyncio import AsyncIOScheduler
         from apscheduler.triggers.cron import CronTrigger
 
         sched = AsyncIOScheduler(timezone=os.environ.get("DIGEST_TIMEZONE", "Europe/Istanbul"))
-        day = os.environ.get("DIGEST_SCHEDULE_DAY", "mon")[:3]
-        hour = int(os.environ.get("DIGEST_SCHEDULE_HOUR", "9"))
+        # Her saat başı tetikle; run_weekly_digest_for_all her org için kayıtlı day/hour ile karşılaştırır
         sched.add_job(
             run_weekly_digest_for_all,
-            CronTrigger(day_of_week=day, hour=hour, minute=0),
-            id="weekly_digest",
+            CronTrigger(minute=0),
+            id="digest_hourly_tick",
             replace_existing=True,
         )
         sched.start()
         app.state.scheduler = sched
-        logger.info(f"Weekly digest scheduler started ({day} {hour}:00)")
+        logger.info("Digest scheduler started (hourly tick, per-org day/hour)")
     except Exception as e:
         logger.warning(f"Scheduler could not start: {e}")
 

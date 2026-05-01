@@ -26,6 +26,9 @@ import YearEndTransferPage from './pages/YearEndTransferPage';
 import CalculationsPage from './pages/CalculationsPage';
 import ActivityLogsPage from './pages/ActivityLogsPage';
 import EmployeePerformancePage from './pages/EmployeePerformancePage';
+import WantedCarsPage from './pages/WantedCarsPage';
+import ReceivablesPage from './pages/ReceivablesPage';
+import StockAgingPage from './pages/StockAgingPage';
 
 // Modals
 import AddCarModal from './components/modals/AddCarModal';
@@ -55,6 +58,9 @@ const getViewTitle = (view) => {
     case 'year-end': return 'Yıl Sonu Devri';
     case 'activity-logs': return 'İşlem Geçmişi';
     case 'employee-performance': return 'Personel Performansı';
+    case 'wanted-cars': return 'Aranan Araçlar';
+    case 'receivables': return 'Alacaklar';
+    case 'stock-aging': return 'Stok Yaşlanma';
     default: return 'Dashboard';
   }
 };
@@ -465,6 +471,9 @@ const AppContent = () => {
           {activeView === 'year-end' && <YearEndTransferPage />}
           {activeView === 'activity-logs' && <ActivityLogsPage />}
           {activeView === 'employee-performance' && <EmployeePerformancePage />}
+          {activeView === 'wanted-cars' && <WantedCarsPage />}
+          {activeView === 'receivables' && <ReceivablesPage />}
+          {activeView === 'stock-aging' && <StockAgingPage />}
           {activeView === 'calculations' && <CalculationsPage />}
         </main>
       </div>

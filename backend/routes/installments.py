@@ -149,3 +149,92 @@ async def _enrich(installment_id: str, org_id: str, base: Optional[dict] = None)
         "is_settled": remaining <= 0,
     })
     return inst
+
+
+
+@router.get("/installments/overdue/list")
+async def get_overdue_installments(current_user: dict = Depends(get_current_user)):
+    """Vadesi geçen / yaklaşan alacaklar tablosu.
+
+    Her vadeli satış için: beklenen ödenmiş taksit sayısı vs. gerçek,
+    eksik taksit adedi, gecikmiş gün sayısı, kalan tutar.
+    """
+    from datetime import date as _date
+
+    org_id = current_user.get("org_id", current_user["user_id"])
+    items = await db.installments.find(
+        {"org_id": org_id, "deleted": {"$ne": True}}, {"_id": 0}
+    ).to_list(1000)
+
+    today = _date.today()
+    rows: List[dict] = []
+    totals = {"overdue_count": 0, "overdue_amount": 0.0, "upcoming_count": 0, "total_remaining": 0.0}
+
+    for inst in items:
+        enriched = await _enrich(inst["id"], org_id, base=inst)
+        if enriched.get("is_settled"):
+            continue
+        remaining = float(enriched.get("remaining_amount", 0) or 0)
+        term_count = int(inst.get("term_count", 1) or 1)
+        # Taksit tutarı (peşinat hariç, toplam / term_count)
+        total = float(inst.get("total_amount", 0) or 0)
+        down = float(inst.get("down_payment", 0) or 0)
+        per_term = max(0.0, (total - down) / term_count) if term_count else 0
+
+        start = inst.get("start_date") or ""
+        try:
+            start_date = datetime.strptime(start, "%Y-%m-%d").date()
+        except Exception:
+            continue
+
+        months_passed = max(0, (today.year - start_date.year) * 12 + (today.month - start_date.month) + (1 if today.day >= start_date.day else 0))
+        expected_paid = min(term_count, months_passed) * per_term
+        actual_paid = float(enriched.get("paid_amount", 0) or 0)
+        overdue_amount = max(0.0, expected_paid - actual_paid)
+
+        # Gecikmiş gün sayısı = expected'dan ne kadar geç
+        days_overdue = 0
+        if overdue_amount > 0 and per_term > 0:
+            missed_terms = int(overdue_amount // per_term) + (1 if overdue_amount % per_term > 0.01 else 0)
+            if missed_terms >= 1:
+                # İlk eksik taksit tarihi
+                first_missed_month = months_passed - missed_terms + 1
+                try:
+                    due_year = start_date.year + ((start_date.month - 1 + first_missed_month - 1) // 12)
+                    due_month = ((start_date.month - 1 + first_missed_month - 1) % 12) + 1
+                    due_day = min(start_date.day, 28)
+                    due_date = _date(due_year, due_month, due_day)
+                    days_overdue = max(0, (today - due_date).days)
+                except Exception:
+                    days_overdue = 0
+
+        is_overdue = overdue_amount > 0
+        rows.append({
+            "installment_id": inst["id"],
+            "customer_id": inst.get("customer_id"),
+            "customer_name": inst.get("customer_name", ""),
+            "car_id": inst.get("car_id"),
+            "total_amount": total,
+            "down_payment": down,
+            "per_term_amount": round(per_term, 2),
+            "term_count": term_count,
+            "paid_amount": actual_paid,
+            "expected_paid": round(expected_paid, 2),
+            "overdue_amount": round(overdue_amount, 2),
+            "remaining_amount": remaining,
+            "days_overdue": days_overdue,
+            "is_overdue": is_overdue,
+            "start_date": start,
+        })
+        if is_overdue:
+            totals["overdue_count"] += 1
+            totals["overdue_amount"] += overdue_amount
+        else:
+            totals["upcoming_count"] += 1
+        totals["total_remaining"] += remaining
+
+    # Gecikmişleri öne al, sonra gecikme süresine göre azalan
+    rows.sort(key=lambda r: (not r["is_overdue"], -r["days_overdue"], -r["overdue_amount"]))
+    totals["overdue_amount"] = round(totals["overdue_amount"], 2)
+    totals["total_remaining"] = round(totals["total_remaining"], 2)
+    return {"rows": rows, "totals": totals}

@@ -194,7 +194,29 @@ export const statsAPI = {
   salesBreakdown: (period = 'monthly', year) => api.get('/stats/sales-breakdown', {
     params: year ? { period, year } : { period },
   }),
+  stockAging: () => api.get('/stats/stock-aging'),
 };
+
+// ==================== DIGEST (Haftalık Özet E-Maili) ====================
+export const digestAPI = {
+  settings: () => api.get('/digest/settings'),
+  saveSettings: (data) => api.put('/digest/settings', data),
+  preview: () => api.get('/digest/preview'),
+  sendNow: () => api.post('/digest/send-now'),
+};
+
+// ==================== WANTED CARS (Talep Eşleştirme) ====================
+export const wantedCarsAPI = {
+  list: (params = {}) => api.get('/wanted-cars', { params }),
+  create: (data) => api.post('/wanted-cars', data),
+  update: (id, data) => api.put(`/wanted-cars/${id}`, data),
+  delete: (id) => api.delete(`/wanted-cars/${id}`),
+  matches: (id) => api.get(`/wanted-cars/${id}/matches`),
+  matchesForCar: (carId) => api.get(`/wanted-cars/matches-for-car/${carId}`),
+};
+
+// ==================== INSTALLMENTS OVERDUE (Alacaklar) ====================
+// (installmentsAPI already exists below — extend)
 
 // ==================== ACTIVITY LOGS (İşlem Geçmişi) ====================
 export const activityLogsAPI = {
@@ -235,6 +257,7 @@ export const installmentsAPI = {
       car_id: carId,
       installment_id: installmentId,
     }),
+  overdue: () => api.get('/installments/overdue/list'),
 };
 
 // ==================== BRANCHES (Şubeler / Çoklu Galeri) ====================

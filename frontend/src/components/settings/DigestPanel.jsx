@@ -1,19 +1,54 @@
-import React, { useState } from 'react';
-import { Mail, Send, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Send, Eye, CheckCircle2, AlertCircle, Clock, Save } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-// Haftalık özet e-maili paneli — manuel test & preview
+const DAYS = [
+  { val: 'mon', label: 'Pazartesi' },
+  { val: 'tue', label: 'Salı' },
+  { val: 'wed', label: 'Çarşamba' },
+  { val: 'thu', label: 'Perşembe' },
+  { val: 'fri', label: 'Cuma' },
+  { val: 'sat', label: 'Cumartesi' },
+  { val: 'sun', label: 'Pazar' },
+];
+
 const DigestPanel = () => {
   const [sending, setSending] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [settings, setSettings] = useState({ enabled: true, day: 'mon', hour: 9, recipient: '', timezone: 'Europe/Istanbul' });
+  const [saving, setSaving] = useState(false);
 
   const token = localStorage.getItem('crm_token');
   const headers = { Authorization: `Bearer ${token}` };
+
+  const loadSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/api/digest/settings`, { headers });
+      setSettings(res.data);
+    } catch { /* ignore */ }
+  };
+  useEffect(() => { loadSettings(); /* eslint-disable-next-line */ }, []);
+
+  const handleSaveSettings = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/api/digest/settings`, {
+        enabled: settings.enabled,
+        day: settings.day,
+        hour: Number(settings.hour),
+      }, { headers });
+      toast.success('Zamanlama ayarları kaydedildi');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Kaydedilemedi');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSendNow = async () => {
     if (!window.confirm('Haftalık özet maili şimdi kayıtlı e-posta adresinize gönderilsin mi?')) return;
@@ -41,41 +76,94 @@ const DigestPanel = () => {
       const res = await axios.get(`${API}/api/digest/preview`, { headers });
       setPreviewHtml(res.data?.html || '');
       setPreviewOpen(true);
-    } catch {
-      toast.error('Önizleme alınamadı');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Önizleme alınamadı');
     }
   };
 
+  const dayLabel = DAYS.find(d => d.val === settings.day)?.label || settings.day;
+
   return (
-    <div className="bg-card border border-border rounded-xl p-5 space-y-4" data-testid="digest-panel">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
+    <div className="bg-card border border-border rounded-xl p-5 space-y-5" data-testid="digest-panel">
+      <div>
+        <h3 className="font-semibold flex items-center gap-2">
+          <Mail size={18} className="text-primary" />
+          Haftalık Özet E-Maili
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Otomatik olarak <strong>{dayLabel} saat {String(settings.hour).padStart(2, '0')}:00</strong> ({settings.timezone}) da {settings.recipient || '—'} adresine son 7 günün özetini gönderir.
+        </p>
+      </div>
+
+      {/* Zamanlama Ayarları */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 bg-muted/30 rounded-lg">
+        <label className="flex items-center gap-2 text-sm cursor-pointer col-span-1 sm:col-span-4">
+          <input
+            type="checkbox"
+            checked={settings.enabled}
+            onChange={(e) => setSettings(s => ({ ...s, enabled: e.target.checked }))}
+            className="w-4 h-4 accent-primary"
+            data-testid="digest-enabled-toggle"
+          />
+          <span className="font-medium">
+            Otomatik haftalık özet gönderimi {settings.enabled ? 'açık' : 'kapalı'}
+          </span>
+        </label>
         <div>
-          <h3 className="font-semibold flex items-center gap-2">
-            <Mail size={18} className="text-primary" />
-            Haftalık Özet E-Maili
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Her Pazartesi sabah 09:00'da (Türkiye saati) otomatik olarak kayıtlı admin e-postasına
-            son 7 günün özetini gönderir. Aşağıdan manuel olarak test gönderebilir veya önizleyebilirsiniz.
-          </p>
+          <label className="block text-[11px] text-muted-foreground mb-1 uppercase tracking-wider">Gün</label>
+          <select
+            value={settings.day}
+            onChange={(e) => setSettings(s => ({ ...s, day: e.target.value }))}
+            disabled={!settings.enabled}
+            className="w-full h-9 px-3 bg-background border border-border rounded-lg text-sm disabled:opacity-50"
+            data-testid="digest-day-select"
+          >
+            {DAYS.map(d => <option key={d.val} value={d.val}>{d.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] text-muted-foreground mb-1 uppercase tracking-wider">Saat</label>
+          <select
+            value={settings.hour}
+            onChange={(e) => setSettings(s => ({ ...s, hour: Number(e.target.value) }))}
+            disabled={!settings.enabled}
+            className="w-full h-9 px-3 bg-background border border-border rounded-lg text-sm disabled:opacity-50"
+            data-testid="digest-hour-select"
+          >
+            {Array.from({ length: 24 }, (_, i) => i).map(h => (
+              <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+            ))}
+          </select>
+        </div>
+        <div className="sm:col-span-2 flex items-end">
+          <button
+            onClick={handleSaveSettings}
+            disabled={saving}
+            className="h-9 w-full sm:w-auto px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-60"
+            data-testid="digest-save-settings-btn"
+          >
+            <Save size={14} /> {saving ? 'Kaydediliyor…' : 'Ayarları Kaydet'}
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-center">
+        <Clock size={14} className="text-muted-foreground" />
+        <span className="text-xs text-muted-foreground mr-1">Manuel test:</span>
         <button
           onClick={handlePreview}
-          className="h-10 px-4 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          className="h-9 px-3 bg-muted hover:bg-muted/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
           data-testid="digest-preview-btn"
         >
-          <Eye size={16} /> Önizleme
+          <Eye size={14} /> Önizleme
         </button>
         <button
           onClick={handleSendNow}
           disabled={sending}
-          className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-60"
+          className="h-9 px-3 bg-success/90 hover:bg-success text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
           data-testid="digest-send-now-btn"
         >
-          <Send size={16} /> {sending ? 'Gönderiliyor…' : 'Test Gönder'}
+          <Send size={14} /> {sending ? 'Gönderiliyor…' : 'Şimdi Gönder'}
         </button>
       </div>
 

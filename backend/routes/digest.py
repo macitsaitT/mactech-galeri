@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 import resend
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import EmailStr
+from pydantic import EmailStr, BaseModel, Field
 
 from db import db
 from auth import get_current_user
@@ -194,10 +194,28 @@ async def _send_digest_to_org(org_id: str, since: datetime, until: datetime) -> 
 
 
 async def run_weekly_digest_for_all() -> list:
-    """Scheduler'ın çağırdığı ana fonksiyon: tüm admin'lere özet gönderir."""
+    """Scheduler'ın her saat başı çağırdığı ana fonksiyon.
+
+    Her admin için kayıtlı digest_settings (day/hour) mevcut zamanla eşleşiyorsa mail gönder.
+    Default: pazartesi 09:00 (Europe/Istanbul).
+    """
+    import zoneinfo
+    tz_name = os.environ.get("DIGEST_TIMEZONE", "Europe/Istanbul")
+    try:
+        tz = zoneinfo.ZoneInfo(tz_name)
+    except Exception:
+        tz = timezone.utc
+
+    local_now = datetime.now(tz)
+    cur_hour = local_now.hour
+    # Python weekday: Mon=0..Sun=6
+    cur_day_idx = local_now.weekday()
+    day_map = {0: "mon", 1: "tue", 2: "wed", 3: "thu", 4: "fri", 5: "sat", 6: "sun"}
+    cur_day = day_map[cur_day_idx]
+
     until = datetime.now(timezone.utc)
     since = until - timedelta(days=7)
-    admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1, "org_id": 1, "email": 1}).to_list(1000)
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1, "org_id": 1, "email": 1, "digest_enabled": 1, "digest_day": 1, "digest_hour": 1}).to_list(1000)
     seen_orgs = set()
     results = []
     for u in admins:
@@ -205,9 +223,53 @@ async def run_weekly_digest_for_all() -> list:
         if not oid or oid in seen_orgs:
             continue
         seen_orgs.add(oid)
+        # User digest settings — default: enabled, mon, 9
+        enabled = u.get("digest_enabled", True)
+        pref_day = (u.get("digest_day") or "mon").lower()[:3]
+        try:
+            pref_hour = int(u.get("digest_hour", 9))
+        except Exception:
+            pref_hour = 9
+        if not enabled:
+            continue
+        if pref_day != cur_day or pref_hour != cur_hour:
+            continue
         res = await _send_digest_to_org(oid, since, until)
         results.append(res)
     return results
+
+
+class DigestSettingsBody(BaseModel):
+    enabled: bool = True
+    day: str = Field("mon", pattern="^(mon|tue|wed|thu|fri|sat|sun)$")
+    hour: int = Field(9, ge=0, le=23)
+
+
+@router.get("/digest/settings")
+async def get_digest_settings(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Yalnızca admin")
+    org_id = current_user.get("org_id", current_user["user_id"])
+    owner = await db.users.find_one({"id": org_id}, {"_id": 0}) or {}
+    return {
+        "enabled": owner.get("digest_enabled", True),
+        "day": owner.get("digest_day", "mon"),
+        "hour": int(owner.get("digest_hour", 9)),
+        "recipient": owner.get("email", current_user.get("email", "")),
+        "timezone": os.environ.get("DIGEST_TIMEZONE", "Europe/Istanbul"),
+    }
+
+
+@router.put("/digest/settings")
+async def update_digest_settings(body: DigestSettingsBody, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Yalnızca admin")
+    org_id = current_user.get("org_id", current_user["user_id"])
+    await db.users.update_one(
+        {"id": org_id},
+        {"$set": {"digest_enabled": body.enabled, "digest_day": body.day, "digest_hour": body.hour}},
+    )
+    return {"enabled": body.enabled, "day": body.day, "hour": body.hour}
 
 
 @router.post("/digest/send-now")

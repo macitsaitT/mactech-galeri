@@ -25,6 +25,9 @@ import {
   SlidersHorizontal,
   Activity,
   Trophy,
+  Search as SearchIcon,
+  AlertTriangle,
+  Hourglass,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
@@ -43,6 +46,8 @@ const menuGroups = [
       { id: 'customers', label: 'Müşteriler', icon: Users, roles: ['admin', 'satis', 'muhasebe'], perm: 'customers_view' },
       { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis'], perm: 'appointments_view' },
       { id: 'inspection', label: 'Muayene Takibi', icon: Wrench, roles: ['admin', 'satis'], perm: 'vehicles_view' },
+      { id: 'wanted-cars', label: 'Aranan Araçlar', icon: SearchIcon, roles: ['admin', 'satis'] },
+      { id: 'stock-aging', label: 'Stok Yaşlanma', icon: Hourglass, roles: ['admin', 'muhasebe'] },
     ],
   },
   {
@@ -51,6 +56,7 @@ const menuGroups = [
     icon: PiggyBank,
     items: [
       { id: 'finance', label: 'Gelir & Gider', icon: Wallet, roles: ['admin', 'muhasebe'], perm: 'transactions_view' },
+      { id: 'receivables', label: 'Alacaklar', icon: AlertTriangle, roles: ['admin', 'muhasebe'] },
       { id: 'reports', label: 'Raporlar', icon: FileText, roles: ['admin', 'muhasebe'], perm: 'reports_view' },
       { id: 'calculations', label: 'Hesaplama Araçları', icon: Calculator, roles: ['admin', 'muhasebe', 'satis'], perm: 'dashboard_view' },
       { id: 'year-end', label: 'Yıl Sonu Devri', icon: CalendarClock, roles: ['admin'] },

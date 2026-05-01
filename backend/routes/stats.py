@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from datetime import datetime
 
 from db import db
 from auth import get_current_user
@@ -235,3 +236,79 @@ async def get_sales_breakdown(
         b["revenue"] += sale
         b["profit"] += profit
     return {"period": "yearly", "data": list(buckets.values())}
+
+
+@router.get("/stats/stock-aging")
+async def get_stock_aging(current_user: dict = Depends(get_current_user)):
+    """Stokta 30+ gün kalan araçlar ve günlük maliyet tahmini.
+
+    Kullanıcı kendi settings'inde `daily_stock_cost_pct` ile yıllık %X sermaye maliyeti
+    tanımlarsa buna göre günlük maliyet hesaplanır. Default %18 yıllık.
+    """
+    from datetime import date as _date
+
+    org_id = current_user.get("org_id", current_user["user_id"])
+    owner = await db.users.find_one({"id": org_id}, {"_id": 0}) or {}
+    yearly_rate = float(owner.get("stock_cost_yearly_pct", 18)) / 100.0
+    daily_rate = yearly_rate / 365.0
+
+    cars = await db.cars.find(
+        {"org_id": org_id, "deleted": {"$ne": True}, "status": "Stokta"}, {"_id": 0}
+    ).to_list(5000)
+
+    today = _date.today()
+    rows = []
+    buckets = {"0-30": 0, "31-60": 0, "61-90": 0, "91+": 0}
+    total_capital = 0.0
+    total_daily_cost = 0.0
+
+    for car in cars:
+        entry = car.get("entry_date") or ""
+        try:
+            entry_date = datetime.strptime(entry, "%Y-%m-%d").date()
+            days = max(0, (today - entry_date).days)
+        except Exception:
+            days = 0
+        purchase = float(car.get("purchase_price", 0) or 0) if car.get("ownership") == "stock" else 0.0
+        daily_cost = purchase * daily_rate
+        accumulated_cost = daily_cost * days
+
+        if days <= 30:
+            buckets["0-30"] += 1
+        elif days <= 60:
+            buckets["31-60"] += 1
+        elif days <= 90:
+            buckets["61-90"] += 1
+        else:
+            buckets["91+"] += 1
+
+        rows.append({
+            "car_id": car.get("id"),
+            "plate": (car.get("plate") or "").upper(),
+            "brand": car.get("brand", ""),
+            "model": car.get("model", ""),
+            "year": car.get("year"),
+            "entry_date": entry,
+            "days_in_stock": days,
+            "purchase_price": purchase,
+            "daily_cost": round(daily_cost, 2),
+            "accumulated_cost": round(accumulated_cost, 2),
+            "ownership": car.get("ownership", "stock"),
+            "is_stale": days > 30,
+        })
+        total_capital += purchase
+        total_daily_cost += daily_cost
+
+    rows.sort(key=lambda r: -r["days_in_stock"])
+    return {
+        "rows": rows,
+        "buckets": buckets,
+        "totals": {
+            "total_cars": len(rows),
+            "stale_cars": sum(1 for r in rows if r["is_stale"]),
+            "total_capital": round(total_capital, 2),
+            "daily_cost": round(total_daily_cost, 2),
+            "yearly_rate_pct": round(yearly_rate * 100, 2),
+        },
+    }
+
