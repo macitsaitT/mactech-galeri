@@ -190,6 +190,13 @@ export const transactionsAPI = {
 // ==================== STATS ====================
 export const statsAPI = {
   get: () => api.get('/stats'),
+  employeePerformance: () => api.get('/stats/employee-performance'),
+};
+
+// ==================== ACTIVITY LOGS (İşlem Geçmişi) ====================
+export const activityLogsAPI = {
+  list: (params = {}) => api.get('/activity-logs', { params }),
+  clear: () => api.delete('/activity-logs/clear'),
 };
 
 // ==================== CAPITAL (Kasa / Sermaye) ====================

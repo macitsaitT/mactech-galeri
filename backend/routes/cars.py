@@ -6,7 +6,7 @@ import uuid
 from db import db
 from auth import get_current_user
 from models import CarCreate, Car
-from helpers import build_data_filter
+from helpers import build_data_filter, log_activity
 
 router = APIRouter()
 
@@ -30,6 +30,13 @@ async def create_car(car: CarCreate, current_user: dict = Depends(get_current_us
         "deleted": False, "deleted_at": None, "created_at": now, "updated_at": now
     })
     await db.cars.insert_one(car_doc)
+    await log_activity(
+        db, current_user=current_user, action="create", entity_type="car",
+        entity_id=car_id, entity_label=car_doc.get("plate", "").upper(),
+        details={"brand": car_doc.get("brand"), "model": car_doc.get("model"),
+                 "purchase_price": car_doc.get("purchase_price"),
+                 "sale_price": car_doc.get("sale_price")},
+    )
     return await db.cars.find_one({"id": car_id}, {"_id": 0})
 
 
@@ -85,6 +92,28 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
         updates["sold_by_name"] = ""
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": updates})
+
+    # ✅ Fiyat ve durum değişikliklerini activity log'a yaz
+    plate = (existing.get("plate") or "").upper()
+    tracked_fields = ("purchase_price", "sale_price", "status", "employee_share")
+    for fld in tracked_fields:
+        if fld in updates:
+            old_v = existing.get(fld)
+            new_v = updates.get(fld)
+            if old_v != new_v:
+                action = "price_change" if fld in ("purchase_price", "sale_price") else \
+                         "status_change" if fld == "status" else "update"
+                label_map = {
+                    "purchase_price": "Alış Fiyatı",
+                    "sale_price": "Satış Fiyatı",
+                    "status": "Durum",
+                    "employee_share": "Çalışan Payı",
+                }
+                await log_activity(
+                    db, current_user=current_user, action=action, entity_type="car",
+                    entity_id=car_id, entity_label=plate,
+                    details={"field": fld, "field_label": label_map[fld], "old": old_v, "new": new_v},
+                )
 
     # ✅ employee_share değişirse ilgili "Çalışan Payı" expense transaction'ı da senkronize et
     if "employee_share" in updates:
@@ -218,6 +247,14 @@ async def delete_car(car_id: str, permanent: bool = False, current_user: dict = 
             {"$set": {"deleted": True, "deleted_at": now, "capital_applied": False}},
         )
 
+    await log_activity(
+        db, current_user=current_user,
+        action="permanent_delete" if permanent else "delete",
+        entity_type="car",
+        entity_id=existing.get("id", ""),
+        entity_label=(existing.get("plate") or "").upper(),
+        details={"brand": existing.get("brand"), "model": existing.get("model")},
+    )
     return {"success": True, "removed_transactions": len(related_txs)}
 
 

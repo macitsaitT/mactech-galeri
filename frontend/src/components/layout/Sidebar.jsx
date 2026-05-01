@@ -23,6 +23,8 @@ import {
   Briefcase,
   PiggyBank,
   SlidersHorizontal,
+  Activity,
+  Trophy,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
@@ -61,6 +63,8 @@ const menuGroups = [
     items: [
       { id: 'permissions', label: 'Yetki Yönetimi', icon: Shield, roles: ['admin'] },
       { id: 'users', label: 'Kullanıcılar', icon: UserCog, roles: ['admin'] },
+      { id: 'employee-performance', label: 'Personel Performansı', icon: Trophy, roles: ['admin', 'muhasebe'] },
+      { id: 'activity-logs', label: 'İşlem Geçmişi', icon: Activity, roles: ['admin', 'muhasebe'] },
       { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'], perm: 'trash_view' },
     ],
   },

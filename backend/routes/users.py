@@ -6,6 +6,7 @@ from db import db
 from auth import get_current_user, hash_password
 from models import UserCreate
 from security import validate_email, validate_password
+from helpers import log_activity
 
 PERMISSION_KEYS = [
     "vehicles_view", "vehicles_add", "vehicles_edit", "vehicles_delete", "vehicles_sell", "vehicles_price_view",
@@ -115,6 +116,11 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         "auth_provider": "local"
     }
     await db.users.insert_one(user_doc)
+    await log_activity(
+        db, current_user=current_user, action="create", entity_type="user",
+        entity_id=user_id, entity_label=user.company_name or clean_email,
+        details={"email": clean_email, "role": user.role},
+    )
     return {"id": user_id, "email": clean_email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
 
 
@@ -136,6 +142,11 @@ async def update_user(user_id: str, updates: dict, current_user: dict = Depends(
     if safe_updates:
         safe_updates["updated_at"] = datetime.now(timezone.utc).isoformat()
         await db.users.update_one({"id": user_id}, {"$set": safe_updates})
+        await log_activity(
+            db, current_user=current_user, action="update", entity_type="user",
+            entity_id=user_id, entity_label=target.get("company_name") or target.get("email", ""),
+            details={"fields": list(safe_updates.keys())},
+        )
     return await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
 
 
@@ -155,6 +166,11 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
             # Zaten yok — idempotent başarılı dön ki frontend listede görünmesin
             return {"success": True, "already_deleted": True}
     res = await db.users.delete_one({"id": user_id})
+    await log_activity(
+        db, current_user=current_user, action="delete", entity_type="user",
+        entity_id=user_id, entity_label=target.get("company_name") or target.get("email", ""),
+        details={"email": target.get("email", ""), "role": target.get("role", "")},
+    )
     return {"success": True, "deleted_count": res.deleted_count}
 
 

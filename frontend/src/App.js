@@ -24,6 +24,8 @@ import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
 import YearEndTransferPage from './pages/YearEndTransferPage';
 import CalculationsPage from './pages/CalculationsPage';
+import ActivityLogsPage from './pages/ActivityLogsPage';
+import EmployeePerformancePage from './pages/EmployeePerformancePage';
 
 // Modals
 import AddCarModal from './components/modals/AddCarModal';
@@ -51,6 +53,8 @@ const getViewTitle = (view) => {
     case 'inspection': return 'Muayene Takibi';
     case 'users': return 'Kullanıcı Yönetimi';
     case 'year-end': return 'Yıl Sonu Devri';
+    case 'activity-logs': return 'İşlem Geçmişi';
+    case 'employee-performance': return 'Personel Performansı';
     default: return 'Dashboard';
   }
 };
@@ -459,6 +463,8 @@ const AppContent = () => {
           {activeView === 'users' && <UsersPage />}
           {activeView === 'permissions' && <PermissionsPage />}
           {activeView === 'year-end' && <YearEndTransferPage />}
+          {activeView === 'activity-logs' && <ActivityLogsPage />}
+          {activeView === 'employee-performance' && <EmployeePerformancePage />}
           {activeView === 'calculations' && <CalculationsPage />}
         </main>
       </div>
