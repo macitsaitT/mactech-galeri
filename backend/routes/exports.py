@@ -201,26 +201,78 @@ async def export_transactions_word(current_user: dict = Depends(get_current_user
 async def export_expertise_pdf(car_id: str, current_user: dict = Depends(get_current_user)):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as RLImage
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import cm
+    import base64
 
     car = await db.cars.find_one({"id": car_id, "org_id": current_user.get("org_id", current_user["user_id"])}, {"_id": 0})
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
 
+    # Şirket bilgileri (White Label)
+    owner = await db.users.find_one({"user_id": current_user.get("org_id", current_user["user_id"])}, {"_id": 0}) or current_user
+    company_name = owner.get("company_name") or "MACTech Oto Galeri"
+    company_phone = owner.get("phone") or ""
+    company_address = owner.get("address") or ""
+    logo_url = owner.get("logo_url") or ""
+
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1.5*cm, bottomMargin=1.5*cm)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1.2*cm, bottomMargin=1.5*cm)
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('Title2', parent=styles['Title'], fontSize=18, spaceAfter=20)
-    subtitle_style = ParagraphStyle('Sub', parent=styles['Normal'], fontSize=12, spaceAfter=10, textColor=colors.grey)
+    title_style = ParagraphStyle('Title2', parent=styles['Title'], fontSize=18, spaceAfter=8)
+    subtitle_style = ParagraphStyle('Sub', parent=styles['Normal'], fontSize=12, spaceAfter=6, textColor=colors.grey)
+    company_style = ParagraphStyle('Company', parent=styles['Normal'], fontSize=10, textColor=colors.HexColor('#444444'))
 
     elements = []
 
+    # Antetli kağıt header — logo + şirket bilgileri
+    logo_img = None
+    if logo_url:
+        try:
+            if logo_url.startswith('data:image'):
+                # base64 data URL
+                b64 = logo_url.split(',', 1)[1]
+                img_bytes = base64.b64decode(b64)
+                logo_img = RLImage(io.BytesIO(img_bytes), width=3.2*cm, height=1.6*cm, kind='proportional')
+            elif logo_url.startswith('/api/') or logo_url.startswith('uploads/'):
+                # lokal file path (eski kayıtlar için)
+                import os
+                local_path = logo_url.lstrip('/').replace('api/', '', 1)
+                if os.path.exists(local_path):
+                    logo_img = RLImage(local_path, width=3.2*cm, height=1.6*cm, kind='proportional')
+        except Exception:
+            logo_img = None
+
+    header_right = f"<b>{company_name}</b>"
+    if company_phone:
+        header_right += f"<br/>Tel: {company_phone}"
+    if company_address:
+        header_right += f"<br/>{company_address}"
+
+    if logo_img:
+        header_table = Table(
+            [[logo_img, Paragraph(header_right, company_style)]],
+            colWidths=[4*cm, 13*cm]
+        )
+    else:
+        header_table = Table(
+            [[Paragraph(f"<b>{company_name}</b>", styles['Heading2']), Paragraph(header_right, company_style)]],
+            colWidths=[8.5*cm, 8.5*cm]
+        )
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('LINEBELOW', (0, 0), (-1, -1), 1.5, colors.HexColor('#111111')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 12))
+
     elements.append(Paragraph("EKSPERTIZ RAPORU", title_style))
     elements.append(Paragraph(f"{car.get('brand', '')} {car.get('model', '')} - {car.get('year', '')} | {car.get('plate', '')}", subtitle_style))
-    elements.append(Spacer(1, 15))
+    elements.append(Spacer(1, 10))
 
     info_data = [
         ["Marka", car.get("brand", ""), "Model", car.get("model", "")],

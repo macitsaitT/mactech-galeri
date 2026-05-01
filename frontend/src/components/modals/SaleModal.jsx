@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ShoppingCart, MessageCircle } from 'lucide-react';
-import { formatNumberInput, parseNumber, formatCurrency, formatPhoneInput } from '../../utils/helpers';
+import { ShoppingCart, MessageCircle, FileSignature } from 'lucide-react';
+import { formatNumberInput, parseNumber, formatCurrency, formatPhoneInput, openPrintableHTML } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
-import { usersAPI } from '../../services/api';
+import { usersAPI, fileAPI } from '../../services/api';
+import { buildSalesContractHTML } from '../../utils/salesContract';
 import {
   Dialog,
   DialogContent,
@@ -117,8 +118,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
     const { customer, car: soldCar } = completedSaleData;
     
     // Güvenli şekilde company_name al
-    const companyName = user?.company_name || 'ASLANBAŞ YAPI ENERJİ GIDA TARIM HAYVANCILIK A.Ş.';
-    
+    const companyName = user?.company_name || 'ASLANBAŞ YAPI ENERJİ GIDA TARIM HAYVANCILIK A.Ş.';    
     // Mesaj şablonu
     const message = `Sayın ${customer?.name || 'Değerli Müşterimiz'},
 
@@ -157,6 +157,50 @@ ${companyName}`;
     setTimeout(() => {
       handleCloseModal();
     }, 500);
+  };
+
+  // Satış Sözleşmesi PDF (noter formatı) — yeni sekmede açıp yazdırır
+  const handleGenerateContract = async () => {
+    if (!completedSaleData) return;
+    let logoDataUrl = null;
+    try {
+      const logoPath = user?.logo_url || '';
+      if (logoPath) {
+        const url = logoPath.startsWith('http') ? logoPath : fileAPI.getUrl(logoPath);
+        logoDataUrl = await new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+              canvas.getContext('2d').drawImage(img, 0, 0);
+              resolve(canvas.toDataURL('image/png'));
+            } catch {
+              resolve(null);
+            }
+          };
+          img.onerror = () => resolve(null);
+          img.src = url;
+        });
+      }
+    } catch { /* logo optional */ }
+
+    const html = buildSalesContractHTML({
+      car: completedSaleData.car,
+      customer: completedSaleData.customer,
+      salePrice: completedSaleData.price,
+      saleDate: formData.sale_date,
+      company: {
+        company_name: user?.company_name || 'MACTech Oto Galeri',
+        phone: user?.phone || '',
+        address: user?.address || '',
+        tax_no: user?.tax_no || user?.tax_number || '',
+        logoDataUrl,
+      },
+    });
+    openPrintableHTML(html);
   };
 
   const handleCloseModal = () => {
@@ -232,16 +276,25 @@ ${companyName}`;
 
             {completedSaleData?.customer && (
               <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Müşteriye Teşekkür Mesajı Gönder</h4>
+                <h4 className="font-semibold text-sm">Satış Sonrası İşlemler</h4>
+                <button
+                  onClick={handleGenerateContract}
+                  className="w-full h-12 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors border border-slate-700"
+                  data-testid="generate-sales-contract-btn"
+                >
+                  <FileSignature size={20} />
+                  Satış Sözleşmesi PDF Oluştur
+                </button>
                 <button
                   onClick={handleSendWhatsApp}
                   className="w-full h-12 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                  data-testid="whatsapp-thankyou-btn"
                 >
                   <MessageCircle size={20} />
                   WhatsApp ile Teşekkür Mesajı Gönder
                 </button>
                 <p className="text-xs text-muted-foreground text-center">
-                  {completedSaleData.customer.name} adlı müşteriye teşekkür mesajı gönderilecek
+                  {completedSaleData.customer.name} — {completedSaleData.car?.plate?.toUpperCase()}
                 </p>
               </div>
             )}
