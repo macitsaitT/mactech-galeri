@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from typing import Optional
 
 from db import db
@@ -51,7 +51,7 @@ async def get_activity_logs(
 async def clear_activity_logs(current_user: dict = Depends(get_current_user)):
     """Admin: tüm activity log'ları temizle (organizasyon bazlı)."""
     if current_user.get("role", "admin") != "admin":
-        return {"success": False, "detail": "Yetkisiz"}
+        raise HTTPException(status_code=403, detail="Yalnızca admin işlem geçmişini temizleyebilir")
     org_id = current_user.get("org_id", current_user["user_id"])
     res = await db.activity_logs.delete_many({"org_id": org_id})
     return {"success": True, "deleted": res.deleted_count}

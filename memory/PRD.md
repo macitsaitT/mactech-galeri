@@ -2,11 +2,17 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.9.0
+- **Version:** 5.10.0
 - **Last Updated:** 2026-05-01
-- **Status:** Sidebar UX + Satış Sözleşmesi PDF + White Label Ekspertiz
+- **Status:** P2 — Activity Logs + Personel Performansı
 
 ## Implementation Status
+
+### v5.10.0 - İşlem Geçmişi & Personel Performansı (2026-05-01)
+- [x] **Activity Logs (P2)**: Yeni `activity_logs` koleksiyonu. `helpers.log_activity` helper'ı create/update/delete/price_change/status_change olaylarını kaydeder. `cars.py` (create/patch/delete) ve `users.py` (create/update/delete) hook'ları eklendi. Yeni endpoint'ler: `GET /api/activity-logs` (filtreli: entity_type, action, user_id, tarih), `DELETE /api/activity-logs/clear` (admin only, 403).
+- [x] **ActivityLogsPage (P2)**: Yönetim grubunda yeni sayfa. Filtre dropdown'ları (varlık, eylem, personel), mobil card + desktop tablo. Admin için "Tümünü Sil" butonu. Fiyat değişiklikleri `old → new` formatında gösteriliyor.
+- [x] **Employee Performance (P2)**: `GET /api/stats/employee-performance` — satan kişi başına `sold_count`, `total_revenue`, `total_cost`, `total_profit`, `total_employee_share`. Satış rolündeki kullanıcı yalnızca kendini görüyor, Atanmamış bucket'ı admin/muhasebe için gösteriliyor.
+- [x] **EmployeePerformancePage (P2)**: Özet kartları + En İyi Satıcı öne çıkarması + detaylı tablo.
 
 ### v5.9.0 - Sidebar UX, Sözleşme PDF ve White Label (2026-05-01)
 - [x] **Sidebar Kontrast İyileştirmesi (P0)**: Aktif sekme `bg-primary/25` + `font-semibold` + sol primary border + primary renkli ikonlar; inaktif itemlar `text-white/75 font-medium`. Background `#0a0a0a` daha koyu. Quick action butonları `bg-white/10` ile daha belirgin.

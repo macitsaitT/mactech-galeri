@@ -131,7 +131,8 @@ async def get_employee_performance(current_user: dict = Depends(get_current_user
         bucket["total_employee_share"] += emp_share
 
     results = list(perf_map.values())
-    if unassigned["sold_count"] > 0:
+    if unassigned["sold_count"] > 0 and role in ("admin", "muhasebe"):
+        # satis rolündeki kullanıcı 'Atanmamış' bucket üzerinden toplam satış sayısını öğrenmesin
         results.append(unassigned)
 
     # Çok satandan aza sırala
