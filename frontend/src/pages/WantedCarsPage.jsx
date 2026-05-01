@@ -3,7 +3,7 @@ import { Search, Plus, Trash2, Eye, Car, Phone, RefreshCcw } from 'lucide-react'
 import { wantedCarsAPI, customersAPI } from '../services/api';
 import { formatCurrency } from '../utils/helpers';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
 
 const WantedCarsPage = () => {
   const [items, setItems] = useState([]);
@@ -182,6 +182,7 @@ const WantedCarsPage = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Yeni Talep Ekle</DialogTitle>
+            <DialogDescription>Müşterinin aradığı araç kriterlerini girin — eşleşen stok otomatik hesaplanır.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-3">
             <div>
@@ -267,6 +268,7 @@ const WantedCarsPage = () => {
                 </span>
               )}
             </DialogTitle>
+            <DialogDescription>Kriterlere uyan stoktaki aktif araçlar.</DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto">
             {matchesModal?.matches?.length === 0 ? (

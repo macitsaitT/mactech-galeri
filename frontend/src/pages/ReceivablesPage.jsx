@@ -77,10 +77,6 @@ const ReceivablesPage = () => {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-muted-foreground">Yükleniyor…</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">
-            {filter === 'overdue' ? 'Geciken ödeme yok — temiz!' : 'Aktif vadeli satış yok.'}
-          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px]" data-testid="receivables-table">
@@ -96,34 +92,42 @@ const ReceivablesPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(r => (
-                  <tr key={r.installment_id}
-                      className={`border-b border-border hover:bg-muted/20 ${r.is_overdue ? 'bg-destructive/5' : ''}`}
-                      data-testid={`receivable-row-${r.installment_id}`}>
-                    <td className="p-3 text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        {r.is_overdue && <AlertTriangle size={14} className="text-destructive shrink-0" />}
-                        {r.customer_name}
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm text-muted-foreground">{formatDate(r.start_date)}</td>
-                    <td className="p-3 text-sm text-right tabular-nums">{formatCurrency(r.total_amount)}</td>
-                    <td className="p-3 text-sm text-right tabular-nums text-success">{formatCurrency(r.paid_amount)}</td>
-                    <td className="p-3 text-sm text-right tabular-nums font-semibold">{formatCurrency(r.remaining_amount)}</td>
-                    <td className={`p-3 text-sm text-right tabular-nums font-bold ${r.is_overdue ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {r.overdue_amount > 0 ? formatCurrency(r.overdue_amount) : '-'}
-                    </td>
-                    <td className="p-3 text-center">
-                      {r.days_overdue > 0 ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-destructive/15 text-destructive text-xs font-semibold">
-                          <Clock size={10} /> {r.days_overdue} gün
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-12 text-center text-muted-foreground">
+                      {filter === 'overdue' ? 'Geciken ödeme yok — temiz!' : 'Aktif vadeli satış yok.'}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map(r => (
+                    <tr key={r.installment_id}
+                        className={`border-b border-border hover:bg-muted/20 ${r.is_overdue ? 'bg-destructive/5' : ''}`}
+                        data-testid={`receivable-row-${r.installment_id}`}>
+                      <td className="p-3 text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          {r.is_overdue && <AlertTriangle size={14} className="text-destructive shrink-0" />}
+                          {r.customer_name}
+                        </div>
+                      </td>
+                      <td className="p-3 text-sm text-muted-foreground">{formatDate(r.start_date)}</td>
+                      <td className="p-3 text-sm text-right tabular-nums">{formatCurrency(r.total_amount)}</td>
+                      <td className="p-3 text-sm text-right tabular-nums text-success">{formatCurrency(r.paid_amount)}</td>
+                      <td className="p-3 text-sm text-right tabular-nums font-semibold">{formatCurrency(r.remaining_amount)}</td>
+                      <td className={`p-3 text-sm text-right tabular-nums font-bold ${r.is_overdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {r.overdue_amount > 0 ? formatCurrency(r.overdue_amount) : '-'}
+                      </td>
+                      <td className="p-3 text-center">
+                        {r.days_overdue > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-destructive/15 text-destructive text-xs font-semibold">
+                            <Clock size={10} /> {r.days_overdue} gün
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -2,11 +2,18 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.11.0
+- **Version:** 5.12.0
 - **Last Updated:** 2026-05-01
-- **Status:** Transaction Logs + Tarih Filtresi + Breakdown Chart + Haftalık Özet Maili (Resend)
+- **Status:** P3 Tamamlandı — Talep Eşleştirme + Alacaklar + Stok Yaşlanma + Digest Settings UI
 
 ## Implementation Status
+
+### v5.12.0 - P3 Backlog (2026-05-01)
+- [x] **Digest Settings UI**: Settings > DigestPanel artık `enabled` toggle + day/hour select + Save butonu. Scheduler **saatlik tick** ile her admin'in kendi `digest_day`/`digest_hour` tercihine göre gönderiyor. `GET/PUT /api/digest/settings`.
+- [x] **Aranan Araçlar (Talep Eşleştirme)**: Yeni koleksiyon `wanted_cars`. Müşteri başına arama kriteri (marka/model/yıl aralığı/bütçe aralığı/yakıt/vites). Her listeleme ve yeni talep oluşturmada stoktaki araçlara göre `match_count` hesaplanır. `/api/wanted-cars` CRUD + `/matches` + `/matches-for-car/{car_id}`. Operasyon menüsünde yeni sayfa.
+- [x] **Alacaklar (Vadeli Satış Takibi)**: `/api/installments/overdue/list` — her taksit için beklenen vs ödenen, gecikmiş tutar, gecikme gün sayısı. Finans menüsünde yeni `ReceivablesPage` (özet kartları + filtreler + tablo).
+- [x] **Stok Yaşlanma Analizi**: `/api/stats/stock-aging` — stoktaki her araç için `days_in_stock`, günlük sermaye maliyeti (default %18/yıl), birikmiş maliyet, 0-30/31-60/61-90/91+ bucket'ları. Operasyon menüsünde yeni `StockAgingPage`.
+- [x] **Sender mail güncellendi:** `noreply@mactech.tr` → `info@mactech.tr` (kullanıcının Resend'de doğrulanmış domain adresi).
 
 ### v5.11.0 - Genişletilmiş Audit + Analytics + E-Mail Digest (2026-05-01)
 - [x] **Transaction CRUD Activity Logs**: `routes/transactions.py` create/update/delete hook'ları `log_activity` çağırıyor. ActivityLogsPage render mantığı transaction tipini (Gelir/Gider) ve tutarı gösteriyor.
