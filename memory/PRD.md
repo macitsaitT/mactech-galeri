@@ -2,11 +2,21 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.10.0
+- **Version:** 5.11.0
 - **Last Updated:** 2026-05-01
-- **Status:** P2 — Activity Logs + Personel Performansı
+- **Status:** Transaction Logs + Tarih Filtresi + Breakdown Chart + Haftalık Özet Maili (Resend)
 
 ## Implementation Status
+
+### v5.11.0 - Genişletilmiş Audit + Analytics + E-Mail Digest (2026-05-01)
+- [x] **Transaction CRUD Activity Logs**: `routes/transactions.py` create/update/delete hook'ları `log_activity` çağırıyor. ActivityLogsPage render mantığı transaction tipini (Gelir/Gider) ve tutarı gösteriyor.
+- [x] **ActivityLogsPage Tarih Filtresi**: `logs-filter-start` ve `logs-filter-end` date input'ları + "Filtreleri Temizle" butonu. Backend `/api/activity-logs?start_date&end_date` zaten destekliyordu.
+- [x] **EmployeePerformancePage Breakdown Chart**: `recharts` BarChart ile aylık (12 ay, yıl seçimi) / yıllık (son 5 yıl) satış adedi + net kâr grafiği. Yeni endpoint: `GET /api/stats/sales-breakdown?period=monthly|yearly&year=...`.
+- [x] **Haftalık Özet E-Maili (Resend)**: `routes/digest.py` ile `_collect_digest_data` + `_build_html` + `_send_digest_to_org`. HTML e-mail template (kurumsal gold/dark tema) son 7 günün özeti: satılan araç, ciro, fiyat değişikliği, yeni personel, en iyi satıcı, stok durumu.
+  - `POST /api/digest/send-now` — admin test gönderimi.
+  - `GET /api/digest/preview` — iframe ile önizleme.
+  - **APScheduler** `AsyncIOScheduler` + `CronTrigger` ile **Pazartesi 09:00 Europe/Istanbul** otomatik tetikleniyor (`DIGEST_SCHEDULE_DAY` / `DIGEST_SCHEDULE_HOUR` ile config).
+- [x] **Settings › DigestPanel**: Önizleme + Test Gönder butonları + son gönderim sonuç kartı.
 
 ### v5.10.0 - İşlem Geçmişi & Personel Performansı (2026-05-01)
 - [x] **Activity Logs (P2)**: Yeni `activity_logs` koleksiyonu. `helpers.log_activity` helper'ı create/update/delete/price_change/status_change olaylarını kaydeder. `cars.py` (create/patch/delete) ve `users.py` (create/update/delete) hook'ları eklendi. Yeni endpoint'ler: `GET /api/activity-logs` (filtreli: entity_type, action, user_id, tarih), `DELETE /api/activity-logs/clear` (admin only, 403).
