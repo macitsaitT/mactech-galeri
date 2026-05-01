@@ -56,6 +56,18 @@ const renderDetails = (log) => {
   if (log.entity_type === 'car' && log.action === 'create') {
     return `${d.brand || ''} ${d.model || ''}`.trim() || '-';
   }
+  if (log.entity_type === 'transaction') {
+    if (log.action === 'create' || ['delete', 'permanent_delete'].includes(log.action)) {
+      const tLabel = d.type === 'income' ? 'Gelir' : d.type === 'expense' ? 'Gider' : (d.type || '');
+      const amtText = d.amount != null ? formatCurrency(Number(d.amount) || 0) : '';
+      return [tLabel, amtText].filter(Boolean).join(' • ');
+    }
+    if (log.action === 'update' && d.changes) {
+      return Object.entries(d.changes)
+        .map(([k, v]) => `${k}: ${v.old ?? '-'} → ${v.new ?? '-'}`)
+        .join(' | ');
+    }
+  }
   return d.description || '';
 };
 
@@ -68,6 +80,8 @@ const ActivityLogsPage = () => {
     entity_type: '',
     action: '',
     user_id: '',
+    start_date: '',
+    end_date: '',
   });
 
   const isAdmin = (user?.role || 'admin') === 'admin';
@@ -79,6 +93,8 @@ const ActivityLogsPage = () => {
       if (filters.entity_type) params.entity_type = filters.entity_type;
       if (filters.action) params.action = filters.action;
       if (filters.user_id) params.user_id = filters.user_id;
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
       const res = await activityLogsAPI.list(params);
       setLogs(res.data?.logs || []);
     } catch {
@@ -191,6 +207,35 @@ const ActivityLogsPage = () => {
               ))}
             </select>
           </div>
+        )}
+        <div>
+          <label className="block text-[11px] text-muted-foreground mb-1">Başlangıç</label>
+          <input
+            type="date"
+            value={filters.start_date}
+            onChange={(e) => setFilters(f => ({ ...f, start_date: e.target.value }))}
+            className="h-9 px-3 bg-background border border-border rounded-lg text-sm"
+            data-testid="logs-filter-start"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] text-muted-foreground mb-1">Bitiş</label>
+          <input
+            type="date"
+            value={filters.end_date}
+            onChange={(e) => setFilters(f => ({ ...f, end_date: e.target.value }))}
+            className="h-9 px-3 bg-background border border-border rounded-lg text-sm"
+            data-testid="logs-filter-end"
+          />
+        </div>
+        {(filters.entity_type || filters.action || filters.user_id || filters.start_date || filters.end_date) && (
+          <button
+            onClick={() => setFilters({ entity_type: '', action: '', user_id: '', start_date: '', end_date: '' })}
+            className="h-9 px-3 text-xs font-medium text-muted-foreground hover:text-foreground underline"
+            data-testid="logs-filter-clear"
+          >
+            Filtreleri Temizle
+          </button>
         )}
         <div className="ml-auto text-xs text-muted-foreground">
           <strong>{logs.length}</strong> kayıt

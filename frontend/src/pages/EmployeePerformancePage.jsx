@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, Award, Users, RefreshCcw } from 'lucide-react';
+import { TrendingUp, Award, Users, RefreshCcw, BarChart3 } from 'lucide-react';
 import { statsAPI } from '../services/api';
 import { formatCurrency } from '../utils/helpers';
 import { toast } from 'sonner';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid,
+} from 'recharts';
+
+const currentYear = new Date().getFullYear();
 
 const EmployeePerformancePage = () => {
   const [data, setData] = useState({ performance: [], totals: null });
   const [loading, setLoading] = useState(false);
+  const [breakdown, setBreakdown] = useState({ period: 'monthly', year: currentYear, data: [] });
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -23,7 +30,24 @@ const EmployeePerformancePage = () => {
     }
   };
 
+  const loadBreakdown = async (period, year) => {
+    setBreakdownLoading(true);
+    try {
+      const res = await statsAPI.salesBreakdown(period, period === 'monthly' ? year : undefined);
+      setBreakdown({
+        period,
+        year: res.data?.year || year,
+        data: res.data?.data || [],
+      });
+    } catch {
+      toast.error('Grafik verisi alınamadı');
+    } finally {
+      setBreakdownLoading(false);
+    }
+  };
+
   useEffect(() => { load(); }, []);
+  useEffect(() => { loadBreakdown(breakdown.period, breakdown.year); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [breakdown.period, breakdown.year]);
 
   const top = data.performance[0];
   const activeEmployees = data.performance.filter(p => p.sold_count > 0);
@@ -94,6 +118,84 @@ const EmployeePerformancePage = () => {
           </div>
         </div>
       )}
+
+      {/* Aylık / Yıllık Breakdown Chart */}
+      <div className="bg-card border border-border rounded-xl p-4 sm:p-6" data-testid="perf-breakdown-chart">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <BarChart3 size={18} className="text-primary" />
+            Satış & Kâr Kırılımı
+            <span className="text-xs text-muted-foreground font-normal">
+              ({breakdown.period === 'monthly' ? `${breakdown.year} yılı aylık` : 'Son 5 yıl'})
+            </span>
+          </h3>
+          <div className="flex gap-2 items-center">
+            <div className="inline-flex rounded-lg border border-border overflow-hidden" data-testid="perf-period-switch">
+              <button
+                onClick={() => setBreakdown(b => ({ ...b, period: 'monthly' }))}
+                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  breakdown.period === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted text-foreground'
+                }`}
+                data-testid="perf-period-monthly"
+              >
+                Aylık
+              </button>
+              <button
+                onClick={() => setBreakdown(b => ({ ...b, period: 'yearly' }))}
+                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  breakdown.period === 'yearly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted text-foreground'
+                }`}
+                data-testid="perf-period-yearly"
+              >
+                Yıllık
+              </button>
+            </div>
+            {breakdown.period === 'monthly' && (
+              <select
+                value={breakdown.year}
+                onChange={(e) => setBreakdown(b => ({ ...b, year: Number(e.target.value) }))}
+                className="h-8 px-2 bg-background border border-border rounded-lg text-xs font-semibold"
+                data-testid="perf-year-select"
+              >
+                {Array.from({ length: 6 }, (_, i) => currentYear - i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+        <div className="h-64">
+          {breakdownLoading ? (
+            <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Yükleniyor…</div>
+          ) : breakdown.data.length === 0 || breakdown.data.every(d => d.sold_count === 0) ? (
+            <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+              Bu dönemde satış kaydı yok.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={breakdown.data} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="count" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                <YAxis yAxisId="profit" orientation="right" tick={{ fontSize: 10 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickFormatter={(v) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}
+                />
+                <Tooltip
+                  contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                  formatter={(value, name) => {
+                    if (name === 'Satış Adedi') return [value, name];
+                    return [formatCurrency(value), name];
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <Bar yAxisId="count" dataKey="sold_count" name="Satış Adedi" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="profit" dataKey="profit" name="Net Kâr" fill="#16a34a" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
 
       {/* Tablo */}
       <div className="bg-card border border-border rounded-xl overflow-hidden">

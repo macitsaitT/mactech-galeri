@@ -191,6 +191,9 @@ export const transactionsAPI = {
 export const statsAPI = {
   get: () => api.get('/stats'),
   employeePerformance: () => api.get('/stats/employee-performance'),
+  salesBreakdown: (period = 'monthly', year) => api.get('/stats/sales-breakdown', {
+    params: year ? { period, year } : { period },
+  }),
 };
 
 // ==================== ACTIVITY LOGS (İşlem Geçmişi) ====================

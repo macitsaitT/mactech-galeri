@@ -147,3 +147,91 @@ async def get_employee_performance(current_user: dict = Depends(get_current_user
     }
 
     return {"performance": results, "totals": totals}
+
+
+@router.get("/stats/sales-breakdown")
+async def get_sales_breakdown(
+    period: str = "monthly",
+    year: int = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """Aylık/yıllık satış ve kâr kırılımı (personel performans grafiği için).
+
+    period: 'monthly' (tek yıl, 12 ay) veya 'yearly' (son 5 yıl).
+    year: monthly için opsiyonel; default = içinde bulunulan yıl.
+    """
+    from datetime import datetime as _dt
+
+    org_id = current_user.get("org_id", current_user["user_id"])
+    role = current_user.get("role", "admin")
+    now_year = _dt.utcnow().year
+
+    # Satılan araçları çek
+    q = {"org_id": org_id, "status": "Satıldı", "deleted": {"$ne": True}}
+    if role not in ("admin", "muhasebe"):
+        q["sold_by_user_id"] = current_user["user_id"]
+    sold_cars = await db.cars.find(q, {"_id": 0}).to_list(20000)
+
+    # Araç bazlı giderleri pre-grupla
+    tx_list = await db.transactions.find(
+        {"org_id": org_id, "type": "expense", "deleted": {"$ne": True}}, {"_id": 0}
+    ).to_list(50000)
+    tx_by_car: dict = {}
+    for t in tx_list:
+        cid = t.get("car_id")
+        if not cid:
+            continue
+        tx_by_car.setdefault(cid, []).append(t)
+
+    def _car_cost(car: dict) -> float:
+        cid = car.get("id")
+        car_txs = tx_by_car.get(cid, [])
+        owner_pay = sum(float(t.get("amount", 0) or 0) for t in car_txs if t.get("category") == "Araç Sahibine Ödeme")
+        employee_share = sum(float(t.get("amount", 0) or 0) for t in car_txs if t.get("category") == "Çalışan Payı")
+        other = sum(
+            float(t.get("amount", 0) or 0) for t in car_txs
+            if t.get("category") not in ("Araç Alımı", "Araç Sahibine Ödeme", "Çalışan Payı")
+        )
+        purchase = float(car.get("purchase_price", 0) or 0) if car.get("ownership") == "stock" else 0.0
+        return purchase + owner_pay + other + employee_share
+
+    if period == "monthly":
+        target_year = year or now_year
+        buckets = {i: {"label": f"{i:02d}", "sold_count": 0, "revenue": 0.0, "profit": 0.0} for i in range(1, 13)}
+        for car in sold_cars:
+            sd = car.get("sold_date") or ""
+            if not sd or not sd.startswith(str(target_year)):
+                continue
+            try:
+                month = int(sd.split("-")[1])
+            except Exception:
+                continue
+            if month not in buckets:
+                continue
+            sale = float(car.get("sale_price", 0) or 0)
+            profit = sale - _car_cost(car)
+            b = buckets[month]
+            b["sold_count"] += 1
+            b["revenue"] += sale
+            b["profit"] += profit
+        data = [buckets[m] for m in range(1, 13)]
+        return {"period": "monthly", "year": target_year, "data": data}
+
+    # Yearly — son 5 yıl
+    years = sorted({(car.get("sold_date") or "0000")[:4] for car in sold_cars if car.get("sold_date")})
+    years = [y for y in years if y and y.isdigit()][-5:]
+    if not years:
+        years = [str(now_year)]
+    buckets = {y: {"label": y, "sold_count": 0, "revenue": 0.0, "profit": 0.0} for y in years}
+    for car in sold_cars:
+        sd = car.get("sold_date") or ""
+        yr = sd[:4]
+        if yr not in buckets:
+            continue
+        sale = float(car.get("sale_price", 0) or 0)
+        profit = sale - _car_cost(car)
+        b = buckets[yr]
+        b["sold_count"] += 1
+        b["revenue"] += sale
+        b["profit"] += profit
+    return {"period": "yearly", "data": list(buckets.values())}

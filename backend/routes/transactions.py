@@ -6,7 +6,7 @@ import uuid
 from db import db
 from auth import get_current_user
 from models import TransactionCreate, Transaction
-from helpers import build_data_filter
+from helpers import build_data_filter, log_activity
 from capital_service import apply_delta
 
 router = APIRouter()
@@ -68,6 +68,17 @@ async def create_transaction(transaction: TransactionCreate, current_user: dict 
             allow_negative=True, user_id=current_user["user_id"],
         )
         raise
+
+    await log_activity(
+        db, current_user=current_user, action="create", entity_type="transaction",
+        entity_id=transaction_id, entity_label=transaction_doc.get("category", ""),
+        details={
+            "type": transaction_doc.get("type"),
+            "amount": transaction_doc.get("amount"),
+            "car_id": transaction_doc.get("car_id") or None,
+            "customer_id": transaction_doc.get("customer_id") or None,
+        },
+    )
     return await db.transactions.find_one({"id": transaction_id}, {"_id": 0})
 
 
@@ -97,6 +108,19 @@ async def update_transaction(transaction_id: str, updates: dict, current_user: d
 
     await db.transactions.update_one({"id": transaction_id}, {"$set": updates})
     updated = await db.transactions.find_one({"id": transaction_id}, {"_id": 0})
+
+    # ✅ Activity log — önemli alanlar değiştiyse kaydet
+    tracked = ("amount", "type", "category", "date", "description")
+    changed_fields = {}
+    for k in tracked:
+        if k in updates and existing.get(k) != updates[k]:
+            changed_fields[k] = {"old": existing.get(k), "new": updates[k]}
+    if changed_fields:
+        await log_activity(
+            db, current_user=current_user, action="update", entity_type="transaction",
+            entity_id=transaction_id, entity_label=updated.get("category", ""),
+            details={"changes": changed_fields, "amount": updated.get("amount")},
+        )
 
     # ✅ "Araç Satışı" income ise ilgili araç sale_price ve sold_date senkronize edilir
     try:
@@ -152,6 +176,13 @@ async def delete_transaction(transaction_id: str, permanent: bool = False, curre
             {"id": transaction_id},
             {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat(), "capital_applied": False}},
         )
+    await log_activity(
+        db, current_user=current_user,
+        action="permanent_delete" if permanent else "delete",
+        entity_type="transaction",
+        entity_id=transaction_id, entity_label=existing.get("category", ""),
+        details={"amount": existing.get("amount"), "type": existing.get("type")},
+    )
     return {"success": True}
 
 
