@@ -601,6 +601,14 @@ async def sso_login(data: dict):
         if not sso_data.get("valid"):
             raise HTTPException(status_code=401, detail="SSO token doğrulanamadı")
         
+        # mactech.tr'nin verdiği platform JWT — sub-user sync için saklanacak
+        parent_jwt = (
+            sso_data.get("token")
+            or sso_data.get("access_token")
+            or sso_data.get("jwt")
+            or sso_token  # fallback: orijinal sso_token
+        )
+        
         # Kullanıcı bilgilerini al
         user_info = sso_data.get("user", {})
         mactech_id = user_info.get("mactech_id")
@@ -691,10 +699,10 @@ async def sso_login(data: dict):
         role = user.get("role", "admin")
         token = create_token(user["id"], user["email"], org_id, role)
         
-        # Son giriş zamanını güncelle
+        # Son giriş zamanını ve mactech JWT'yi güncelle (alt kullanıcı sync için)
         await db.users.update_one(
             {"id": user["id"]},
-            {"$set": {"last_login": now}}
+            {"$set": {"last_login": now, "mactech_jwt": parent_jwt, "mactech_jwt_updated_at": now}}
         )
         
         # Hassas bilgileri çıkar

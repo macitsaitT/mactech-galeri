@@ -7,6 +7,9 @@ from auth import get_current_user, hash_password
 from models import UserCreate
 from security import validate_email, validate_password
 from helpers import log_activity
+from services.mactech_subuser_sync import (
+    sync_sub_user_created, sync_sub_user_deleted, fire_and_forget,
+)
 
 PERMISSION_KEYS = [
     "vehicles_view", "vehicles_add", "vehicles_edit", "vehicles_delete", "vehicles_sell", "vehicles_price_view",
@@ -121,6 +124,11 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         entity_id=user_id, entity_label=user.company_name or clean_email,
         details={"email": clean_email, "role": user.role},
     )
+    # 🔗 mactech.tr'ye alt kullanıcı sync'i (best-effort, async)
+    fire_and_forget(sync_sub_user_created(
+        org_id=org_id, email=clean_email, name=user.company_name or "",
+        password=user.password, phone=user.phone or "",
+    ))
     return {"id": user_id, "email": clean_email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
 
 
@@ -171,10 +179,31 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
         entity_id=user_id, entity_label=target.get("company_name") or target.get("email", ""),
         details={"email": target.get("email", ""), "role": target.get("role", "")},
     )
+    # 🔗 mactech.tr'ye silme sync'i (best-effort)
+    if target.get("email"):
+        fire_and_forget(sync_sub_user_deleted(org_id=org_id, email=target.get("email", "")))
     return {"success": True, "deleted_count": res.deleted_count}
 
 
 @router.get("/employees")
+
+
+@router.get("/users/subuser-sync-logs")
+async def get_subuser_sync_logs(
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user),
+):
+    """mactech.tr'ye alt kullanıcı sync denemeleri — debugging için."""
+    if current_user.get("role", "admin") != "admin":
+        raise HTTPException(status_code=403, detail="Yalnızca admin")
+    org_id = current_user.get("org_id", current_user["user_id"])
+    logs = await db.subuser_sync_logs.find(
+        {"org_id": org_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(limit)
+    success = sum(1 for log in logs if log.get("success"))
+    failed = len(logs) - success
+    return {"logs": logs, "count": len(logs), "success": success, "failed": failed}
+
 async def get_employees(current_user: dict = Depends(get_current_user)):
     org_id = current_user.get("org_id", current_user["user_id"])
     users = await db.users.find({"org_id": org_id}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
