@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, HTTPException, Header
 from datetime import datetime, timezone
 from typing import Optional
@@ -7,12 +8,13 @@ from db import db
 
 router = APIRouter()
 
-# Webhook secret - Production'da env variable olarak saklanmalı
-WEBHOOK_SECRET = "whsec_galeri_" + secrets.token_urlsafe(32)
+# Webhook secret — production'da .env'den alınır. Eksikse rastgele üret (dev mode).
+WEBHOOK_SECRET = os.environ.get("WEBHOOK_SECRET") or ("whsec_galeri_" + secrets.token_urlsafe(32))
 
-# Webhook secret'i logla (ilk kurulumda görmek için)
-print(f"🔐 Webhook Secret: {WEBHOOK_SECRET}")
-print("📝 Bu secret'i mactech.tr webhook ayarlarına ekleyin")
+# Setup bilgisi logla (development için kolaylık)
+if not os.environ.get("WEBHOOK_SECRET"):
+    print(f"WARNING: WEBHOOK_SECRET env var set edilmemiş. Geçici değer: {WEBHOOK_SECRET}")
+    print("Production'da backend/.env dosyasına WEBHOOK_SECRET=... ekleyin.")
 
 
 async def verify_webhook_signature(authorization: str):
@@ -343,3 +345,140 @@ async def handle_subscription_cancelled(user: dict, payload: dict, now: str):
 async def get_webhook_secret():
     """Webhook secret'i döndür (sadece development için)"""
     return {"webhook_secret": WEBHOOK_SECRET}
+
+
+@router.get("/admin/users-hierarchy")
+async def get_users_hierarchy(authorization: str = Header(None)):
+    """mactech.tr admin panel için hiyerarşik kullanıcı listesi.
+
+    Ana admin kullanıcıları + her birinin altındaki çalışanları (alt kullanıcılar) döner.
+
+    Kullanım (mactech.tr admin panelinden):
+        GET /api/admin/users-hierarchy
+        Authorization: Bearer {WEBHOOK_SECRET}
+
+    Yanıt:
+    [
+      {
+        "id": "...",
+        "mactech_id": "...",
+        "email": "sahibi@galeri.com",
+        "company_name": "ABC Galeri",
+        "role": "admin",
+        "subscription": "pro",
+        "trial_active": false,
+        "created_at": "2025-...",
+        "employees": [
+          {"id": "...", "email": "satisci@...", "company_name": "Ali", "role": "satis", "created_at": "..."},
+          ...
+        ],
+        "employee_count": 3
+      },
+      ...
+    ]
+    """
+    # Auth — webhook secret ile aynı
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header required (Bearer <webhook_secret>)")
+    token = authorization.replace("Bearer ", "").strip()
+    if token != WEBHOOK_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid webhook secret")
+
+    # Tüm admin (ana) kullanıcıları getir
+    admins = await db.users.find(
+        {"role": "admin"},
+        {"_id": 0, "password_hash": 0, "verification_code": 0}
+    ).to_list(10000)
+
+    # Tüm admin-olmayan kullanıcıları org_id bazında grupla
+    employees = await db.users.find(
+        {"role": {"$ne": "admin"}},
+        {"_id": 0, "password_hash": 0, "verification_code": 0}
+    ).to_list(10000)
+    emp_by_org: dict = {}
+    for e in employees:
+        oid = e.get("org_id") or ""
+        if not oid:
+            continue
+        emp_by_org.setdefault(oid, []).append({
+            "id": e.get("id"),
+            "email": e.get("email"),
+            "company_name": e.get("company_name"),
+            "phone": e.get("phone"),
+            "role": e.get("role"),
+            "auth_provider": e.get("auth_provider", "local"),
+            "created_at": e.get("created_at"),
+            "access_blocked": e.get("access_blocked", False),
+        })
+
+    # Her admin için altına çalışanları ekle
+    hierarchy = []
+    for a in admins:
+        org_id = a.get("org_id") or a.get("id")
+        emps = emp_by_org.get(org_id, [])
+        # Çalışanları en yeni eklenen sona gelecek şekilde sırala
+        emps.sort(key=lambda x: x.get("created_at") or "")
+        hierarchy.append({
+            "id": a.get("id"),
+            "mactech_id": a.get("mactech_id"),
+            "email": a.get("email"),
+            "company_name": a.get("company_name"),
+            "phone": a.get("phone"),
+            "role": "admin",
+            "subscription": a.get("subscription", "free"),
+            "payment_status": a.get("payment_status"),
+            "trial_active": a.get("trial_active", False),
+            "trial_end": a.get("trial_end"),
+            "access_blocked": a.get("access_blocked", False),
+            "auth_provider": a.get("auth_provider", "local"),
+            "created_at": a.get("created_at"),
+            "employees": emps,
+            "employee_count": len(emps),
+        })
+
+    # En yeni admin üstte
+    hierarchy.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+
+    return {
+        "total_admins": len(hierarchy),
+        "total_employees": sum(h["employee_count"] for h in hierarchy),
+        "users": hierarchy,
+    }
+
+
+@router.get("/admin/organization/{mactech_id}/employees")
+async def get_organization_employees(
+    mactech_id: str,
+    authorization: str = Header(None),
+):
+    """Belirli bir ana admin'in altındaki çalışan listesi (tek org scope).
+
+    mactech.tr panelinde admin detay sayfası için kullanılabilir.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    token = authorization.replace("Bearer ", "").strip()
+    if token != WEBHOOK_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid webhook secret")
+
+    admin = await db.users.find_one({"mactech_id": mactech_id}, {"_id": 0, "password_hash": 0})
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin (mactech_id) bulunamadı")
+
+    org_id = admin.get("org_id") or admin.get("id")
+    employees = await db.users.find(
+        {"org_id": org_id, "role": {"$ne": "admin"}},
+        {"_id": 0, "password_hash": 0, "verification_code": 0}
+    ).sort("created_at", -1).to_list(500)
+
+    return {
+        "admin": {
+            "id": admin.get("id"),
+            "mactech_id": admin.get("mactech_id"),
+            "email": admin.get("email"),
+            "company_name": admin.get("company_name"),
+        },
+        "employees": employees,
+        "count": len(employees),
+    }
+
