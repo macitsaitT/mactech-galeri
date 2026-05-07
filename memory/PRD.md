@@ -8,6 +8,16 @@
 
 ## Implementation Status
 
+### v5.17.0 - 'Satıcı' Personeline Özel Dashboard (2026-05-07)
+- ✅ **Yeni `SalesPersonalView` componenti** (`/app/frontend/src/pages/SalesPersonalView.jsx`):
+  - Karşılama: "Hoş geldin, {ad}"
+  - **Aylık Hedef Kartı**: localStorage'da kullanıcı başına saklanan hedef (varsayılan 5 araç). İlerleme barı, "Hedefe X araç kaldı" / "Tebrikler" rozeti, **Hedef Düzenle** butonu (1-100 arası).
+  - **Bu Ay Komisyonum** canlı tutar.
+  - 3 stat: Toplam Sattığım, Bu Yıl, Toplam Komisyonum.
+  - Sattığım araçlar listesi (en yeni 20 — plaka, müşteri adı, satış tarihi, komisyon).
+- ✅ **Dashboard.jsx Yönlendirme**: `if (user.role === 'satis') return <SalesPersonalView />;` — ESLint rules-of-hooks uyumlu (tüm hook'lardan sonra).
+- ✅ **Smoke test**: 'satis' demo user oluşturuldu, login → SalesPersonalView render edildi (hedef kartı, stat kartları, boş liste). Sermaye/Kasa hiç görünmüyor.
+
 ### v5.16.3 - Sermaye/Kasa Erişim Kısıtlaması (2026-05-07)
 - ✅ **Backend** (`/app/backend/routes/capital.py`): Yeni `_require_finance_role` helper. **'satis' rolü tüm capital endpoint'lerinden 403 alır**: GET /capital, GET /capital/movements, POST /capital/adjust, POST /capital/set, POST /capital/initialize, DELETE /capital/movements/{id}, POST /capital/movements/cleanup-deleted. Sadece `admin`, `owner`, `muhasebe` erişebilir.
 - ✅ **Frontend** (`Dashboard.jsx`): Yeni `canSeeCapital = user.role !== 'satis'` kontrolü ile aşağıdakiler 'satis' rolünden gizlenir:

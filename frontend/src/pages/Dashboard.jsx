@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import CapitalModal from '../components/modals/CapitalModal';
 import CapitalDetailModal from '../components/modals/CapitalDetailModal';
+import SalesPersonalView from './SalesPersonalView';
 import { installmentsAPI } from '../services/api';
 import { computeUpcomingPayments, buildPaymentReminderText } from '../utils/installmentReminders';
 import {
@@ -189,6 +190,8 @@ const Dashboard = ({ onOpenReport }) => {
   const { cars, transactions, loading, capital, user } = useApp();
   // ✅ 'satis' rolü Sermaye/Kasa modülünü göremez
   const canSeeCapital = (user?.role || 'admin') !== 'satis';
+  const isSalesRole = (user?.role || 'admin') === 'satis';
+
 
   const [preset, setPreset] = useState('month');
   const [customStart, setCustomStart] = useState('');
@@ -420,6 +423,11 @@ const Dashboard = ({ onOpenReport }) => {
   }
 
   const presetLabel = presets.find(p => p.id === preset)?.label || '';
+
+  // ✅ 'satis' rolündeki kullanıcı için kişiselleştirilmiş satış görünümü
+  if (isSalesRole) {
+    return <SalesPersonalView />;
+  }
 
   return (
     <div className="space-y-5 pb-24 md:pb-6 animate-fade-in" data-testid="dashboard">
