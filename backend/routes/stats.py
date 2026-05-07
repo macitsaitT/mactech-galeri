@@ -133,6 +133,10 @@ async def get_employee_performance(current_user: dict = Depends(get_current_user
         bucket["total_profit"] += profit
         bucket["total_employee_share"] += emp_share
 
+    # ✅ Ortalama brüt kâr (satış başına) hesapla
+    for b in list(perf_map.values()) + [unassigned]:
+        b["avg_profit"] = round(b["total_profit"] / b["sold_count"], 2) if b["sold_count"] > 0 else 0
+
     results = list(perf_map.values())
     if unassigned["sold_count"] > 0 and role in ("admin", "muhasebe"):
         # satis rolündeki kullanıcı 'Atanmamış' bucket üzerinden toplam satış sayısını öğrenmesin
@@ -148,6 +152,7 @@ async def get_employee_performance(current_user: dict = Depends(get_current_user
         "total_profit": sum(r["total_profit"] for r in results),
         "total_employee_share": sum(r["total_employee_share"] for r in results),
     }
+    totals["avg_profit"] = round(totals["total_profit"] / totals["sold_count"], 2) if totals["sold_count"] > 0 else 0
 
     return {"performance": results, "totals": totals}
 

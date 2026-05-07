@@ -89,6 +89,11 @@ const EmployeePerformancePage = () => {
             <div className={`text-xl font-bold ${data.totals.total_profit >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatCurrency(data.totals.total_profit)}
             </div>
+            {data.totals.sold_count > 0 && (
+              <div className={`text-[11px] mt-1 font-medium ${data.totals.avg_profit >= 0 ? 'text-success/80' : 'text-destructive/80'}`} data-testid="perf-totals-avg-profit">
+                Ort: {formatCurrency(data.totals.avg_profit)} / satış
+              </div>
+            )}
           </div>
           <div className="p-4 border border-border rounded-xl bg-card">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Aktif Personel</div>
@@ -114,6 +119,12 @@ const EmployeePerformancePage = () => {
               <span className={top.total_profit >= 0 ? 'text-success font-semibold' : 'text-destructive font-semibold'}>
                 {formatCurrency(top.total_profit)}
               </span>
+              {top.sold_count > 0 && (
+                <>
+                  {' • '}
+                  <span className="text-xs">Ort: <span className={`font-semibold ${top.avg_profit >= 0 ? 'text-success' : 'text-destructive'}`} data-testid="perf-top-avg-profit">{formatCurrency(top.avg_profit)}</span> / satış</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -246,6 +257,7 @@ const EmployeePerformancePage = () => {
                     <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase">Toplam Maliyet</th>
                     <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase">Çalışan Payı</th>
                     <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase">Net Kâr</th>
+                    <th className="text-right p-3 text-xs font-semibold text-muted-foreground uppercase">Ort/Satış</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,6 +283,9 @@ const EmployeePerformancePage = () => {
                       <td className={`p-3 text-sm text-right tabular-nums font-bold ${p.total_profit >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {p.total_profit >= 0 ? '+' : ''}{formatCurrency(p.total_profit)}
                       </td>
+                      <td className={`p-3 text-sm text-right tabular-nums ${p.sold_count === 0 ? 'text-muted-foreground' : (p.avg_profit >= 0 ? 'text-success' : 'text-destructive')}`}>
+                        {p.sold_count > 0 ? formatCurrency(p.avg_profit) : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -284,6 +299,9 @@ const EmployeePerformancePage = () => {
                       <td className="p-3 text-sm text-right tabular-nums">{formatCurrency(data.totals.total_employee_share)}</td>
                       <td className={`p-3 text-sm text-right tabular-nums ${data.totals.total_profit >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {formatCurrency(data.totals.total_profit)}
+                      </td>
+                      <td className={`p-3 text-sm text-right tabular-nums ${data.totals.avg_profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {data.totals.sold_count > 0 ? formatCurrency(data.totals.avg_profit) : '—'}
                       </td>
                     </tr>
                   </tfoot>

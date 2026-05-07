@@ -8,6 +8,17 @@
 
 ## Implementation Status
 
+### v5.16.2 - Personel Performans Rozeti + Sistem Audit (2026-05-07)
+- ✅ **Personel Performans — Ortalama Brüt Kâr/Satış**:
+  - Backend `/api/stats/employee-performance`: her satıcı için `avg_profit = total_profit / sold_count` ve `totals.avg_profit` döner.
+  - Frontend `EmployeePerformancePage`:
+    - "Toplam Kâr" kartında küçük "Ort: ₺X / satış" etiketi.
+    - "En İyi Satıcı" rozetinde Ort/satış küçük göstergesi.
+    - Tabloda yeni **ORT/SATIŞ** kolonu (header + body + footer).
+  - Pytest regression: 2/2 PASS, lint clean.
+- ✅ **Sistem Audit**: Backend logları (no errors), 16 endpoint smoke test (hepsi 200), ESLint frontend tamamen temiz, MongoDB `_id` projection eksiği yok, capital movements + cascade delete + seller revert çalışıyor. Hiç gerçek bug bulunmadı.
+- ℹ️ **Minor (etkisiz)**: JWT secret 27 byte (RFC 7518: 32+ önerilir, çalışıyor); `auth_routes.py` F841 unused var (kozmetik).
+
 ### v5.16.1 - Tedarikçi Performans Rozeti (2026-05-07)
 - ✅ **Backend `/api/customers/{id}/detail`**: Yeni alanlar `seller_sold_count`, `seller_total_profit`, `seller_avg_profit`. Her satılan `sold_to_us_car` için `gross_profit = sale_price - purchase_price - Σ(masraflar Araç Alımı/Sahibi hariç)`. Ortalama hesabına sadece **Satıldı** durumundaki araçlar girer.
 - ✅ **CustomerDetailModal**: "Bu Kişiden Aldığımız Araçlar" bölümünde **TEDARİKÇİ PERFORMANSI** rozeti — kâr ortalaması pozitifse yeşil, negatifse kırmızı. Her satılan aracın yanında `Brüt Kâr` etiketi de görünür.
