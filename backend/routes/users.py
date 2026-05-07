@@ -190,6 +190,10 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
 
 
 @router.get("/employees")
+async def get_employees(current_user: dict = Depends(get_current_user)):
+    org_id = current_user.get("org_id", current_user["user_id"])
+    users = await db.users.find({"org_id": org_id}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
+    return [{"id": u["id"], "email": u["email"], "name": u.get("company_name", u["email"]), "phone": u.get("phone", ""), "role": u.get("role", "satis"), "branch_id": u.get("branch_id")} for u in users]
 
 
 @router.get("/users/subuser-sync-logs")
@@ -207,11 +211,6 @@ async def get_subuser_sync_logs(
     success = sum(1 for log in logs if log.get("success"))
     failed = len(logs) - success
     return {"logs": logs, "count": len(logs), "success": success, "failed": failed}
-
-async def get_employees(current_user: dict = Depends(get_current_user)):
-    org_id = current_user.get("org_id", current_user["user_id"])
-    users = await db.users.find({"org_id": org_id}, {"_id": 0, "password_hash": 0, "verification_code": 0}).to_list(100)
-    return [{"id": u["id"], "email": u["email"], "name": u.get("company_name", u["email"]), "phone": u.get("phone", ""), "role": u.get("role", "satis")} for u in users]
 
 
 @router.get("/org-users")
