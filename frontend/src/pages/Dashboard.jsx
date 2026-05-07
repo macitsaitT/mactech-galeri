@@ -186,7 +186,9 @@ const CapitalSummaryCard = ({ cars, cashAmount, onOpenDetail, onOpenAction }) =>
 };
 
 const Dashboard = ({ onOpenReport }) => {
-  const { cars, transactions, loading, capital } = useApp();
+  const { cars, transactions, loading, capital, user } = useApp();
+  // ✅ 'satis' rolü Sermaye/Kasa modülünü göremez
+  const canSeeCapital = (user?.role || 'admin') !== 'satis';
 
   const [preset, setPreset] = useState('month');
   const [customStart, setCustomStart] = useState('');
@@ -421,20 +423,26 @@ const Dashboard = ({ onOpenReport }) => {
 
   return (
     <div className="space-y-5 pb-24 md:pb-6 animate-fade-in" data-testid="dashboard">
-      {/* ✅ Toplam Sermaye (Nakit + Araç Envanteri) Kartı */}
-      <CapitalSummaryCard
-        cars={cars}
-        cashAmount={Number(capital?.amount || 0)}
-        onOpenDetail={() => setCapitalDetailOpen(true)}
-        onOpenAction={() => setCapitalModalOpen(true)}
-      />
+      {/* ✅ Toplam Sermaye (Nakit + Araç Envanteri) Kartı — sadece admin/muhasebe */}
+      {canSeeCapital && (
+        <CapitalSummaryCard
+          cars={cars}
+          cashAmount={Number(capital?.amount || 0)}
+          onOpenDetail={() => setCapitalDetailOpen(true)}
+          onOpenAction={() => setCapitalModalOpen(true)}
+        />
+      )}
 
-      <CapitalModal isOpen={capitalModalOpen} onClose={() => setCapitalModalOpen(false)} />
-      <CapitalDetailModal isOpen={capitalDetailOpen} onClose={() => setCapitalDetailOpen(false)} />
+      {canSeeCapital && (
+        <>
+          <CapitalModal isOpen={capitalModalOpen} onClose={() => setCapitalModalOpen(false)} />
+          <CapitalDetailModal isOpen={capitalDetailOpen} onClose={() => setCapitalDetailOpen(false)} />
+        </>
+      )}
 
-      {/* ✅ Vade Hatırlatıcı + Ciro Karşılaştırma */}
+      {/* ✅ Vade Hatırlatıcı + Ciro Karşılaştırma — finansal, satış görmez */}
       <PaymentRemindersBar />
-      <RevenueComparisonCard transactions={activeTransactions} />
+      {canSeeCapital && <RevenueComparisonCard transactions={activeTransactions} />}
 
       {/* Date Range Filter */}
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4" data-testid="date-filter">
@@ -484,11 +492,11 @@ const Dashboard = ({ onOpenReport }) => {
         )}
       </div>
 
-      {/* Stats Grid — 5 kart, hepsi tek satırda eşit dağılım */}
+      {/* Stats Grid — finansal kartlar (Gelir/Gider/Kâr) sadece admin/muhasebe görebilir */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />
-        <StatCard title="TOPLAM GİDER" value={formatCurrency(totalExpense)} icon={ArrowDownRight} color="destructive" />
-        <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color="success" />
+        {canSeeCapital && <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />}
+        {canSeeCapital && <StatCard title="TOPLAM GİDER" value={formatCurrency(totalExpense)} icon={ArrowDownRight} color="destructive" />}
+        {canSeeCapital && <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color="success" />}
         <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : undefined} />
         <StatCard title="STOK / KONSİNYE" value={`${stockCars.length} / ${consignmentCars.length}`} icon={Package} color="default" subtitle={`${depositCars.length} kapora`} />
       </div>
@@ -593,12 +601,13 @@ const Dashboard = ({ onOpenReport }) => {
           </div>
         </div>
 
-        {/* Category Breakdown */}
-        <div className="bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="category-breakdown">
-          <div className="flex items-center gap-2 mb-4">
-            <CreditCard size={18} className="text-primary" />
-            <h3 className="font-heading font-semibold text-sm sm:text-base">Kategori Dağılımı</h3>
-          </div>
+        {/* Category Breakdown — sadece admin/muhasebe */}
+        {canSeeCapital && (
+          <div className="bg-card border border-border rounded-xl p-4 sm:p-5" data-testid="category-breakdown">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard size={18} className="text-primary" />
+              <h3 className="font-heading font-semibold text-sm sm:text-base">Kategori Dağılımı</h3>
+            </div>
           {categoryBreakdown.length > 0 ? (
             <div className="space-y-2.5">
               {categoryBreakdown.map((item, i) => (
@@ -620,7 +629,8 @@ const Dashboard = ({ onOpenReport }) => {
           ) : (
             <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Bu dönemde işlem yok</div>
           )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Row 3: Top Brands + Top Sellers + Recent Transactions */}
@@ -683,32 +693,35 @@ const Dashboard = ({ onOpenReport }) => {
           )}
         </div>
 
-        {/* Recent Transactions */}
-        <div className="bg-card border border-border rounded-xl" data-testid="recent-transactions">
-          <div className="p-4 border-b border-border">
-            <h3 className="font-heading font-semibold text-sm sm:text-base">Son İşlemler</h3>
-          </div>
-          <div className="p-2">
-            {recentTx.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-6">Bu dönemde işlem yok</p>
-            ) : (
-              recentTx.map(tx => (
-                <div key={tx.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-xs truncate">{tx.category}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{tx.description}</p>
+        {/* Recent Transactions — sadece admin/muhasebe */}
+        {canSeeCapital && (
+          <div className="bg-card border border-border rounded-xl" data-testid="recent-transactions">
+            <div className="p-4 border-b border-border">
+              <h3 className="font-heading font-semibold text-sm sm:text-base">Son İşlemler</h3>
+            </div>
+            <div className="p-2">
+              {recentTx.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-6">Bu dönemde işlem yok</p>
+              ) : (
+                recentTx.map(tx => (
+                  <div key={tx.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-xs truncate">{tx.category}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{tx.description}</p>
+                    </div>
+                    <span className={`font-heading font-bold text-xs tabular-nums ml-2 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                      {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                    </span>
                   </div>
-                  <span className={`font-heading font-bold text-xs tabular-nums ml-2 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
-                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                  </span>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Reports Button */}
+      {/* Reports Button — sadece admin/muhasebe */}
+      {canSeeCapital && (
       <button
         onClick={onOpenReport}
         className="w-full p-4 bg-card border border-border rounded-xl flex items-center justify-between hover:bg-muted/50 transition-colors"
@@ -725,6 +738,7 @@ const Dashboard = ({ onOpenReport }) => {
         </div>
         <Calendar size={20} className="text-muted-foreground" />
       </button>
+      )}
     </div>
   );
 };

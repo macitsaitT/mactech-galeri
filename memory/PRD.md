@@ -8,6 +8,19 @@
 
 ## Implementation Status
 
+### v5.16.3 - Sermaye/Kasa Erişim Kısıtlaması (2026-05-07)
+- ✅ **Backend** (`/app/backend/routes/capital.py`): Yeni `_require_finance_role` helper. **'satis' rolü tüm capital endpoint'lerinden 403 alır**: GET /capital, GET /capital/movements, POST /capital/adjust, POST /capital/set, POST /capital/initialize, DELETE /capital/movements/{id}, POST /capital/movements/cleanup-deleted. Sadece `admin`, `owner`, `muhasebe` erişebilir.
+- ✅ **Frontend** (`Dashboard.jsx`): Yeni `canSeeCapital = user.role !== 'satis'` kontrolü ile aşağıdakiler 'satis' rolünden gizlenir:
+  - CapitalSummaryCard (Toplam Sermaye)
+  - CapitalModal + CapitalDetailModal
+  - RevenueComparisonCard (Ciro Karşılaştırma)
+  - StatCard'lar: TOPLAM GELİR, TOPLAM GİDER, NET KÂR
+  - Kategori Dağılımı kartı
+  - Son İşlemler kartı
+  - Detaylı Raporlar butonu
+- ✅ **Sidebar**: Zaten 'satis' için Finans menüsü kapalı (Gelir&Gider, Alacaklar, Raporlar, Yıl Sonu Devri görünmüyor).
+- ✅ **Curl test**: 'satis' user oluştur → GET /capital → 403 ✓, GET /cars → 200 ✓ (operasyonel erişim devam ediyor). Pytest regression 2/2 PASS.
+
 ### v5.16.2 - Personel Performans Rozeti + Sistem Audit (2026-05-07)
 - ✅ **Personel Performans — Ortalama Brüt Kâr/Satış**:
   - Backend `/api/stats/employee-performance`: her satıcı için `avg_profit = total_profit / sold_count` ve `totals.avg_profit` döner.

@@ -10,6 +10,19 @@ from capital_service import get_capital, apply_delta
 
 router = APIRouter()
 
+# ✅ Sermaye/Kasa modülü: sadece admin ve muhasebe rolleri erişebilir.
+# 'satis' rolü sermaye bilgilerini görmemeli.
+_FINANCE_ROLES = {"admin", "owner", "muhasebe"}
+
+
+def _require_finance_role(current_user: dict) -> None:
+    role = (current_user.get("role") or "").lower()
+    if role not in _FINANCE_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail="Sermaye/Kasa bilgilerine sadece yönetici ve muhasebe rolleri erişebilir.",
+        )
+
 
 class CapitalAdjust(BaseModel):
     amount: float = Field(..., gt=0, description="Pozitif tutar")
@@ -29,6 +42,7 @@ class CapitalInitialize(BaseModel):
 
 @router.get("/capital")
 async def read_capital(current_user: dict = Depends(get_current_user)):
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     cap = await get_capital(org_id)
 
@@ -62,6 +76,7 @@ async def read_capital(current_user: dict = Depends(get_current_user)):
 @router.post("/capital/adjust")
 async def adjust_capital(body: CapitalAdjust, current_user: dict = Depends(get_current_user)):
     """Manuel kasa girişi (deposit) veya çıkışı (withdrawal)."""
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     delta = body.amount if body.type == "deposit" else -body.amount
     reason = "manual_deposit" if body.type == "deposit" else "manual_withdrawal"
@@ -79,6 +94,7 @@ async def adjust_capital(body: CapitalAdjust, current_user: dict = Depends(get_c
 @router.post("/capital/set")
 async def set_capital(body: CapitalSet, current_user: dict = Depends(get_current_user)):
     """Kasa bakiyesini doğrudan ayarla (başlangıç sermayesi için)."""
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     current = await get_capital(org_id)
     current_amt = float(current.get("amount", 0) or 0)
@@ -105,6 +121,7 @@ async def initialize_capital(body: CapitalInitialize, current_user: dict = Depen
       sistem geçmiş alış/satış/giderleri otomatik düşer/ekler.
     - Tüm bu tx'leri capital_applied=True işaretler ki sonradan tekrar uygulanmasın.
     """
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
 
     # Geçmiş, kasaya uygulanmamış aktif transactions
@@ -182,6 +199,7 @@ async def list_movements(
     (kullanıcı "silinen işlem her yerden silinmeli" dedi).
     `include_hidden=true` ile denetim için tümü görüntülenebilir.
     """
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     raw = (
         await db.capital_movements.find({"org_id": org_id}, {"_id": 0})
@@ -242,6 +260,7 @@ async def delete_movement(movement_id: str, current_user: dict = Depends(get_cur
       tek başına hard-delete edilir (bakiye revert edilmez — bunlar zaten net etkisi sıfır
       olan denetim/track kayıtlardır).
     """
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     mv = await db.capital_movements.find_one({"id": movement_id, "org_id": org_id}, {"_id": 0})
     if not mv:
@@ -317,6 +336,7 @@ async def cleanup_deleted_transactions(current_user: dict = Depends(get_current_
     kayıtlarını HARD-delete eder. Kasa görünümünden iptal edilmiş satışlar/yarım kalmış
     işlemlerin tüm izini temizler. Bakiye etkilenmez (bu kayıtların net etkisi zaten 0'dı).
     """
+    _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     deleted_txs = await db.transactions.find(
         {"org_id": org_id, "deleted": True}, {"id": 1}
