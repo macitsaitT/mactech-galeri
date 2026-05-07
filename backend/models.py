@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 class UserCreate(BaseModel):
     email: str
     password: str
+    name: str = ""
     company_name: str = "Aslanba Oto"
     phone: str = ""
     email_verified: bool = False

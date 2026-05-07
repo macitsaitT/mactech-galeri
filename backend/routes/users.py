@@ -122,6 +122,7 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
     
     user_doc = {
         "id": user_id, "email": clean_email, "password_hash": hash_password(user.password),
+        "name": getattr(user, "name", "") or "",
         "company_name": user.company_name, "phone": clean_phone,
         "address": "", "logo_url": "", "theme": "dark",
         "role": user.role, "org_id": org_id, "email_verified": True,
@@ -143,12 +144,18 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         entity_id=user_id, entity_label=user.company_name or clean_email,
         details={"email": clean_email, "role": user.role},
     )
-    # 🔗 mactech.tr'ye alt kullanıcı sync'i (best-effort, async)
+    # 🔗 mactech.tr'ye alt kullanıcı sync'i (best-effort, async) — name varsa onu, yoksa company_name'i kullan
+    sync_name = (getattr(user, "name", "") or user.company_name or "").strip()
     fire_and_forget(sync_sub_user_created(
-        org_id=org_id, email=clean_email, name=user.company_name or "",
+        org_id=org_id, email=clean_email, name=sync_name,
         password=user.password, phone=user.phone or "",
     ))
-    return {"id": user_id, "email": clean_email, "company_name": user.company_name, "phone": user.phone, "role": user.role, "org_id": org_id}
+    return {
+        "id": user_id, "email": clean_email,
+        "name": getattr(user, "name", "") or "",
+        "company_name": user.company_name, "phone": user.phone,
+        "role": user.role, "org_id": org_id, "branch_id": user.branch_id,
+    }
 
 
 @router.put("/users/{user_id}")
@@ -159,7 +166,7 @@ async def update_user(user_id: str, updates: dict, current_user: dict = Depends(
     target = await db.users.find_one({"id": user_id, "org_id": org_id})
     if not target:
         raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
-    allowed = {"role", "company_name", "phone", "email", "branch_id"}
+    allowed = {"name", "role", "company_name", "phone", "email", "branch_id"}
     safe_updates = {k: v for k, v in updates.items() if k in allowed and v is not None}
     if "email" in safe_updates:
         safe_updates["email"] = validate_email(safe_updates["email"])

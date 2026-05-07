@@ -23,7 +23,7 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [formData, setFormData] = useState({ email: '', password: '', company_name: '', phone: '', role: 'satis', branch_id: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', company_name: '', phone: '', role: 'satis', branch_id: '' });
   const [saving, setSaving] = useState(false);
 
   const fetchUsers = async () => {
@@ -45,13 +45,14 @@ const UsersPage = () => {
 
   const openAdd = () => {
     setEditingUser(null);
-    setFormData({ email: '', password: '', company_name: '', phone: '', role: 'satis', branch_id: '' });
+    setFormData({ name: '', email: '', password: '', company_name: '', phone: '', role: 'satis', branch_id: '' });
     setModalOpen(true);
   };
 
   const openEdit = (user) => {
     setEditingUser(user);
     setFormData({
+      name: user.name || user.company_name || '',
       email: user.email || '',
       password: '',
       company_name: user.company_name || '',
@@ -170,7 +171,7 @@ const UsersPage = () => {
                       <Icon size={20} />
                     </div>
                     <div>
-                      <p className="font-semibold">{user.company_name || user.email}</p>
+                      <p className="font-semibold">{user.name || user.company_name || user.email}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
@@ -253,10 +254,11 @@ const UsersPage = () => {
               <label className="block text-sm font-medium mb-2">Ad Soyad</label>
               <input
                 type="text"
-                value={formData.company_name}
-                onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value, company_name: e.target.value })}
                 className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors"
                 data-testid="user-name-input"
+                placeholder="Örn: Mehmet Yılmaz"
               />
             </div>
 

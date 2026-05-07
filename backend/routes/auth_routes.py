@@ -306,6 +306,7 @@ async def login(request: Request, credentials: UserLogin):
     
     user_response = {
         "id": user["id"], "email": user["email"],
+        "name": user.get("name", ""),
         "company_name": user.get("company_name", ""), "phone": user.get("phone", ""),
         "address": user.get("address", ""), "logo_url": user.get("logo_url", ""),
         "theme": user.get("theme", "dark"), "role": role, "org_id": org_id

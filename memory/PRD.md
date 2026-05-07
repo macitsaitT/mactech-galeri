@@ -8,6 +8,17 @@
 
 ## Implementation Status
 
+### v5.18.3 - Personel Adı Bug Fix (2026-05-07)
+- 🐛 **BUG**: SalesPersonalView'da "Hoş geldin, Satışçı" görünüyordu — kullanıcının gerçek adı yerine generic fallback. Kök neden: backend'in 3 noktası `name` alanını saklamıyor/döndürmüyordu.
+- ✅ **Fix kapsamı (3 backend, 4 frontend)**:
+  - **`models.py UserCreate`**: `name: str = ""` field'ı eklendi.
+  - **`routes/users.py POST /users`**: `user_doc`'a `name` ekleniyor + response'da dönüyor + mactech sub-user sync'inde name öncelikli.
+  - **`routes/users.py PUT /users/{id}`**: `allowed` set'e `name` eklendi (düzenleme).
+  - **`routes/auth_routes.py POST /auth/login`**: response `user_response`'a `name` field'ı eklendi.
+  - **Frontend `UsersPage.jsx`**: `formData.name` field'ı eklendi, "Ad Soyad" input'u artık `name`'e bağlı (geriye uyumluluk için `company_name`'e de yazılıyor). Liste'de `user.name || user.company_name || user.email` şeklinde fallback.
+  - **Frontend `SalesPersonalView.jsx`**: Karşılama metni `user.name || user.company_name || user.email.split('@')[0] || 'Satışçı'`.
+- ✅ **E2E test**: Yeni satış user "Ali Demir" oluşturuldu → POST/GET/Login response hepsinde `name: 'Ali Demir'` doğru dönüyor. Lint clean.
+
 ### v5.18.2 - Yetki Override Sidebar Bug Fix (KRİTİK) (2026-05-07)
 - 🐛 **KRİTİK BUG**: Sidebar `isItemVisible` mantığında **rol kontrolü yetkiyi ezerek user_overrides'ı işe yaramaz hale getiriyordu**.
   - Eski: `if (!item.roles.includes(userRole)) return false;` (rol listesi yoksa bayrak görünmüyordu, hasPermission'a gelinmiyordu).

@@ -67,7 +67,7 @@ const SalesPersonalView = () => {
             <Trophy size={24} className="text-primary" />
           </div>
           <div className="flex-1">
-            <h2 className="text-lg sm:text-xl font-bold">Hoş geldin, {user?.name || 'Satışçı'}</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Hoş geldin, {user?.name || user?.company_name || user?.email?.split('@')[0] || 'Satışçı'}</h2>
             <p className="text-xs sm:text-sm text-muted-foreground">Bu sayfada kendi satış performansını görüyorsun</p>
           </div>
         </div>
