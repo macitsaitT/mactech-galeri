@@ -40,14 +40,14 @@ const menuGroups = [
     icon: Briefcase,
     items: [
       { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard, roles: ['admin', 'muhasebe', 'satis'], perm: 'dashboard_view' },
-      { id: 'inventory', label: 'Stok Araçlar', icon: Car, roles: ['admin', 'satis'], perm: 'vehicles_view' },
-      { id: 'consignment', label: 'Konsinye Araçlar', icon: Package, roles: ['admin', 'satis'], perm: 'vehicles_view' },
-      { id: 'sold', label: 'Satılan Araçlar', icon: ShoppingCart, roles: ['admin', 'satis'], perm: 'vehicles_view' },
+      { id: 'inventory', label: 'Stok Araçlar', icon: Car, roles: ['admin', 'satis', 'muhasebe'], perm: 'vehicles_view' },
+      { id: 'consignment', label: 'Konsinye Araçlar', icon: Package, roles: ['admin', 'satis', 'muhasebe'], perm: 'vehicles_view' },
+      { id: 'sold', label: 'Satılan Araçlar', icon: ShoppingCart, roles: ['admin', 'satis', 'muhasebe'], perm: 'vehicles_view' },
       { id: 'customers', label: 'Müşteriler', icon: Users, roles: ['admin', 'satis', 'muhasebe'], perm: 'customers_view' },
-      { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis'], perm: 'appointments_view' },
-      { id: 'inspection', label: 'Muayene Takibi', icon: Wrench, roles: ['admin', 'satis'], perm: 'vehicles_view' },
-      { id: 'wanted-cars', label: 'Aranan Araçlar', icon: SearchIcon, roles: ['admin', 'satis'] },
-      { id: 'stock-aging', label: 'Stok Yaşlanma', icon: Hourglass, roles: ['admin', 'muhasebe'] },
+      { id: 'calendar', label: 'Randevular', icon: Calendar, roles: ['admin', 'satis', 'muhasebe'], perm: 'appointments_view' },
+      { id: 'inspection', label: 'Muayene Takibi', icon: Wrench, roles: ['admin', 'satis', 'muhasebe'], perm: 'vehicles_view' },
+      { id: 'wanted-cars', label: 'Aranan Araçlar', icon: SearchIcon, roles: ['admin', 'satis', 'muhasebe'], perm: 'vehicles_view' },
+      { id: 'stock-aging', label: 'Stok Yaşlanma', icon: Hourglass, roles: ['admin', 'muhasebe'], perm: 'reports_view' },
     ],
   },
   {
@@ -56,10 +56,10 @@ const menuGroups = [
     icon: PiggyBank,
     items: [
       { id: 'finance', label: 'Gelir & Gider', icon: Wallet, roles: ['admin', 'muhasebe'], perm: 'transactions_view' },
-      { id: 'receivables', label: 'Alacaklar', icon: AlertTriangle, roles: ['admin', 'muhasebe'] },
+      { id: 'receivables', label: 'Alacaklar', icon: AlertTriangle, roles: ['admin', 'muhasebe'], perm: 'transactions_view' },
       { id: 'reports', label: 'Raporlar', icon: FileText, roles: ['admin', 'muhasebe'], perm: 'reports_view' },
       { id: 'calculations', label: 'Hesaplama Araçları', icon: Calculator, roles: ['admin', 'muhasebe', 'satis'], perm: 'dashboard_view' },
-      { id: 'year-end', label: 'Yıl Sonu Devri', icon: CalendarClock, roles: ['admin'] },
+      { id: 'year-end', label: 'Yıl Sonu Devri', icon: CalendarClock, roles: ['admin'], perm: 'reports_view' },
     ],
   },
   {
@@ -69,8 +69,8 @@ const menuGroups = [
     items: [
       { id: 'permissions', label: 'Yetki Yönetimi', icon: Shield, roles: ['admin'] },
       { id: 'users', label: 'Kullanıcılar', icon: UserCog, roles: ['admin'] },
-      { id: 'employee-performance', label: 'Personel Performansı', icon: Trophy, roles: ['admin', 'muhasebe'] },
-      { id: 'activity-logs', label: 'İşlem Geçmişi', icon: Activity, roles: ['admin', 'muhasebe'] },
+      { id: 'employee-performance', label: 'Personel Performansı', icon: Trophy, roles: ['admin', 'muhasebe'], perm: 'reports_view' },
+      { id: 'activity-logs', label: 'İşlem Geçmişi', icon: Activity, roles: ['admin', 'muhasebe'], perm: 'reports_view' },
       { id: 'trash', label: 'Çöp Kutusu', icon: Trash2, roles: ['admin'], perm: 'trash_view' },
     ],
   },
@@ -102,11 +102,17 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
     setCollapsedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
+  // ✅ Görünürlük: Admin/owner her şeyi görür. Diğer roller için yetki (perm) ÖNCELİKLİ —
+  // perm varsa user_overrides + role_defaults üzerinden hasPermission belirler.
+  // Perm yoksa, eski roles[] listesine bakılır.
   const isItemVisible = (item) => {
-    if (userRole === 'admin') return item.roles.includes('admin');
-    if (!item.roles.includes(userRole)) return false;
-    if (item.perm) return hasPermission(item.perm);
-    return true;
+    if (userRole === 'admin' || userRole === 'owner') return true;
+    if (item.perm) {
+      // Perm tanımlıysa onun üzerinden karar ver — user_overrides bu sayede çalışır
+      return hasPermission(item.perm);
+    }
+    // Perm yoksa eski rol listesi üzerinden
+    return item.roles.includes(userRole);
   };
 
   const handleNavClick = (itemId) => {

@@ -8,6 +8,17 @@
 
 ## Implementation Status
 
+### v5.18.2 - Yetki Override Sidebar Bug Fix (KRİTİK) (2026-05-07)
+- 🐛 **KRİTİK BUG**: Sidebar `isItemVisible` mantığında **rol kontrolü yetkiyi ezerek user_overrides'ı işe yaramaz hale getiriyordu**.
+  - Eski: `if (!item.roles.includes(userRole)) return false;` (rol listesi yoksa bayrak görünmüyordu, hasPermission'a gelinmiyordu).
+  - Sonuç: Admin bir satış kullanıcısına `reports_view: true` user_override verse bile **Raporlar menüsü görünmüyordu**, çünkü `roles` listesinde 'satis' yoktu.
+- ✅ **FIX**: Yeni mantık —
+  1. Admin/owner: tümü görünür.
+  2. Item'da `perm` tanımlıysa: **sadece** `hasPermission(perm)` ile karar verilir → user_overrides + role_defaults düzgün çalışır.
+  3. Item'da `perm` yoksa: eski `roles[]` listesi kullanılır.
+- ✅ **Menu items perm eklendi**: `receivables`, `year-end`, `wanted-cars`, `stock-aging`, `employee-performance`, `activity-logs`. Şimdi tüm sidebar öğeleri user_overrides ile kontrol edilebilir.
+- ✅ **E2E test**: Satış kullanıcısına `reports_view: true` + `vehicles_delete: true` user_override verildi → Raporlar, Stok Yaşlanma, Yıl Sonu Devri, Personel Performansı, İşlem Geçmişi menüleri **görünür hale geldi**. Pytest 2/2 PASS.
+
 ### v5.18.1 - Yetki Real-time Senkronizasyonu (Polling) (2026-05-07)
 - ✅ **Backend**: `GET /api/permissions/version` (hafif endpoint, sadece UUID + updated_at döner). `PUT /api/permissions` artık her güncellemede yeni UUID üretiyor (`version` alanı).
 - ✅ **Frontend AppContext**: 
