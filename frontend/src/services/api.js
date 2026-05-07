@@ -183,6 +183,7 @@ export const customersAPI = {
 export const transactionsAPI = {
   getAll: (params = {}) => api.get('/transactions', { params }),
   create: (data) => api.post('/transactions', data),
+  createBatch: (transactions) => api.post('/transactions/batch', { transactions }),
   update: (id, data) => api.put(`/transactions/${id}`, data),
   delete: (id, permanent = false) => api.delete(`/transactions/${id}?permanent=${permanent}`),
   restore: (id) => api.post(`/transactions/${id}/restore`),

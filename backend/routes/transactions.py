@@ -29,6 +29,68 @@ async def get_transactions(created_by: str = None, branch_id: str = None, curren
     return await db.transactions.find(query, {"_id": 0}).to_list(5000)
 
 
+@router.post("/transactions/batch")
+async def create_transactions_batch(payload: dict, current_user: dict = Depends(get_current_user)):
+    """Toplu transaction kaydı — AddCarModal'daki inline masraflar gibi senaryolarda
+    tek istekle birden çok kayıt oluşturur. Her tx için kasa atomik uygulanır.
+
+    Body: {"transactions": [TransactionCreate, ...]}
+    Response: {"created": [...], "errors": [{"index": int, "error": str}]}
+    """
+    items = payload.get("transactions") or []
+    if not isinstance(items, list) or len(items) == 0:
+        raise HTTPException(status_code=400, detail="transactions array gerekli")
+    if len(items) > 50:
+        raise HTTPException(status_code=400, detail="Tek seferde en fazla 50 transaction gönderilebilir")
+
+    org_id = current_user.get("org_id", current_user["user_id"])
+    now = datetime.now(timezone.utc).isoformat()
+    created = []
+    errors = []
+
+    for idx, raw in enumerate(items):
+        try:
+            tc = TransactionCreate(**raw)
+        except Exception as e:
+            errors.append({"index": idx, "error": f"Geçersiz veri: {e}"})
+            continue
+
+        tx_id = str(uuid.uuid4())
+        tx_doc = tc.model_dump()
+        tx_doc.update({
+            "id": tx_id, "user_id": current_user["user_id"],
+            "org_id": org_id, "created_by": current_user["user_id"],
+            "deleted": False, "deleted_at": None, "created_at": now,
+            "capital_applied": True,
+        })
+        delta = _tx_delta(tx_doc)
+        try:
+            await apply_delta(
+                org_id, delta,
+                reason="transaction_create",
+                ref_type="transaction", ref_id=tx_id,
+                description=f"{tx_doc.get('category', '')}: {tx_doc.get('description', '')}",
+                allow_negative=True,
+                user_id=current_user["user_id"],
+            )
+            await db.transactions.insert_one(tx_doc)
+            await log_activity(
+                db, current_user=current_user, action="create", entity_type="transaction",
+                entity_id=tx_id, entity_label=tx_doc.get("category", ""),
+                details={
+                    "type": tx_doc.get("type"), "amount": tx_doc.get("amount"),
+                    "car_id": tx_doc.get("car_id") or None,
+                    "batch": True,
+                },
+            )
+            created_doc = await db.transactions.find_one({"id": tx_id}, {"_id": 0})
+            created.append(created_doc)
+        except Exception as e:
+            errors.append({"index": idx, "error": str(e)})
+
+    return {"created": created, "errors": errors, "created_count": len(created), "error_count": len(errors)}
+
+
 @router.post("/transactions", response_model=Transaction)
 async def create_transaction(transaction: TransactionCreate, current_user: dict = Depends(get_current_user)):
     org_id = current_user.get("org_id", current_user["user_id"])

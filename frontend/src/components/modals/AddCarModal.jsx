@@ -8,6 +8,10 @@ import { fileAPI, notificationsAPI } from '../../services/api';
 import { useApp } from '../../context/AppContext';
 import VehicleExpensesModal from './VehicleExpensesModal';
 import { toast } from 'sonner';
+// ✅ Refactor: ayrı dosyalara çıkarılan alt componentler
+import DocumentCategory from './addCarParts/DocumentCategory';
+import PhotoUploadTab from './addCarParts/PhotoUploadTab';
+import SellerSelector from './addCarParts/SellerSelector';
 
 const INLINE_EXPENSE_CATEGORIES = [
   'Genel Gider', 'Boya', 'Mekanik Bakım', 'Yedek Parça',
@@ -15,423 +19,12 @@ const INLINE_EXPENSE_CATEGORIES = [
   'Detaylı Yıkama', 'Ekspertiz', 'Taşıma/Çekici', 'Diğer'
 ];
 
-// Document Category Component
-const DocumentCategory = ({ doc, docs, formData, handleChange }) => {
-  const [uploading, setUploading] = useState(false);
-
-  const handleDocUpload = async (files) => {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      const newDocs = [...docs];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        // 50MB limit
-        if (file.size > 50 * 1024 * 1024) {
-          alert(`${file.name} çok büyük (max 50MB)`);
-          continue;
-        }
-        
-        try {
-          const res = await fileAPI.smartUpload(file);
-          newDocs.push({
-            path: res.data.path,
-            name: file.name,
-            uploadedAt: new Date().toISOString()
-          });
-        } catch (err) {
-          console.error('Upload failed:', err);
-          alert(`"${file.name}" yüklenemedi.`);
-        }
-      }
-      handleChange('documents', {
-        ...formData.documents,
-        [doc.id]: newDocs
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDocDelete = (index) => {
-    const newDocs = docs.filter((_, i) => i !== index);
-    handleChange('documents', {
-      ...formData.documents,
-      [doc.id]: newDocs
-    });
-  };
-
-  return (
-    <div className="p-4 bg-muted/30 border border-border rounded-xl">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{doc.icon}</span>
-          <h5 className="font-semibold text-sm">{doc.label}</h5>
-          {docs.length > 0 && (
-            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-              {docs.length} dosya
-            </span>
-          )}
-        </div>
-        <label className="cursor-pointer px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
-          <Upload size={14} />
-          {uploading ? 'Yükleniyor...' : 'Yükle'}
-          <input
-            type="file"
-            multiple
-            accept="image/*,.pdf"
-            className="hidden"
-            onChange={(e) => handleDocUpload(e.target.files)}
-            disabled={uploading}
-          />
-        </label>
-      </div>
-      
-      {docs.length > 0 && (
-        <div className="space-y-2">
-          {docs.map((docFile, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border/50 group hover:border-primary/30 transition-colors"
-            >
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <FileText size={16} className="text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{docFile.name}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {new Date(docFile.uploadedAt).toLocaleDateString('tr-TR')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <a
-                  href={docFile.path.startsWith('http') ? docFile.path : fileAPI.getUrl(docFile.path)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 text-primary hover:bg-primary/10 rounded transition-colors"
-                  title="Görüntüle"
-                >
-                  <Camera size={14} />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleDocDelete(index)}
-                  className="p-1.5 text-destructive hover:bg-destructive/10 rounded transition-colors"
-                  title="Sil"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {docs.length === 0 && (
-        <p className="text-xs text-muted-foreground text-center py-2">
-          Henüz belge yüklenmedi
-        </p>
-      )}
-    </div>
-  );
-};
-
-const PhotoUploadTab = ({ formData, handleChange }) => {
-  const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  const handleFileUpload = async (files) => {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    setUploadProgress(0);
-    try {
-      const newPhotos = [...(formData.photos || [])];
-      const totalFiles = files.length;
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        // Limit: 50MB
-        if (file.size > 50 * 1024 * 1024) {
-          alert('Dosya çok büyük (max 50MB)');
-          continue;
-        }
-        
-        try {
-          // Smart upload kullan - otomatik olarak en uygun yöntemi seçer
-          const res = await fileAPI.smartUpload(file, (progress) => {
-            // Her dosya için progress
-            const overallProgress = Math.round(((i + progress / 100) / totalFiles) * 100);
-            setUploadProgress(overallProgress);
-          });
-          newPhotos.push(res.data.path);
-          setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
-        } catch (uploadError) {
-          console.error('Smart upload failed, trying fallback:', uploadError);
-          // Fallback: Normal upload dene
-          try {
-            const fd = new FormData();
-            fd.append('file', file);
-            const res = await fileAPI.upload(fd);
-            newPhotos.push(res.data.path);
-          } catch (fallbackError) {
-            console.error('All upload methods failed:', fallbackError);
-            alert(`"${file.name}" yüklenemedi. Lütfen daha küçük bir dosya deneyin.`);
-          }
-        }
-      }
-      handleChange('photos', newPhotos);
-    } catch (err) {
-      console.error('Upload failed:', err);
-      alert('Fotoğraf yüklenemedi: ' + (err.response?.data?.detail || err.message));
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    handleFileUpload(e.dataTransfer.files);
-  };
-
-  return (
-    <div className="space-y-4 py-4">
-      <div
-        className={`text-center py-12 border-2 border-dashed rounded-xl transition-colors ${
-          dragOver ? 'border-primary bg-primary/5' : 'border-border'
-        }`}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
-      >
-        {uploading ? (
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 size={48} className="animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Yükleniyor... %{uploadProgress}</p>
-            <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
-        ) : (
-          <>
-            <Upload size={48} className="mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-2">Fotoğraf yüklemek için tıklayın veya sürükleyin</p>
-            <p className="text-xs text-muted-foreground">PNG, JPG, WebP, HEIC (max. 50MB)</p>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              id="photo-upload"
-              data-testid="photo-upload-input"
-              onChange={(e) => handleFileUpload(e.target.files)}
-            />
-            <label
-              htmlFor="photo-upload"
-              className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:bg-primary/90 transition-colors font-medium text-sm"
-              data-testid="photo-upload-btn"
-            >
-              <Upload size={16} />
-              Fotoğraf Seç
-            </label>
-          </>
-        )}
-      </div>
-
-      {formData.photos && formData.photos.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          {formData.photos.map((photo, index) => (
-            <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-muted group" data-testid={`photo-preview-${index}`}>
-              <img
-                src={photo.startsWith('http') ? photo : fileAPI.getUrl(photo)}
-                alt={`Araç ${index + 1}`}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.target.src = ''; e.target.className = 'hidden'; }}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const newPhotos = formData.photos.filter((_, i) => i !== index);
-                  handleChange('photos', newPhotos);
-                }}
-                className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                data-testid={`remove-photo-${index}`}
-              >
-                <Trash2 size={14} />
-              </button>
-              <div className="absolute bottom-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">
-                {index + 1}/{formData.photos.length}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-
-// ✅ Satıcı seçici — mevcut müşteri listesinden seç veya yeni satıcı ekle
-const SellerSelector = ({ customers, selectedId, onChange, addCustomer }) => {
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [search, setSearch] = useState('');
-  const [newSeller, setNewSeller] = useState({ name: '', phone: '' });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  // Sadece silinmemiş müşteriler — Satıcı + Potansiyel + Aktif görünür (Satış Yapıldı tipi gizlenmiyor, biri zaten satıcımız olabilir)
-  const filtered = (customers || [])
-    .filter((c) => !c.deleted)
-    .filter((c) => {
-      if (!search.trim()) return true;
-      const q = search.trim().toLowerCase();
-      return (c.name || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q);
-    })
-    .sort((a, b) => {
-      // Satıcı tipindekiler en üstte
-      const ar = a.type === 'Satıcı' ? 0 : 1;
-      const br = b.type === 'Satıcı' ? 0 : 1;
-      if (ar !== br) return ar - br;
-      return (a.name || '').localeCompare(b.name || '', 'tr');
-    });
-
-  const selected = customers.find((c) => c.id === selectedId);
-
-  const handleCreate = async () => {
-    setError('');
-    const name = (newSeller.name || '').trim();
-    const phone = (newSeller.phone || '').replace(/\D/g, '');
-    if (!name) return setError('İsim gerekli');
-    if (!phone || phone.length !== 11) return setError('Telefon 11 haneli olmalı (örn 05321234567)');
-    setSaving(true);
-    try {
-      const created = await addCustomer({ name, phone, type: 'Satıcı', notes: 'Araç alımı sırasında oluşturuldu' });
-      if (created?.id) {
-        onChange(created.id);
-        setShowNewForm(false);
-        setNewSeller({ name: '', phone: '' });
-      }
-    } catch (err) {
-      setError(err?.response?.data?.detail || 'Müşteri oluşturulamadı');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="p-3 sm:p-4 bg-amber-500/5 border border-amber-500/30 rounded-xl space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="text-sm font-semibold text-amber-600">Aracı Aldığımız Kişi (Satıcı)</h4>
-          <p className="text-xs text-muted-foreground mt-0.5">Müşteri listesinden seçin veya yeni satıcı ekleyin</p>
-        </div>
-        {!showNewForm && (
-          <button
-            type="button"
-            onClick={() => { setShowNewForm(true); setError(''); }}
-            className="px-3 py-1.5 text-xs font-medium bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 rounded-lg flex items-center gap-1.5"
-            data-testid="seller-add-new-btn"
-          >
-            + Yeni Satıcı
-          </button>
-        )}
-      </div>
-
-      {showNewForm ? (
-        <div className="space-y-2 p-3 bg-background border border-border rounded-lg">
-          <input
-            type="text"
-            value={newSeller.name}
-            onChange={(e) => setNewSeller({ ...newSeller, name: e.target.value })}
-            placeholder="Satıcı Adı *"
-            className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm focus:border-amber-500 outline-none"
-            data-testid="seller-new-name"
-          />
-          <input
-            type="tel"
-            value={newSeller.phone}
-            onChange={(e) => setNewSeller({ ...newSeller, phone: formatPhoneInput(e.target.value) })}
-            placeholder="Telefon (11 hane) *"
-            maxLength={14}
-            className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm focus:border-amber-500 outline-none"
-            data-testid="seller-new-phone"
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={saving}
-              className="flex-1 h-9 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50"
-              data-testid="seller-new-save"
-            >
-              {saving ? 'Kaydediliyor…' : 'Kaydet & Seç'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowNewForm(false); setNewSeller({ name: '', phone: '' }); setError(''); }}
-              className="flex-1 h-9 border border-border rounded-lg text-sm"
-            >
-              İptal
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Ara: isim veya telefon"
-            className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm focus:border-amber-500 outline-none"
-            data-testid="seller-search"
-          />
-          <select
-            value={selectedId || ''}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm focus:border-amber-500 outline-none"
-            data-testid="seller-select"
-          >
-            <option value="">— Satıcı seçilmedi —</option>
-            {filtered.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} {c.phone ? `(${c.phone})` : ''} {c.type === 'Satıcı' ? '· Satıcı' : ''}
-              </option>
-            ))}
-          </select>
-          {selected && (
-            <div className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-amber-500/20 text-xs">
-              <div>
-                <span className="font-semibold">{selected.name}</span>
-                {selected.phone && <span className="text-muted-foreground"> · {selected.phone}</span>}
-              </div>
-              <button
-                type="button"
-                onClick={() => onChange('')}
-                className="text-destructive hover:underline"
-                data-testid="seller-clear"
-              >
-                Kaldır
-              </button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
 
 // Expertise sections
 const expertiseParts = [
@@ -534,7 +127,7 @@ const defaultFormData = {
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
-  const { addTransaction, customers, addCustomer } = useApp();
+  const { addTransactionsBatch, customers, addCustomer } = useApp();
   const [formData, setFormData] = useState(defaultFormData);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -674,30 +267,29 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
       // Hatırlatmaları backend'e kaydet
       const carId = savedCar?.id || editingCar?.id;
       if (carId) {
-        // ✅ Inline masrafları transaction olarak kaydet (Gider) — kasa otomatik düşer
+        // ✅ Inline masrafları transaction olarak kaydet (Gider) — tek batch isteğiyle, kasa otomatik düşer
         if (pendingExpenses.length > 0) {
-          let okCount = 0;
-          for (const exp of pendingExpenses) {
-            try {
-              // ✅ AppContext.addTransaction kullanılıyor — bu setTransactions + refreshStats + refreshCapital çağırır
-              await addTransaction({
-                type: 'expense',
-                category: exp.category || 'Genel Gider',
-                amount: parseNumber(exp.amount),
-                description: `${exp.description || ''}${exp.description ? ' - ' : ''}${(savedCar?.plate || formData.plate || '').toUpperCase()}`,
-                date: exp.date || new Date().toISOString().split('T')[0],
-                car_id: carId,
-              });
-              okCount++;
-            } catch (err) {
-              console.error('Inline masraf kaydı başarısız:', err);
+          try {
+            const txList = pendingExpenses.map((exp) => ({
+              type: 'expense',
+              category: exp.category || 'Genel Gider',
+              amount: parseNumber(exp.amount),
+              description: `${exp.description || ''}${exp.description ? ' - ' : ''}${(savedCar?.plate || formData.plate || '').toUpperCase()}`,
+              date: exp.date || new Date().toISOString().split('T')[0],
+              car_id: carId,
+            }));
+            const result = await addTransactionsBatch(txList);
+            const ok = result?.created_count ?? 0;
+            const fail = result?.error_count ?? 0;
+            if (ok > 0) {
+              toast.success(`${ok} masraf kaydedildi, kasa güncellendi`);
             }
-          }
-          if (okCount > 0) {
-            toast.success(`${okCount} masraf kaydedildi, kasa güncellendi`);
-          }
-          if (okCount < pendingExpenses.length) {
-            toast.error(`${pendingExpenses.length - okCount} masraf kaydedilemedi`);
+            if (fail > 0) {
+              toast.error(`${fail} masraf kaydedilemedi`);
+            }
+          } catch (err) {
+            console.error('Inline batch masraf kaydı başarısız:', err);
+            toast.error('Masraflar kaydedilemedi');
           }
         }
         // Muayene hatırlatmalarını kaydet

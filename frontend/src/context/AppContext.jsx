@@ -251,6 +251,17 @@ export const AppProvider = ({ children }) => {
     return response.data;
   };
 
+  // ✅ Toplu transaction kaydı — tek istekle birden çok tx oluşturur, sonra tek refresh
+  const addTransactionsBatch = async (transactionsArr) => {
+    const response = await transactionsAPI.createBatch(transactionsArr);
+    const created = response.data?.created || [];
+    if (created.length > 0) {
+      setTransactions(prev => [...prev, ...created]);
+      await Promise.all([refreshStats(), refreshCapital()]);
+    }
+    return response.data; // {created, errors, created_count, error_count}
+  };
+
   const updateTransaction = async (id, updates) => {
     const response = await transactionsAPI.update(id, updates);
     setTransactions(prev => prev.map(t => t.id === id ? response.data : t));
@@ -382,6 +393,7 @@ export const AppProvider = ({ children }) => {
 
     // Transactions
     addTransaction,
+    addTransactionsBatch,
     updateTransaction,
     deleteTransaction,
     restoreTransaction,

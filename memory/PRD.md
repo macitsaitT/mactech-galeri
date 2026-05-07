@@ -2,11 +2,21 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.15.0
+- **Version:** 5.16.0
 - **Last Updated:** 2026-05-07
-- **Status:** Satıcı (Aldığımız) Müşteri Tipi Eklendi — Curl E2E PASS
+- **Status:** Batch Transactions Endpoint + AddCarModal Refactor Tamamlandı — 2/2 pytest PASS
 
 ## Implementation Status
+
+### v5.16.0 - Batch Transactions + AddCarModal Refactor (2026-05-07)
+- ✅ **P1 — `POST /api/transactions/batch`**: Tek istekle çoklu transaction kaydı. Body `{transactions: [...]}`. Her tx için kasa atomik uygulanır, hata olanlar `errors[]` array'inde döner. Max 50 / istek. AddCarModal inline masraflar artık sequential loop yerine **tek batch çağrısı** ile kaydediliyor (daha hızlı UX, tek refreshStats+refreshCapital). Curl test: 2 tx, kasa -2.300 ₺ doğru, errors=0.
+- ✅ **P3 — AddCarModal Refactor**: 1793 → 1385 satır (-408, **-%23**). Sub-componentler ayrı dosyalara çıkarıldı:
+  - `addCarParts/DocumentCategory.jsx` (~130 satır)
+  - `addCarParts/PhotoUploadTab.jsx` (~150 satır)
+  - `addCarParts/SellerSelector.jsx` (~155 satır)
+  - Hiçbir davranış değişikliği yok — sadece dosya organizasyonu. ESLint clean.
+  - Smoke test: AddCarModal açılıyor, tüm 5 tab (Genel/Ekspertiz/Foto/Belge/Sahiplik) render oluyor.
+  - Pytest regression: `test_iter50_seller_multi_car.py` 2/2 PASS.
 
 ### v5.15.1 - Satıcı Edge Cases (Update + Multi-car) (2026-05-07)
 - ✅ **P2 — Seller Change Handling**: Yeni helper'lar `_mark_as_seller` + `_revert_seller_if_orphan` ile cars router. PUT/PATCH `seller_customer_id` değişirse eski satıcı orphan olduğunda Potansiyel'e revert + yeni satıcı Satıcı olur. Restore (soft-delete'ten geri yükleme) seller'ı yeniden işaretler.
