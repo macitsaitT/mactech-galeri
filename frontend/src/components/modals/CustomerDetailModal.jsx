@@ -116,6 +116,39 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
                 )}
               </div>
 
+              {/* ✅ Bizden alınan araçlar — satıcı modu (bu kişiden aldığımız) */}
+              {Array.isArray(data.sold_to_us_cars) && data.sold_to_us_cars.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <CarIcon size={16} className="text-amber-600" />
+                    Bu Kişiden Aldığımız Araçlar
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      Toplam Alış: <span className="font-bold text-amber-600">{formatCurrency(totals.total_sold_to_us_amount || 0)}</span>
+                    </span>
+                  </h3>
+                  <div className="space-y-2">
+                    {data.sold_to_us_cars.map(car => (
+                      <div key={car.id} className="p-3 border border-amber-500/30 bg-amber-500/5 rounded-lg" data-testid={`detail-sold-to-us-${car.id}`}>
+                        <div className="flex items-start justify-between gap-2 flex-wrap">
+                          <div>
+                            <div className="font-semibold">
+                              {car.brand} {car.model} ({car.year})
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {car.plate?.toUpperCase()} • Giriş: {formatDate(car.entry_date)} • Durum: <span className="font-medium">{car.status}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[11px] text-muted-foreground">Alış</div>
+                            <div className="text-sm font-bold text-amber-600">{formatCurrency(car.purchase_price)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Vadeli Taksit */}
               {data.installments.length > 0 && (
                 <div>

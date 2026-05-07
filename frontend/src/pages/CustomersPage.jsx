@@ -38,6 +38,8 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, on
         return 'bg-primary/20 text-primary border-primary/30';
       case 'Satış Yapıldı':
         return 'bg-success/20 text-success border-success/30';
+      case 'Satıcı':
+        return 'bg-amber-500/20 text-amber-600 border-amber-500/30';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
@@ -305,6 +307,7 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
           <option value="Potansiyel">Potansiyel</option>
           <option value="Aktif">Aktif</option>
           <option value="Satış Yapıldı">Satış Yapıldı</option>
+          <option value="Satıcı">Satıcı (Aldığımız)</option>
         </select>
 
         {/* Add Button */}
@@ -335,6 +338,9 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
           </span>
           <span className="text-success">
             Satış: {customers.filter(c => !c.deleted && c.type === 'Satış Yapıldı').length}
+          </span>
+          <span className="text-amber-600">
+            Satıcı: {customers.filter(c => !c.deleted && c.type === 'Satıcı').length}
           </span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

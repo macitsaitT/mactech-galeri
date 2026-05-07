@@ -107,6 +107,13 @@ async def get_customer_detail(customer_id: str, current_user: dict = Depends(get
         "deleted": {"$ne": True},
     }, {"_id": 0}).sort("sold_date", -1).to_list(500)
 
+    # ✅ Bu kişiden ALDIĞIMIZ araçlar (seller_customer_id eşleşen, silinmemiş)
+    sold_to_us_cars = await db.cars.find({
+        "org_id": org_id,
+        "seller_customer_id": customer_id,
+        "deleted": {"$ne": True},
+    }, {"_id": 0}).sort("entry_date", -1).to_list(500)
+
     # İlgili tüm ödeme/gelir transaction'ları (bu müşteriye ait)
     transactions = await db.transactions.find({
         "org_id": org_id,
@@ -135,11 +142,15 @@ async def get_customer_detail(customer_id: str, current_user: dict = Depends(get
         "total_paid": sum(c["total_paid"] for c in purchased_cars),
         "total_remaining": sum(c["remaining"] for c in purchased_cars),
         "installment_count": len(installments),
+        # ✅ Bu kişiden alınan araçlar (satıcı modu)
+        "total_sold_to_us": len(sold_to_us_cars),
+        "total_sold_to_us_amount": sum(float(c.get("purchase_price", 0) or 0) for c in sold_to_us_cars),
     }
 
     return {
         "customer": customer,
         "purchased_cars": purchased_cars,
+        "sold_to_us_cars": sold_to_us_cars,
         "transactions": transactions,
         "installments": installments,
         "totals": totals,

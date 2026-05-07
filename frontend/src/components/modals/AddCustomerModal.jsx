@@ -17,7 +17,7 @@ const defaultFormData = {
   interested_car_id: ''
 };
 
-const customerTypes = ['Potansiyel', 'Aktif', 'Satış Yapıldı'];
+const customerTypes = ['Potansiyel', 'Aktif', 'Satış Yapıldı', 'Satıcı'];
 
 const AddCustomerModal = ({ isOpen, onClose, onSave, editingCustomer = null }) => {
   const { cars } = useApp();

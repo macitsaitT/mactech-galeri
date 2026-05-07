@@ -2,11 +2,22 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.14.0
+- **Version:** 5.15.0
 - **Last Updated:** 2026-05-07
-- **Status:** Inline Masraf Entegrasyonu (AddCarModal) + Expense Düzenle/Sil tam çalışıyor — Backend 4/4 PASS, Frontend 100% (Iter 48)
+- **Status:** Satıcı (Aldığımız) Müşteri Tipi Eklendi — Curl E2E PASS
 
 ## Implementation Status
+
+### v5.15.0 - Satıcı Müşteri Tipi (Aldığımız Kişi) (2026-05-07)
+- ✅ **Yeni Müşteri Tipi 'Satıcı'**: AddCustomerModal + CustomersPage filtre + sayım kartı (amber renk).
+- ✅ **AddCarModal Sahiplik > Stok**: Yeni `SellerSelector` componenti — mevcut müşteriler arasından arama/dropdown ile satıcı seç + "Yeni Satıcı" inline form (ad + 11 hane telefon → AppContext.addCustomer ile oluşturup otomatik seçer). Edit modunda da görünür.
+- ✅ **Backend Otomasyon**:
+  - `Car.seller_customer_id` alanı eklendi (CarBase).
+  - `POST /api/cars`: `seller_customer_id` set edilirse + müşteri 'Potansiyel' tipindeyse otomatik **'Satıcı'** olur.
+  - `DELETE /api/cars/{id}`: silinen aracın satıcısı başka aracımız yoksa otomatik **'Potansiyel'e geri döner**.
+  - `GET /api/customers/{id}/detail`: `sold_to_us_cars` array + `total_sold_to_us` / `total_sold_to_us_amount` totals'a eklendi.
+- ✅ **CustomerDetailModal**: "Bu Kişiden Aldığımız Araçlar" bölümü (amber tema, plaka + giriş tarihi + alış fiyatı + status). Toplam alış tutarı header'da.
+- ✅ **Curl Test (E2E)**: Müşteri Potansiyel→Satıcı, sold_to_us_cars=1 amount=400.000, araç silince Satıcı→Potansiyel geri dönüş hepsi PASS.
 
 ### v5.14.2 - Inline Masraf Sermaye/Dashboard/Rapor Senkron Bug Fix (2026-05-07)
 - 🔴 **BUG**: AddCarModal'dan girilen inline masraflar Kasa/Sermaye, Dashboard "Toplam Gider" ve Raporlar'a yansımıyordu. **Kök neden**: (a) `transactionsAPI.create` doğrudan kullanılıyordu — AppContext state güncellenmiyor, refreshStats+refreshCapital tetiklenmiyor. (b) `App.js handleSaveCar` yeni car nesnesini return etmiyordu — AddCarModal `carId` alamıyor, inline expense loop hiç çalışmıyordu.

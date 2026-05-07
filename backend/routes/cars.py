@@ -26,14 +26,26 @@ async def get_cars(created_by: str = None, branch_id: str = None, current_user: 
 async def create_car(car: CarCreate, current_user: dict = Depends(get_current_user)):
     car_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
+    org_id = current_user.get("org_id", current_user["user_id"])
     car_doc = car.model_dump()
     car_doc.update({
         "id": car_id, "user_id": current_user["user_id"],
-        "org_id": current_user.get("org_id", current_user["user_id"]),
+        "org_id": org_id,
         "created_by": current_user["user_id"],
         "deleted": False, "deleted_at": None, "created_at": now, "updated_at": now
     })
     await db.cars.insert_one(car_doc)
+
+    # ✅ Satıcı müşteri seçilmişse tipini "Satıcı" olarak işaretle (şu an Potansiyel ise)
+    seller_id = car_doc.get("seller_customer_id")
+    if seller_id:
+        seller = await db.customers.find_one({"id": seller_id, "org_id": org_id})
+        if seller and seller.get("type") == "Potansiyel":
+            await db.customers.update_one(
+                {"id": seller_id, "org_id": org_id},
+                {"$set": {"type": "Satıcı"}},
+            )
+
     await log_activity(
         db, current_user=current_user, action="create", entity_type="car",
         entity_id=car_id, entity_label=car_doc.get("plate", "").upper(),
@@ -267,6 +279,23 @@ async def delete_car(car_id: str, permanent: bool = False, current_user: dict = 
             {"car_id": car_id, "org_id": org_id},
             {"$set": {"deleted": True, "deleted_at": now, "capital_applied": False}},
         )
+
+    # ✅ Satıcı müşteriyi geri al — bu satıcının başka aktif (silinmemiş) satılan aracı kalmadıysa
+    seller_id = existing.get("seller_customer_id")
+    if seller_id:
+        other_active = await db.cars.count_documents({
+            "org_id": org_id,
+            "seller_customer_id": seller_id,
+            "deleted": {"$ne": True},
+            "id": {"$ne": car_id},
+        })
+        if other_active == 0:
+            seller = await db.customers.find_one({"id": seller_id, "org_id": org_id})
+            if seller and seller.get("type") == "Satıcı":
+                await db.customers.update_one(
+                    {"id": seller_id, "org_id": org_id},
+                    {"$set": {"type": "Potansiyel"}},
+                )
 
     await log_activity(
         db, current_user=current_user,

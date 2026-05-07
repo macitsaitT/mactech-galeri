@@ -61,6 +61,8 @@ class CarBase(BaseModel):
     ownership: str = "stock"
     owner_name: str = ""
     owner_phone: str = ""
+    # ✅ Aracın alındığı satıcı (Stok modunda — müşteri kaydına bağlı)
+    seller_customer_id: Optional[str] = None
     commission_rate: float = 0
     photos: List[str] = []
     expertise: dict = {}
