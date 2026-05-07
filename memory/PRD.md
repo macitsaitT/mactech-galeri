@@ -8,6 +8,16 @@
 
 ## Implementation Status
 
+### v5.18.0 - Yetki Yönetimi Gerçek Etki — Buton/Sayfa Kısıtlaması (2026-05-07)
+- 🐛 **BUG**: PermissionsPage'de yetki vermek **sadece sidebar görünürlüğünü** etkiliyordu. Sayfa içindeki butonlar (Düzenle, Sil, Sat, Müşteri Ekle vb.) yetki kontrolü yapmıyordu — verilen yetkiler "etkisiz" hissettiriyordu.
+- ✅ **FIX**:
+  - **InventoryPage**: `canEdit / canDelete / canSell` hesaplanıyor. VehicleCard ve VehicleListRow'a yetki yokken `undefined` handler geçiriliyor.
+  - **VehicleCard.jsx + VehicleListRow.jsx**: Düzenle / Sil / Satış / Satışı İptal Et menü öğeleri `{onEdit && (...)}` koşullu render edilir — yetki yoksa **görünmez**.
+  - **CustomersPage**: `canAdd / canEdit / canDelete` ile "Müşteri Ekle" butonu, kart menüsünde Düzenle/Sil koşullu.
+  - **Sidebar.jsx**: Quick Actions (ARAÇ GİRİŞİ → vehicles_add, ARAÇ GİDERİ + GENEL İŞLEM → transactions_add) yetki yoksa gizli.
+  - **App.js**: Yeni `VIEW_PERM_MAP` + useEffect — yetkisiz `activeView` (örn. inventory yetkisi yok) otomatik **Dashboard'a yönlendiriyor**.
+- ✅ **E2E test**: satış kullanıcı için `vehicles_view=false`, `vehicles_add=false`, `customers_add=false` set edildi → sidebar'dan Stok/Konsinye/Satılan menüleri kayboldu, ARAÇ GİRİŞİ butonu gizlendi, içerik Dashboard'a yönlendirildi. Defaults restore edildi. Pytest 2/2 PASS, lint clean.
+
 ### v5.17.1 - Raporlara "Araç Masrafları" Sekmesi (2026-05-07)
 - ✅ **Yeni rapor tipi `expenses`** (`ReportModal.jsx`):
   - Tab: "Araç Masrafları" (Plus ikonu).

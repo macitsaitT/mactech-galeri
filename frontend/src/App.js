@@ -80,12 +80,41 @@ const AppContent = () => {
     deleteTransaction,
     transactions,
     appointments,
-    cars
+    cars,
+    user,
+    hasPermission,
+    permissions,
   } = useApp();
 
   // ✅ İlk açılışta Stok Araçlar sayfası gösterilsin (kullanıcı isteği)
   const [activeView, setActiveView] = useState('inventory');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ✅ Yetki yoksa otomatik dashboard'a yönlendir — kullanıcı yetkisiz sayfada takılmasın
+  const VIEW_PERM_MAP = {
+    inventory: 'vehicles_view',
+    consignment: 'vehicles_view',
+    sold: 'vehicles_view',
+    customers: 'customers_view',
+    transactions: 'transactions_view',
+    installments: 'transactions_view',
+    'stock-aging': 'reports_view',
+    'activity-logs': 'reports_view',
+    'employee-performance': 'reports_view',
+    'yearend-rollover': 'reports_view',
+    appointments: 'appointments_view',
+    inspection: 'appointments_view',
+    trash: 'trash_view',
+  };
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    if (user.role === 'admin' || user.role === 'owner') return;
+    const permKey = VIEW_PERM_MAP[activeView];
+    if (permKey && !hasPermission(permKey)) {
+      setActiveView('dashboard');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView, isAuthenticated, user, permissions]);
 
   // Notification permission + appointment check
   useEffect(() => {

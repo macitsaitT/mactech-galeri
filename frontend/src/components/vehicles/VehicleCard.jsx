@@ -107,10 +107,12 @@ const VehicleCard = ({
                     Konsinye Sözleşmesi
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => onEdit?.(car)} data-testid={`edit-${car.id}`}>
-                  <Edit size={16} className="mr-2" />
-                  Düzenle
-                </DropdownMenuItem>
+                {onEdit && (
+                  <DropdownMenuItem onClick={() => onEdit?.(car)} data-testid={`edit-${car.id}`}>
+                    <Edit size={16} className="mr-2" />
+                    Düzenle
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onExpenses?.(car)} data-testid={`expenses-${car.id}`}>
                   <Receipt size={16} className="mr-2" />
                   Masraflar
@@ -139,10 +141,12 @@ const VehicleCard = ({
                       <CreditCard size={16} className="mr-2" />
                       Kapora Al
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onSale?.(car)} data-testid={`sale-${car.id}`}>
-                      <ShoppingCart size={16} className="mr-2" />
-                      Satış Yap
-                    </DropdownMenuItem>
+                    {onSale && (
+                      <DropdownMenuItem onClick={() => onSale?.(car)} data-testid={`sale-${car.id}`}>
+                        <ShoppingCart size={16} className="mr-2" />
+                        Satış Yap
+                      </DropdownMenuItem>
+                    )}
                   </>
                 )}
                 {car.status === 'Kapora Alındı' && (
@@ -151,15 +155,17 @@ const VehicleCard = ({
                       <CreditCard size={16} className="mr-2" />
                       Kapora Düzenle
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onSale?.(car)} data-testid={`sale-${car.id}`}>
-                      <ShoppingCart size={16} className="mr-2" />
-                      Satış Tamamla
-                    </DropdownMenuItem>
+                    {onSale && (
+                      <DropdownMenuItem onClick={() => onSale?.(car)} data-testid={`sale-${car.id}`}>
+                        <ShoppingCart size={16} className="mr-2" />
+                        Satış Tamamla
+                      </DropdownMenuItem>
+                    )}
                   </>
                 )}
-                {car.status === 'Satıldı' && (
-                  <DropdownMenuItem 
-                    onClick={() => onCancelSale?.(car)} 
+                {car.status === 'Satıldı' && onCancelSale && (
+                  <DropdownMenuItem
+                    onClick={() => onCancelSale?.(car)}
                     className="text-amber-500 focus:text-amber-500"
                     data-testid={`cancel-sale-${car.id}`}
                   >
@@ -167,15 +173,19 @@ const VehicleCard = ({
                     Satışı İptal Et
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => onDelete?.(car)} 
-                  className="text-destructive focus:text-destructive"
-                  data-testid={`delete-${car.id}`}
-                >
-                  <Trash2 size={16} className="mr-2" />
-                  Sil
-                </DropdownMenuItem>
+                {onDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onDelete?.(car)}
+                      className="text-destructive focus:text-destructive"
+                      data-testid={`delete-${car.id}`}
+                    >
+                      <Trash2 size={16} className="mr-2" />
+                      Sil
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

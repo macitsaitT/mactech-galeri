@@ -10,7 +10,11 @@ import { downloadBlob, formatCurrency } from '../utils/helpers';
 import { generateConsignmentPDF } from '../utils/consignmentPdf';
 
 const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpenses, onDeposit, onSale, onDeleteCar, onCancelSale }) => {
-  const { cars, customers, user } = useApp();
+  const { cars, customers, user, hasPermission } = useApp();
+  // ✅ Yetki kontrolleri — admin tüm yetkilere sahip, diğer roller hasPermission ile kontrol
+  const canEdit = user?.role === 'admin' || hasPermission('vehicles_edit');
+  const canDelete = user?.role === 'admin' || hasPermission('vehicles_delete');
+  const canSell = user?.role === 'admin' || hasPermission('vehicles_sell');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [exporting, setExporting] = useState(false);
@@ -298,26 +302,26 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
                 {viewMode === 'grid' ? (
                   <VehicleCard
                     car={car}
-                    onEdit={selectionMode ? undefined : onEditCar}
-                    onDelete={selectionMode ? undefined : onDeleteCar}
+                    onEdit={selectionMode || !canEdit ? undefined : onEditCar}
+                    onDelete={selectionMode || !canDelete ? undefined : onDeleteCar}
                     onView={selectionMode ? undefined : onViewCar}
                     onExpenses={selectionMode ? undefined : onExpenses}
                     onDeposit={selectionMode ? undefined : onDeposit}
-                    onSale={selectionMode ? undefined : onSale}
-                    onCancelSale={selectionMode ? undefined : onCancelSale}
+                    onSale={selectionMode || !canSell ? undefined : onSale}
+                    onCancelSale={selectionMode || !canEdit ? undefined : onCancelSale}
                     onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
                     onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
                   />
                 ) : (
                   <VehicleListRow
                     car={car}
-                    onEdit={selectionMode ? undefined : onEditCar}
-                    onDelete={selectionMode ? undefined : onDeleteCar}
+                    onEdit={selectionMode || !canEdit ? undefined : onEditCar}
+                    onDelete={selectionMode || !canDelete ? undefined : onDeleteCar}
                     onView={selectionMode ? undefined : onViewCar}
                     onExpenses={selectionMode ? undefined : onExpenses}
                     onDeposit={selectionMode ? undefined : onDeposit}
-                    onSale={selectionMode ? undefined : onSale}
-                    onCancelSale={selectionMode ? undefined : onCancelSale}
+                    onSale={selectionMode || !canSell ? undefined : onSale}
+                    onCancelSale={selectionMode || !canEdit ? undefined : onCancelSale}
                     onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
                     onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
                   />

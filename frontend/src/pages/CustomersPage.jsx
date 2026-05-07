@@ -81,21 +81,25 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, on
               <CreditCard size={16} className="mr-2" />
               Müşteri Detayı
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit?.(customer)}>
-              <Edit size={16} className="mr-2" />
-              Düzenle
-            </DropdownMenuItem>
+            {onEdit && (
+              <DropdownMenuItem onClick={() => onEdit?.(customer)}>
+                <Edit size={16} className="mr-2" />
+                Düzenle
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => onOpenInstallments?.(customer)}>
               <CreditCard size={16} className="mr-2" />
               Vadeli Satışlar
             </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => onDelete?.(customer)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 size={16} className="mr-2" />
-              Sil
-            </DropdownMenuItem>
+            {onDelete && (
+              <DropdownMenuItem
+                onClick={() => onDelete?.(customer)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 size={16} className="mr-2" />
+                Sil
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -186,7 +190,11 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, on
 };
 
 const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
-  const { customers, cars, deleteCustomer } = useApp();
+  const { customers, cars, deleteCustomer, user, hasPermission } = useApp();
+  // ✅ Yetki kontrolleri
+  const canAdd = user?.role === 'admin' || hasPermission('customers_add');
+  const canEdit = user?.role === 'admin' || hasPermission('customers_edit');
+  const canDelete = user?.role === 'admin' || hasPermission('customers_delete');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [exporting, setExporting] = useState(false);
@@ -310,15 +318,17 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
           <option value="Satıcı">Satıcı (Aldığımız)</option>
         </select>
 
-        {/* Add Button */}
-        <button
-          onClick={onAddCustomer}
-          className="h-12 px-6 gradient-gold rounded-lg font-semibold text-primary-foreground shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
-          data-testid="add-customer-btn"
-        >
-          <Plus size={20} />
-          <span className="hidden sm:inline">Müşteri Ekle</span>
-        </button>
+        {/* Add Button — yetki kontrolü */}
+        {canAdd && (
+          <button
+            onClick={onAddCustomer}
+            className="h-12 px-6 gradient-gold rounded-lg font-semibold text-primary-foreground shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2"
+            data-testid="add-customer-btn"
+          >
+            <Plus size={20} />
+            <span className="hidden sm:inline">Müşteri Ekle</span>
+          </button>
+        )}
       </div>
 
       {/* Stats + Bulk Actions + Export */}
@@ -428,8 +438,8 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
                 <CustomerCard
                   customer={customer}
                   cars={activeCars}
-                  onEdit={selectionMode ? undefined : onEditCustomer}
-                  onDelete={selectionMode ? undefined : onDeleteCustomer}
+                  onEdit={selectionMode || !canEdit ? undefined : onEditCustomer}
+                  onDelete={selectionMode || !canDelete ? undefined : onDeleteCustomer}
                   onOpenInstallments={selectionMode ? undefined : handleOpenInstallments}
                   onViewDetail={selectionMode ? undefined : (c) => setDetailCustomerId(c.id)}
                   installmentSummary={summaryByCustomer[customer.id]}

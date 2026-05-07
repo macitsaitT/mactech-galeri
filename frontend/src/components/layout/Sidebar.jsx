@@ -150,16 +150,18 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
           </button>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — yetkilere göre gösteriliyor */}
         <div className="p-3 grid grid-cols-2 gap-2">
-          <button
-            onClick={() => { setActiveView('add-car'); onClose(); }}
-            className="flex flex-col items-center justify-center p-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold"
-            data-testid="quick-add-car"
-          >
-            <span className="text-xl mb-1">+</span>
-            <span className="text-[10px] uppercase tracking-wider">Araç Girişi</span>
-          </button>
+          {(userRole === 'admin' || hasPermission('vehicles_add')) && (
+            <button
+              onClick={() => { setActiveView('add-car'); onClose(); }}
+              className="flex flex-col items-center justify-center p-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold"
+              data-testid="quick-add-car"
+            >
+              <span className="text-xl mb-1">+</span>
+              <span className="text-[10px] uppercase tracking-wider">Araç Girişi</span>
+            </button>
+          )}
           <button
             onClick={() => { setActiveView('promo-card'); onClose(); }}
             className="flex flex-col items-center justify-center p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors font-semibold"
@@ -168,22 +170,26 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
             <FileText size={20} className="mb-1" />
             <span className="text-[10px] uppercase tracking-wider">Tanıtım Kartı</span>
           </button>
-          <button
-            onClick={() => { setActiveView('add-expense'); onClose(); }}
-            className="flex flex-col items-center justify-center p-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-semibold"
-            data-testid="quick-add-expense"
-          >
-            <Wallet size={20} className="mb-1" />
-            <span className="text-[10px] uppercase tracking-wider">Araç Gideri</span>
-          </button>
-          <button
-            onClick={() => { setActiveView('add-transaction'); onClose(); }}
-            className="flex flex-col items-center justify-center p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors font-semibold"
-            data-testid="quick-add-transaction"
-          >
-            <FileText size={20} className="mb-1" />
-            <span className="text-[10px] uppercase tracking-wider">Genel İşlem</span>
-          </button>
+          {(userRole === 'admin' || hasPermission('transactions_add')) && (
+            <button
+              onClick={() => { setActiveView('add-expense'); onClose(); }}
+              className="flex flex-col items-center justify-center p-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-semibold"
+              data-testid="quick-add-expense"
+            >
+              <Wallet size={20} className="mb-1" />
+              <span className="text-[10px] uppercase tracking-wider">Araç Gideri</span>
+            </button>
+          )}
+          {(userRole === 'admin' || hasPermission('transactions_add')) && (
+            <button
+              onClick={() => { setActiveView('add-transaction'); onClose(); }}
+              className="flex flex-col items-center justify-center p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors font-semibold"
+              data-testid="quick-add-transaction"
+            >
+              <FileText size={20} className="mb-1" />
+              <span className="text-[10px] uppercase tracking-wider">Genel İşlem</span>
+            </button>
+          )}
         </div>
 
         {/* Kategori bazlı Navigation */}
