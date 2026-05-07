@@ -144,10 +144,3 @@ async def get_customer_detail(customer_id: str, current_user: dict = Depends(get
         "installments": installments,
         "totals": totals,
     }
-
-    org_id = current_user.get("org_id", current_user["user_id"])
-    existing = await db.customers.find_one({"id": customer_id, "org_id": org_id})
-    if not existing:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    await db.customers.update_one({"id": customer_id}, {"$set": {"deleted": False, "deleted_at": None}})
-    return await db.customers.find_one({"id": customer_id}, {"_id": 0})

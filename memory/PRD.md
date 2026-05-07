@@ -2,11 +2,21 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.12.0
-- **Last Updated:** 2026-05-01
-- **Status:** P3 Tamamlandı — Talep Eşleştirme + Alacaklar + Stok Yaşlanma + Digest Settings UI
+- **Version:** 5.13.0
+- **Last Updated:** 2026-05-07
+- **Status:** 8 Maddelik Backlog Tamamlandı — Telefon Validation, Fiyat Format, Branch Global, Customer Detail, Sale Revert
 
 ## Implementation Status
+
+### v5.13.0 - 8 Maddelik Backlog (2026-05-07)
+- [x] **Veri Kurtarma paneli kaldırıldı** (Settings).
+- [x] **Telefon validation 11 hane zorunlu** — backend `validate_phone` (security.py); customers POST/PUT, users POST/PUT'ta enforced (400 ile reddediyor).
+- [x] **Fiyat onluk format** — WantedCarsPage budget input'ları 1.000.000 formatında. Diğer formlarda zaten `formatNumberInput` kullanılıyor.
+- [x] **Satış iptal → müşteri type revert** — `cars.py:patch_car` status='Satıldı'dan başka bir status'e dönerse, müşterinin başka aktif satışı yoksa type='Potansiyel'e revert ediyor.
+- [x] **Capital vehicles_capital** — `/api/capital` artık {amount, vehicles_capital, vehicles_count, total_equity, vehicles_breakdown[]} döndürüyor.
+- [x] **Müşteri Detay Modal** — `GET /customers/{id}/detail` endpoint + frontend modal (4 KPI kart, satın alınan araçlar, vadeli taksitler, ödeme geçmişi).
+- [x] **Satış akışı hızlandırıldı** — `handleConfirmSale` 4-5 sekanslı API call yerine `Promise.all` ile paralel (~3x hız).
+- [x] **Şube global filtresi** — Header'da BranchSelector + AppContext.selectedBranchId (localStorage persist) + cars/customers/transactions/stats endpoint'lerinde branch_id query param + UsersPage branch filtresi/form.
 
 ### v5.12.0 - P3 Backlog (2026-05-01)
 - [x] **Digest Settings UI**: Settings > DigestPanel artık `enabled` toggle + day/hour select + Save butonu. Scheduler **saatlik tick** ile her admin'in kendi `digest_day`/`digest_hour` tercihine göre gönderiyor. `GET/PUT /api/digest/settings`.
