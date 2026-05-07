@@ -114,6 +114,29 @@ async def get_customer_detail(customer_id: str, current_user: dict = Depends(get
         "deleted": {"$ne": True},
     }, {"_id": 0}).sort("entry_date", -1).to_list(500)
 
+    # ✅ Bu satıcıdan aldığımız ve sattığımız araçların brüt kârı (tedarikçi performans rozeti için)
+    # Her satılan araç için: sale_price - purchase_price - (Araç Alımı hariç giderler)
+    seller_sold_count = 0
+    seller_total_profit = 0.0
+    for sc in sold_to_us_cars:
+        if sc.get("status") != "Satıldı":
+            continue
+        sp = float(sc.get("sale_price", 0) or 0)
+        pp = float(sc.get("purchase_price", 0) or 0)
+        # Bu araca bağlı, Araç Alımı dışındaki gider tx'leri
+        car_expense_txs = await db.transactions.find({
+            "org_id": org_id,
+            "car_id": sc.get("id"),
+            "type": "expense",
+            "deleted": {"$ne": True},
+            "category": {"$nin": ["Araç Alımı", "Araç Sahibine Ödeme"]},
+        }, {"_id": 0}).to_list(500)
+        expenses_sum = sum(float(t.get("amount", 0) or 0) for t in car_expense_txs)
+        sc["gross_profit"] = round(sp - pp - expenses_sum, 2)
+        seller_sold_count += 1
+        seller_total_profit += sc["gross_profit"]
+    seller_avg_profit = round(seller_total_profit / seller_sold_count, 2) if seller_sold_count > 0 else None
+
     # İlgili tüm ödeme/gelir transaction'ları (bu müşteriye ait)
     transactions = await db.transactions.find({
         "org_id": org_id,
@@ -145,6 +168,10 @@ async def get_customer_detail(customer_id: str, current_user: dict = Depends(get
         # ✅ Bu kişiden alınan araçlar (satıcı modu)
         "total_sold_to_us": len(sold_to_us_cars),
         "total_sold_to_us_amount": sum(float(c.get("purchase_price", 0) or 0) for c in sold_to_us_cars),
+        # ✅ Tedarikçi performansı: bu satıcıdan alınıp sattığımız araçların brüt kâr ortalaması
+        "seller_sold_count": seller_sold_count,
+        "seller_total_profit": round(seller_total_profit, 2),
+        "seller_avg_profit": seller_avg_profit,
     }
 
     return {

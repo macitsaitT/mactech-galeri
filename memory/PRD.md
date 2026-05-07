@@ -8,6 +8,11 @@
 
 ## Implementation Status
 
+### v5.16.1 - Tedarikçi Performans Rozeti (2026-05-07)
+- ✅ **Backend `/api/customers/{id}/detail`**: Yeni alanlar `seller_sold_count`, `seller_total_profit`, `seller_avg_profit`. Her satılan `sold_to_us_car` için `gross_profit = sale_price - purchase_price - Σ(masraflar Araç Alımı/Sahibi hariç)`. Ortalama hesabına sadece **Satıldı** durumundaki araçlar girer.
+- ✅ **CustomerDetailModal**: "Bu Kişiden Aldığımız Araçlar" bölümünde **TEDARİKÇİ PERFORMANSI** rozeti — kâr ortalaması pozitifse yeşil, negatifse kırmızı. Her satılan aracın yanında `Brüt Kâr` etiketi de görünür.
+- ✅ **E2E curl test**: 2 araç (1 kâr +195K, 1 zarar -50K) + 5K boya masrafı → backend `total_profit=145K`, `avg_profit=72.5K`, `gross_profit` per-car değerleri tam doğru.
+
 ### v5.16.0 - Batch Transactions + AddCarModal Refactor (2026-05-07)
 - ✅ **P1 — `POST /api/transactions/batch`**: Tek istekle çoklu transaction kaydı. Body `{transactions: [...]}`. Her tx için kasa atomik uygulanır, hata olanlar `errors[]` array'inde döner. Max 50 / istek. AddCarModal inline masraflar artık sequential loop yerine **tek batch çağrısı** ile kaydediliyor (daha hızlı UX, tek refreshStats+refreshCapital). Curl test: 2 tx, kasa -2.300 ₺ doğru, errors=0.
 - ✅ **P3 — AddCarModal Refactor**: 1793 → 1385 satır (-408, **-%23**). Sub-componentler ayrı dosyalara çıkarıldı:

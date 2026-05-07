@@ -126,6 +126,46 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
                       Toplam Alış: <span className="font-bold text-amber-600">{formatCurrency(totals.total_sold_to_us_amount || 0)}</span>
                     </span>
                   </h3>
+
+                  {/* ✅ Tedarikçi Performans Rozeti — bu satıcıdan alınıp sattığımız araçların brüt kâr ortalaması */}
+                  {totals.seller_sold_count > 0 && (
+                    <div
+                      className={`mb-3 p-3 rounded-lg border flex items-center justify-between flex-wrap gap-2 ${
+                        (totals.seller_avg_profit || 0) > 0
+                          ? 'bg-success/5 border-success/30'
+                          : 'bg-destructive/5 border-destructive/30'
+                      }`}
+                      data-testid="seller-performance-badge"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          (totals.seller_avg_profit || 0) > 0
+                            ? 'bg-success/20 text-success'
+                            : 'bg-destructive/20 text-destructive'
+                        }`}>
+                          TEDARİKÇİ PERFORMANSI
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {totals.seller_sold_count} araç satıldı
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Ortalama Brüt Kâr: </span>
+                          <span className={`font-bold ${(totals.seller_avg_profit || 0) > 0 ? 'text-success' : 'text-destructive'}`} data-testid="seller-avg-profit">
+                            {formatCurrency(totals.seller_avg_profit || 0)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Toplam: </span>
+                          <span className={`font-semibold ${(totals.seller_total_profit || 0) > 0 ? 'text-success' : 'text-destructive'}`}>
+                            {formatCurrency(totals.seller_total_profit || 0)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     {data.sold_to_us_cars.map(car => (
                       <div key={car.id} className="p-3 border border-amber-500/30 bg-amber-500/5 rounded-lg" data-testid={`detail-sold-to-us-${car.id}`}>
@@ -141,6 +181,11 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
                           <div className="text-right">
                             <div className="text-[11px] text-muted-foreground">Alış</div>
                             <div className="text-sm font-bold text-amber-600">{formatCurrency(car.purchase_price)}</div>
+                            {car.status === 'Satıldı' && typeof car.gross_profit === 'number' && (
+                              <div className={`text-[11px] font-semibold ${car.gross_profit > 0 ? 'text-success' : 'text-destructive'}`}>
+                                Brüt Kâr: {formatCurrency(car.gross_profit)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
