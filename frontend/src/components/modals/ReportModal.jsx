@@ -3,6 +3,8 @@ import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search,
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, formatDate, openPrintableHTML } from '../../utils/helpers';
 import { fileAPI, usersAPI, capitalAPI } from '../../services/api';
+import VehicleExpensesModal from './VehicleExpensesModal';
+import { Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -211,6 +213,8 @@ const ReportModal = ({ isOpen, onClose }) => {
   const [capitalMovements, setCapitalMovements] = useState([]);
   // ✅ Yıl Sonu Raporu için yıl seçimi (tarih aralığını otomatik ayarlar)
   const [yearendYear, setYearendYear] = useState(() => new Date().getFullYear());
+  // ✅ Rapor ekranından doğrudan masraf ekleme — VehicleExpensesModal pencere state
+  const [expensesFor, setExpensesFor] = useState(null);
 
   // Yıl Sonu seçildiğinde startDate/endDate'i o yıla otomatik ayarla.
   // Yıl Sonu'ndan başka tipe geçildiğinde "tüm zamanlar" varsayılanına dön.
@@ -639,12 +643,29 @@ const ReportModal = ({ isOpen, onClose }) => {
                 <span className="text-[11px] font-semibold text-muted-foreground tracking-wider uppercase block mb-1">
                   {reportType === 'general' ? 'Araç Filtresi (opsiyonel)' : 'Araç Seç'}
                 </span>
-                <select value={selectedCarId} onChange={(e) => setSelectedCarId(e.target.value)} className="h-9 px-3 bg-background border border-border rounded-lg text-sm w-full" data-testid="car-select-dropdown">
-                  <option value="">{reportType === 'general' ? `-- Tüm Araçlar (${filteredCarsForDropdown.length}) --` : `-- Araç Seçiniz (${filteredCarsForDropdown.length} araç) --`}</option>
-                  {filteredCarsForDropdown.map((car) => (
-                    <option key={car.id} value={car.id}>{car.plate?.toUpperCase()} - {car.brand} {car.model} ({car.year})</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select value={selectedCarId} onChange={(e) => setSelectedCarId(e.target.value)} className="h-9 px-3 bg-background border border-border rounded-lg text-sm flex-1" data-testid="car-select-dropdown">
+                    <option value="">{reportType === 'general' ? `-- Tüm Araçlar (${filteredCarsForDropdown.length}) --` : `-- Araç Seçiniz (${filteredCarsForDropdown.length} araç) --`}</option>
+                    {filteredCarsForDropdown.map((car) => (
+                      <option key={car.id} value={car.id}>{car.plate?.toUpperCase()} - {car.brand} {car.model} ({car.year})</option>
+                    ))}
+                  </select>
+                  {selectedCarId && (() => {
+                    const car = activeCars.find(c => c.id === selectedCarId);
+                    if (!car) return null;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setExpensesFor(car)}
+                        className="h-9 px-3 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"
+                        data-testid="report-add-expense-btn"
+                        title="Bu araca masraf ekle / düzenle"
+                      >
+                        <Plus size={14} /> Masraf Ekle
+                      </button>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           )}
@@ -1042,18 +1063,32 @@ const ReportModal = ({ isOpen, onClose }) => {
                   <div className="sm:hidden space-y-2">
                     {vehicleTransactions.length === 0 ? (
                       <p className="text-center py-4 text-muted-foreground text-sm">Araç işlemi bulunamadı.</p>
-                    ) : vehicleTransactions.map((tx) => (
-                      <div key={tx.id} className="p-3 border border-border rounded-lg flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium truncate">{tx.category}</p>
-                          <p className="text-[11px] text-muted-foreground truncate">{tx.description || '-'}</p>
-                          <p className="text-[10px] text-muted-foreground">{formatDate(tx.date)}</p>
+                    ) : vehicleTransactions.map((tx) => {
+                      const txCar = tx.car_id ? activeCars.find(c => c.id === tx.car_id) : null;
+                      return (
+                        <div key={tx.id} className="p-3 border border-border rounded-lg flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium truncate">{tx.category}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{tx.description || '-'}</p>
+                            <p className="text-[10px] text-muted-foreground">{formatDate(tx.date)}</p>
+                          </div>
+                          <p className={`text-sm font-semibold shrink-0 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                            {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                          </p>
+                          {txCar && (
+                            <button
+                              type="button"
+                              onClick={() => setExpensesFor(txCar)}
+                              className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 shrink-0"
+                              data-testid={`row-add-expense-${tx.id}`}
+                              title="Bu araca masraf ekle"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          )}
                         </div>
-                        <p className={`text-sm font-semibold shrink-0 ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
-                          {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   {/* Desktop table */}
                   <div className="hidden sm:block overflow-x-auto">
@@ -1065,20 +1100,37 @@ const ReportModal = ({ isOpen, onClose }) => {
                           <th className="text-left p-3 text-sm font-medium text-muted-foreground">Kategori</th>
                           <th className="text-left p-3 text-sm font-medium text-muted-foreground">Açıklama</th>
                           <th className="text-right p-3 text-sm font-medium text-muted-foreground">Tutar</th>
+                          <th className="text-right p-3 text-sm font-medium text-muted-foreground w-12"></th>
                         </tr>
                       </thead>
                       <tbody>
                         {vehicleTransactions.length === 0 ? (
-                          <tr><td colSpan={5} className="text-center p-6 text-muted-foreground">Bu tarih aralığında araç işlemi bulunamadı.</td></tr>
-                        ) : vehicleTransactions.map((tx) => (
-                          <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
-                            <td className="p-3 text-sm">{formatDate(tx.date)}</td>
-                            <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
-                            <td className="p-3 text-sm">{tx.category}</td>
-                            <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
-                            <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
-                          </tr>
-                        ))}
+                          <tr><td colSpan={6} className="text-center p-6 text-muted-foreground">Bu tarih aralığında araç işlemi bulunamadı.</td></tr>
+                        ) : vehicleTransactions.map((tx) => {
+                          const txCar = tx.car_id ? activeCars.find(c => c.id === tx.car_id) : null;
+                          return (
+                            <tr key={tx.id} className="border-b border-border hover:bg-muted/30">
+                              <td className="p-3 text-sm">{formatDate(tx.date)}</td>
+                              <td className="p-3 text-sm"><span className={tx.type === 'income' ? 'text-success' : 'text-destructive'}>{tx.type === 'income' ? 'Gelir' : 'Gider'}</span></td>
+                              <td className="p-3 text-sm">{tx.category}</td>
+                              <td className="p-3 text-sm text-muted-foreground">{tx.description || '-'}</td>
+                              <td className={`p-3 text-sm text-right font-medium ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                              <td className="p-3 text-right">
+                                {txCar ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpensesFor(txCar)}
+                                    className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
+                                    data-testid={`row-add-expense-${tx.id}`}
+                                    title="Bu araca masraf ekle / düzenle"
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                ) : null}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1239,6 +1291,15 @@ const ReportModal = ({ isOpen, onClose }) => {
           )}
         </div>
       </DialogContent>
+
+      {/* ✅ Rapor ekranından doğrudan masraf ekleme/düzenleme — VehicleExpensesModal */}
+      {expensesFor && (
+        <VehicleExpensesModal
+          isOpen={!!expensesFor}
+          onClose={() => setExpensesFor(null)}
+          car={expensesFor}
+        />
+      )}
     </Dialog>
   );
 };

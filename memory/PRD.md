@@ -8,6 +8,10 @@
 
 ## Implementation Status
 
+### v5.14.1 - Raporlardan Doğrudan Masraf Ekleme (2026-05-07)
+- [x] **ReportModal — Masraf Ekle Butonu**: "Genel" / "Araç" raporunda araç filtresi seçildiğinde dropdown yanında "Masraf Ekle" butonu (`report-add-expense-btn`) görünür → mevcut `VehicleExpensesModal` o aracın id'siyle açılır (görüntüle/ekle/düzenle/sil hepsi tek noktadan).
+- [x] **Tablo İçi Hızlı Ekleme**: Araç İşlemleri tablosundaki her satırın sonunda + ikonlu buton (`row-add-expense-{tx.id}`) — direkt o aracın masraf ekranını açar (mobile + desktop). Kasa hareketleri otomatik senkron.
+
 ### v5.14.0 - Inline Masraf Entegrasyonu (2026-05-07)
 - [x] **AddCarModal Inline Masraf Girişi (P0)**: Yeni araç eklerken (edit modunda gizli) Genel Bilgiler tab'ında "Geliş Masrafları (Opsiyonel)" paneli. Kullanıcı kalem kalem (kategori + tutar + açıklama + tarih) masraf ekleyebilir. Submit sırasında `pending_expenses` payload'dan ayrılıp, araç oluşturulduktan sonra her satır için `transactionsAPI.create` (Gider) çağrılıyor; her create'de Kasa otomatik düşüyor. Toplam Masraf canlı gösteriliyor.
 - [x] **VehicleExpensesModal Düzenle/Sil**: Mevcut tx satırlarının yanında Edit + Trash2 ikon butonları. Sil → confirm dialog → `deleteTransaction` (DELETE /api/transactions/{id}) → backend `apply_delta` ile kasa revert + capital_applied=False. Edit → form pre-fill, PUT ile güncelleme + kasa farkı uygulanıyor.
