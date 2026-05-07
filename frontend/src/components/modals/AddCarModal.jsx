@@ -4,8 +4,15 @@ import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/he
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel, getGearsForSelection } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
-import { fileAPI, notificationsAPI } from '../../services/api';
+import { fileAPI, notificationsAPI, transactionsAPI } from '../../services/api';
 import VehicleExpensesModal from './VehicleExpensesModal';
+import { toast } from 'sonner';
+
+const INLINE_EXPENSE_CATEGORIES = [
+  'Genel Gider', 'Boya', 'Mekanik Bakım', 'Yedek Parça',
+  'Lastik', 'Sigorta', 'Muayene', 'Kaporta', 'Elektrik',
+  'Detaylı Yıkama', 'Ekspertiz', 'Taşıma/Çekici', 'Diğer'
+];
 
 // Document Category Component
 const DocumentCategory = ({ doc, docs, formData, handleChange }) => {
@@ -368,7 +375,9 @@ const defaultFormData = {
   sigorta_bitis_tarihi: '',
   // Hatırlatmalar
   muayene_reminders: [],
-  sigorta_reminders: []
+  sigorta_reminders: [],
+  // ✅ Inline (yeni araç eklerken anında girilen) masraflar — kaydedilen aracın id'si ile transaction olarak yazılacak
+  pending_expenses: []
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
@@ -489,6 +498,10 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
 
     setLoading(true);
     try {
+      // pending_expenses'ı submit payload'undan ayır — backend araç modeli bilmiyor
+      const pendingExpenses = (formData.pending_expenses || []).filter(
+        (e) => e && parseNumber(e.amount) > 0
+      );
       const submitData = {
         ...formData,
         km: formData.km?.replace(/[^\d]/g, '') || '0',
@@ -500,12 +513,38 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         year: parseInt(formData.year) || new Date().getFullYear(),
         expertise_score: parseInt(formData.expertise_score) || 0,
       };
-      
+      delete submitData.pending_expenses;
+
       const savedCar = await onSave(submitData);
-      
+
       // Hatırlatmaları backend'e kaydet
       const carId = savedCar?.id || editingCar?.id;
       if (carId) {
+        // ✅ Inline masrafları transaction olarak kaydet (Gider) — kasa otomatik düşer
+        if (pendingExpenses.length > 0) {
+          let okCount = 0;
+          for (const exp of pendingExpenses) {
+            try {
+              await transactionsAPI.create({
+                type: 'expense',
+                category: exp.category || 'Genel Gider',
+                amount: parseNumber(exp.amount),
+                description: `${exp.description || ''}${exp.description ? ' - ' : ''}${(savedCar?.plate || formData.plate || '').toUpperCase()}`,
+                date: exp.date || new Date().toISOString().split('T')[0],
+                car_id: carId,
+              });
+              okCount++;
+            } catch (err) {
+              console.error('Inline masraf kaydı başarısız:', err);
+            }
+          }
+          if (okCount > 0) {
+            toast.success(`${okCount} masraf kaydedildi`);
+          }
+          if (okCount < pendingExpenses.length) {
+            toast.error(`${pendingExpenses.length - okCount} masraf kaydedilemedi`);
+          }
+        }
         // Muayene hatırlatmalarını kaydet
         if (formData.muayene_reminders && formData.muayene_reminders.length > 0) {
           for (const reminder of formData.muayene_reminders) {
@@ -1152,6 +1191,114 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                 </div>
               </div>
 
+              {/* ✅ Inline Masraf Girişi — Yeni araç eklerken kalem kalem masraf eklenebilir */}
+              {!editingCar && (
+                <div className="space-y-3 p-4 border border-amber-500/30 rounded-xl bg-amber-500/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-semibold text-amber-600 flex items-center gap-2">
+                        <Wallet size={16} /> Geliş Masrafları (Opsiyonel)
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Çekici, ekspertiz, boya gibi masraflar — araç kaydedildiğinde Kasa'dan otomatik düşülür.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          pending_expenses: [
+                            ...(prev.pending_expenses || []),
+                            { category: 'Genel Gider', amount: '', description: '', date: new Date().toISOString().split('T')[0] }
+                          ]
+                        }));
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 rounded-lg flex items-center gap-1.5"
+                      data-testid="add-inline-expense-btn"
+                    >
+                      <span className="text-base leading-none">+</span> Masraf Ekle
+                    </button>
+                  </div>
+
+                  {(formData.pending_expenses || []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-3 border border-dashed border-amber-500/30 rounded-lg">
+                      Henüz masraf eklenmedi.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {(formData.pending_expenses || []).map((exp, idx) => (
+                        <div
+                          key={idx}
+                          className="grid grid-cols-12 gap-2 items-start"
+                          data-testid={`inline-expense-row-${idx}`}
+                        >
+                          <select
+                            value={exp.category}
+                            onChange={(e) => {
+                              const next = [...formData.pending_expenses];
+                              next[idx] = { ...next[idx], category: e.target.value };
+                              setFormData((prev) => ({ ...prev, pending_expenses: next }));
+                            }}
+                            className="col-span-4 sm:col-span-3 h-10 px-2 bg-background border border-border rounded-lg text-xs focus:border-amber-500 outline-none"
+                            data-testid={`inline-expense-category-${idx}`}
+                          >
+                            {INLINE_EXPENSE_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                          <input
+                            type="text"
+                            value={exp.amount}
+                            onChange={(e) => {
+                              const next = [...formData.pending_expenses];
+                              next[idx] = { ...next[idx], amount: formatNumberInput(e.target.value) };
+                              setFormData((prev) => ({ ...prev, pending_expenses: next }));
+                            }}
+                            placeholder="Tutar ₺"
+                            className="col-span-3 sm:col-span-2 h-10 px-2 bg-background border border-border rounded-lg text-xs focus:border-amber-500 outline-none tabular-nums"
+                            data-testid={`inline-expense-amount-${idx}`}
+                          />
+                          <input
+                            type="text"
+                            value={exp.description}
+                            onChange={(e) => {
+                              const next = [...formData.pending_expenses];
+                              next[idx] = { ...next[idx], description: e.target.value };
+                              setFormData((prev) => ({ ...prev, pending_expenses: next }));
+                            }}
+                            placeholder="Açıklama"
+                            className="col-span-4 sm:col-span-6 h-10 px-2 bg-background border border-border rounded-lg text-xs focus:border-amber-500 outline-none"
+                            data-testid={`inline-expense-desc-${idx}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = formData.pending_expenses.filter((_, i) => i !== idx);
+                              setFormData((prev) => ({ ...prev, pending_expenses: next }));
+                            }}
+                            className="col-span-1 h-10 flex items-center justify-center text-destructive hover:bg-destructive/10 rounded-lg"
+                            data-testid={`inline-expense-remove-${idx}`}
+                            title="Sil"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+
+                      <div className="flex justify-end pt-2 border-t border-amber-500/20 text-xs">
+                        <span className="text-muted-foreground mr-2">Toplam Masraf:</span>
+                        <span className="font-bold text-amber-600 tabular-nums">
+                          {(formData.pending_expenses || [])
+                            .reduce((sum, e) => sum + parseNumber(e.amount || 0), 0)
+                            .toLocaleString('tr-TR')} ₺
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium mb-2">Açıklama</label>
@@ -1460,6 +1607,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
                       year: parseInt(formData.year) || new Date().getFullYear(),
                       expertise_score: parseInt(formData.expertise_score) || 0,
                     };
+                    delete submitData.pending_expenses;
                     const saved = await onSave(submitData);
                     if (saved?.id) {
                       setExpensesModal({ open: true, carId: saved.id, plate: saved.plate || formData.plate });
