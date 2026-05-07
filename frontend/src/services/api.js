@@ -298,6 +298,7 @@ export const appointmentsAPI = {
 export const permissionsAPI = {
   get: () => api.get('/permissions'),
   update: (data) => api.put('/permissions', data),
+  getVersion: () => api.get('/permissions/version'),
 };
 
 export const yearEndAPI = {

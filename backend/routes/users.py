@@ -57,12 +57,29 @@ async def get_permissions(current_user: dict = Depends(get_current_user)):
     }
 
 
+@router.get("/permissions/version")
+async def get_permissions_version(current_user: dict = Depends(get_current_user)):
+    """Çok hafif endpoint — sadece güncel sürüm tag'ini döner. Frontend polling için kullanır.
+    Tag değiştiyse frontend `/api/permissions` ile tam yetkileri çeker ve kullanıcıya bildirim gösterir.
+    """
+    org_id = current_user.get("org_id", current_user["user_id"])
+    doc = await db.permissions.find_one({"org_id": org_id}, {"_id": 0, "version": 1, "updated_at": 1})
+    return {
+        "version": (doc or {}).get("version", "0"),
+        "updated_at": (doc or {}).get("updated_at"),
+    }
+
+
 @router.put("/permissions")
 async def update_permissions(body: dict, current_user: dict = Depends(get_current_user)):
     if current_user.get("role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Only admin can update permissions")
     org_id = current_user.get("org_id", current_user["user_id"])
-    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        # ✅ Yeni sürüm tag'i — polling ile saniyeler içinde tüm aktif istemcilere yansır
+        "version": str(uuid.uuid4()),
+    }
     if "role_defaults" in body:
         update_data["role_defaults"] = body["role_defaults"]
     if "user_overrides" in body:
@@ -70,7 +87,7 @@ async def update_permissions(body: dict, current_user: dict = Depends(get_curren
     if "permissions" in body and "role_defaults" not in body:
         update_data["role_defaults"] = body["permissions"]
     await db.permissions.update_one({"org_id": org_id}, {"$set": update_data}, upsert=True)
-    return {"success": True}
+    return {"success": True, "version": update_data["version"]}
 
 
 @router.get("/users")

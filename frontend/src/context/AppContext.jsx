@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { authAPI, carsAPI, customersAPI, transactionsAPI, statsAPI, appointmentsAPI, permissionsAPI, capitalAPI } from '../services/api';
 import api from '../services/api';
 import { notifyEvent } from '../utils/notifications';
+import { toast } from 'sonner';
 
 const AppContext = createContext(null);
 
@@ -28,6 +29,8 @@ export const AppProvider = ({ children }) => {
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [permissions, setPermissions] = useState(null);
+  // ✅ Yetki sürüm tag'i — admin yetkileri değiştirince polling ile farkı algılayıp toast + refetch yaparız
+  const permVersionRef = useRef('0');
   const [orgOwner, setOrgOwner] = useState(null);
   const [capital, setCapital] = useState({ amount: 0 }); // ✅ Kasa / Sermaye bakiyesi
   // ✅ Aktif şube filtresi — tüm sayfalara yayılır. Boş '' → tümü (birleşik görünüm).
@@ -81,6 +84,8 @@ export const AppProvider = ({ children }) => {
           role_defaults: permRes.data.role_defaults || permRes.data.permissions || null,
           user_overrides: permRes.data.user_overrides || {}
         });
+        // ✅ İlk yüklemede sürüm tag'ini kaydet — polling ile karşılaştırılacak
+        permVersionRef.current = permRes.data.version || '0';
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -101,6 +106,43 @@ export const AppProvider = ({ children }) => {
       fetchData();
     }
   }, [isAuthenticated, fetchData]);
+
+  // ✅ Yetki güncellemesi polling — her 25 saniyede bir hafif version endpoint'ini çağır.
+  // Sürüm değişmişse toast göster ve perms'i yenile (kullanıcı manuel logout/login yapmadan da etkili olur).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await permissionsAPI.getVersion();
+        const newVersion = res.data?.version || '0';
+        if (permVersionRef.current && permVersionRef.current !== '0' && newVersion !== permVersionRef.current) {
+          permVersionRef.current = newVersion;
+          // Yeni perm'leri çek
+          try {
+            const fullRes = await permissionsAPI.get();
+            if (fullRes.data) {
+              setPermissions({
+                role_defaults: fullRes.data.role_defaults || fullRes.data.permissions || null,
+                user_overrides: fullRes.data.user_overrides || {}
+              });
+              toast.info('Yetkileriniz yöneticiniz tarafından güncellendi', {
+                description: 'Yeni yetkileriniz şimdi aktif.',
+                duration: 5000,
+              });
+            }
+          } catch (err) {
+            console.error('Permission refetch failed:', err);
+          }
+        } else if (permVersionRef.current === '0' && newVersion !== '0') {
+          // İlk kez set ediliyor (fetchData henüz çalışmadıysa)
+          permVersionRef.current = newVersion;
+        }
+      } catch (err) {
+        // Sessiz fail — auth/network hataları zaten interceptor'da loglanır
+      }
+    }, 25000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   // Auth functions
   const login = async (email, password) => {
@@ -414,6 +456,8 @@ export const AppProvider = ({ children }) => {
     // Permissions
     permissions,
     setPermissions,
+    // ✅ Admin save sonrası kendi tarayıcısında toast almamak için sürümü bump et
+    setPermissionsVersion: (v) => { permVersionRef.current = v || '0'; },
     hasPermission: (key) => {
       const role = user?.role;
       if (role === 'admin') return true;

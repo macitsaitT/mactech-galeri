@@ -86,7 +86,7 @@ const Toggle = ({ isOn, onChange, testId }) => (
 );
 
 const PermissionsPage = () => {
-  const { user, setPermissions: setGlobalPermissions } = useApp();
+  const { user, setPermissions: setGlobalPermissions, setPermissionsVersion } = useApp();
   const [roleDefaults, setRoleDefaults] = useState(null);
   const [userOverrides, setUserOverrides] = useState({});
   const [employees, setEmployees] = useState([]);
@@ -155,8 +155,10 @@ const PermissionsPage = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await permissionsAPI.update({ role_defaults: roleDefaults, user_overrides: userOverrides });
+      const res = await permissionsAPI.update({ role_defaults: roleDefaults, user_overrides: userOverrides });
       setGlobalPermissions({ role_defaults: roleDefaults, user_overrides: userOverrides });
+      // ✅ Admin'in kendi tarayıcısında "yetkileriniz güncellendi" toast'u almaması için sürümü bump et
+      if (res?.data?.version) setPermissionsVersion(res.data.version);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {

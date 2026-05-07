@@ -8,6 +8,15 @@
 
 ## Implementation Status
 
+### v5.18.1 - Yetki Real-time Senkronizasyonu (Polling) (2026-05-07)
+- ✅ **Backend**: `GET /api/permissions/version` (hafif endpoint, sadece UUID + updated_at döner). `PUT /api/permissions` artık her güncellemede yeni UUID üretiyor (`version` alanı).
+- ✅ **Frontend AppContext**: 
+  - `permVersionRef` ile mevcut sürüm tag'i tutulur.
+  - Her **25 saniyede bir** polling (`permissionsAPI.getVersion()`).
+  - Sürüm değiştiyse → tam permissions çek + **toast.info "Yetkileriniz yöneticiniz tarafından güncellendi"** (5sn).
+- ✅ **PermissionsPage**: Admin "Kaydet"e basınca dönen `version` ile `setPermissionsVersion` çağrılıyor → admin **kendi tarayıcısında** toast almıyor (zaten kendi yaptı).
+- ✅ **Test**: PUT /permissions yeni UUID üretiyor, GET /version aynı UUID dönüyor — polling'de fark algılanır. Polling network overhead'i çok düşük (~30 byte response, 25s interval).
+
 ### v5.18.0 - Yetki Yönetimi Gerçek Etki — Buton/Sayfa Kısıtlaması (2026-05-07)
 - 🐛 **BUG**: PermissionsPage'de yetki vermek **sadece sidebar görünürlüğünü** etkiliyordu. Sayfa içindeki butonlar (Düzenle, Sil, Sat, Müşteri Ekle vb.) yetki kontrolü yapmıyordu — verilen yetkiler "etkisiz" hissettiriyordu.
 - ✅ **FIX**:
