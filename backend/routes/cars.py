@@ -11,6 +11,39 @@ from helpers import build_data_filter, log_activity
 router = APIRouter()
 
 
+# ✅ Satıcı tipini sync etmek için yardımcı: müşteriyi 'Satıcı' yap (Potansiyel ise) veya
+# bu satıcının başka aktif aracı yoksa 'Potansiyel'e geri al.
+async def _mark_as_seller(org_id: str, customer_id: str | None) -> None:
+    if not customer_id:
+        return
+    cust = await db.customers.find_one({"id": customer_id, "org_id": org_id})
+    if cust and cust.get("type") == "Potansiyel":
+        await db.customers.update_one(
+            {"id": customer_id, "org_id": org_id},
+            {"$set": {"type": "Satıcı"}},
+        )
+
+
+async def _revert_seller_if_orphan(org_id: str, customer_id: str | None, exclude_car_id: str | None = None) -> None:
+    if not customer_id:
+        return
+    query = {
+        "org_id": org_id,
+        "seller_customer_id": customer_id,
+        "deleted": {"$ne": True},
+    }
+    if exclude_car_id:
+        query["id"] = {"$ne": exclude_car_id}
+    other_active = await db.cars.count_documents(query)
+    if other_active == 0:
+        cust = await db.customers.find_one({"id": customer_id, "org_id": org_id})
+        if cust and cust.get("type") == "Satıcı":
+            await db.customers.update_one(
+                {"id": customer_id, "org_id": org_id},
+                {"$set": {"type": "Potansiyel"}},
+            )
+
+
 @router.get("/cars", response_model=List[Car])
 async def get_cars(created_by: str = None, branch_id: str = None, current_user: dict = Depends(get_current_user)):
     extra = {}
@@ -37,14 +70,7 @@ async def create_car(car: CarCreate, current_user: dict = Depends(get_current_us
     await db.cars.insert_one(car_doc)
 
     # ✅ Satıcı müşteri seçilmişse tipini "Satıcı" olarak işaretle (şu an Potansiyel ise)
-    seller_id = car_doc.get("seller_customer_id")
-    if seller_id:
-        seller = await db.customers.find_one({"id": seller_id, "org_id": org_id})
-        if seller and seller.get("type") == "Potansiyel":
-            await db.customers.update_one(
-                {"id": seller_id, "org_id": org_id},
-                {"$set": {"type": "Satıcı"}},
-            )
+    await _mark_as_seller(org_id, car_doc.get("seller_customer_id"))
 
     await log_activity(
         db, current_user=current_user, action="create", entity_type="car",
@@ -65,6 +91,13 @@ async def update_car(car_id: str, car: CarCreate, current_user: dict = Depends(g
     update_data = car.model_dump()
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": update_data})
+
+    # ✅ Satıcı (seller_customer_id) değiştiyse — eski satıcıyı revert + yeni satıcıyı işaretle
+    old_seller = existing.get("seller_customer_id")
+    new_seller = update_data.get("seller_customer_id")
+    if (old_seller or new_seller) and old_seller != new_seller:
+        await _revert_seller_if_orphan(org_id, old_seller, exclude_car_id=car_id)
+        await _mark_as_seller(org_id, new_seller)
 
     # ✅ Muayene / Sigorta tarihi değiştiyse bildirimleri ve tetiklenmiş reminder'ları temizle
     inspection_fields = {
@@ -125,6 +158,14 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
                 )
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": updates})
+
+    # ✅ Satıcı (seller_customer_id) değiştiyse PATCH ile — eski satıcıyı revert + yeni satıcıyı işaretle
+    if "seller_customer_id" in updates:
+        old_seller = existing.get("seller_customer_id")
+        new_seller = updates.get("seller_customer_id")
+        if old_seller != new_seller:
+            await _revert_seller_if_orphan(org_id, old_seller, exclude_car_id=car_id)
+            await _mark_as_seller(org_id, new_seller)
 
     # ✅ Fiyat ve durum değişikliklerini activity log'a yaz
     plate = (existing.get("plate") or "").upper()
@@ -280,22 +321,8 @@ async def delete_car(car_id: str, permanent: bool = False, current_user: dict = 
             {"$set": {"deleted": True, "deleted_at": now, "capital_applied": False}},
         )
 
-    # ✅ Satıcı müşteriyi geri al — bu satıcının başka aktif (silinmemiş) satılan aracı kalmadıysa
-    seller_id = existing.get("seller_customer_id")
-    if seller_id:
-        other_active = await db.cars.count_documents({
-            "org_id": org_id,
-            "seller_customer_id": seller_id,
-            "deleted": {"$ne": True},
-            "id": {"$ne": car_id},
-        })
-        if other_active == 0:
-            seller = await db.customers.find_one({"id": seller_id, "org_id": org_id})
-            if seller and seller.get("type") == "Satıcı":
-                await db.customers.update_one(
-                    {"id": seller_id, "org_id": org_id},
-                    {"$set": {"type": "Potansiyel"}},
-                )
+    # ✅ Satıcı müşteriyi geri al — bu satıcının başka aktif (silinmemiş) aracı kalmadıysa
+    await _revert_seller_if_orphan(org_id, existing.get("seller_customer_id"), exclude_car_id=car_id)
 
     await log_activity(
         db, current_user=current_user,
@@ -316,6 +343,8 @@ async def restore_car(car_id: str, current_user: dict = Depends(get_current_user
         raise HTTPException(status_code=404, detail="Car not found")
     await db.cars.update_one({"id": car_id}, {"$set": {"deleted": False, "deleted_at": None}})
     await db.transactions.update_many({"car_id": car_id, "org_id": org_id}, {"$set": {"deleted": False, "deleted_at": None}})
+    # ✅ Restore: seller varsa tipini yeniden 'Satıcı' olarak işaretle (Potansiyel ise)
+    await _mark_as_seller(org_id, existing.get("seller_customer_id"))
     return await db.cars.find_one({"id": car_id}, {"_id": 0})
 
 

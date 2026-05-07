@@ -8,6 +8,13 @@
 
 ## Implementation Status
 
+### v5.15.1 - Satıcı Edge Cases (Update + Multi-car) (2026-05-07)
+- ✅ **P2 — Seller Change Handling**: Yeni helper'lar `_mark_as_seller` + `_revert_seller_if_orphan` ile cars router. PUT/PATCH `seller_customer_id` değişirse eski satıcı orphan olduğunda Potansiyel'e revert + yeni satıcı Satıcı olur. Restore (soft-delete'ten geri yükleme) seller'ı yeniden işaretler.
+- ✅ **P1 — Multi-car E2E Test**: `tests/test_iter50_seller_multi_car.py` — 2 senaryo PASS:
+  1. Aynı satıcıdan 2 araç al → 1.yi sil → tip 'Satıcı' kalır → 2.yi de sil → 'Potansiyel'e revert.
+  2. PUT ile seller değiştir → eski Potansiyel'e revert, yeni Satıcı; PATCH ile boşaltma da revert.
+- ⏭️ **P3 — AddCarModal Refactor**: Bu turda ATLANDI (1750+ satır, dikkatli planlama gerek). Kullanıcının "hızlı + hatasız" önceliği nedeniyle ileri bırakıldı.
+
 ### v5.15.0 - Satıcı Müşteri Tipi (Aldığımız Kişi) (2026-05-07)
 - ✅ **Yeni Müşteri Tipi 'Satıcı'**: AddCustomerModal + CustomersPage filtre + sayım kartı (amber renk).
 - ✅ **AddCarModal Sahiplik > Stok**: Yeni `SellerSelector` componenti — mevcut müşteriler arasından arama/dropdown ile satıcı seç + "Yeni Satıcı" inline form (ad + 11 hane telefon → AppContext.addCustomer ile oluşturup otomatik seçer). Edit modunda da görünür.
