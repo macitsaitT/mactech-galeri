@@ -8,6 +8,15 @@
 
 ## Implementation Status
 
+### v5.17.1 - Raporlara "Araç Masrafları" Sekmesi (2026-05-07)
+- ✅ **Yeni rapor tipi `expenses`** (`ReportModal.jsx`):
+  - Tab: "Araç Masrafları" (Plus ikonu).
+  - Yeni `ExpensesReportBody` componenti — tarih + araç filtreli, sadece `expense` tipindeki tx'ler (Araç Alımı / Araç Sahibine Ödeme hariç).
+  - **Üstte** turuncu özet kartı: Toplam tutar + masraf sayısı + araç sayısı.
+  - **Araç bazlı gruplama** — her grup için: marka/model/yıl + plaka + masraf adedi + toplam tutar + sağda **"Düzenle"** butonu (mevcut `VehicleExpensesModal` açar).
+  - Her grup içinde tablo (desktop) / kart (mobile): tarih, kategori, açıklama, tutar.
+- ✅ **Test (E2E)**: BMW 320i için 2 masraf (Boya 5.000 + Ekspertiz 2.000) → rapor "Toplam ₺7.000,00 · 2 masraf · 1 araç" doğru gösteriyor, gruplandırma ve Düzenle butonu çalışıyor. Pytest regression 2/2 PASS, lint clean.
+
 ### v5.17.0 - 'Satıcı' Personeline Özel Dashboard (2026-05-07)
 - ✅ **Yeni `SalesPersonalView` componenti** (`/app/frontend/src/pages/SalesPersonalView.jsx`):
   - Karşılama: "Hoş geldin, {ad}"
