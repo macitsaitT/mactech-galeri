@@ -145,7 +145,9 @@ const AppContent = () => {
   // Car handlers
   const handleSaveCar = async (carData) => {
     if (carModal.car) {
-      await updateCar(carModal.car.id, carData);
+      const updated = await updateCar(carModal.car.id, carData);
+      setCarModal({ open: false, car: null });
+      return updated || carModal.car;
     } else {
       const newCar = await addCar(carData);
 
@@ -166,11 +168,12 @@ const AppContent = () => {
           const msg = (detail && typeof detail === 'object' && detail.message) || detail;
           try { await deleteCar(newCar.id, true); } catch (_) {}
           alert(typeof msg === 'string' ? msg : 'Araç alışı kaydedilemedi: yetersiz sermaye. Lütfen önce Kasa Girişi yapın.');
-          return; // Modal açık kalsın ki kullanıcı tekrar deneyebilsin
+          return null; // Modal açık kalsın ki kullanıcı tekrar deneyebilsin
         }
       }
+      // ✅ AddCarModal yeni car.id ile ek işlemler (inline masraflar, hatırlatıcılar) yapabilsin
+      return newCar;
     }
-    setCarModal({ open: false, car: null });
   };
 
   const handleDeleteCar = async (car) => {

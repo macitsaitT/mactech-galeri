@@ -4,7 +4,8 @@ import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/he
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel, getGearsForSelection } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
-import { fileAPI, notificationsAPI, transactionsAPI } from '../../services/api';
+import { fileAPI, notificationsAPI } from '../../services/api';
+import { useApp } from '../../context/AppContext';
 import VehicleExpensesModal from './VehicleExpensesModal';
 import { toast } from 'sonner';
 
@@ -381,6 +382,7 @@ const defaultFormData = {
 };
 
 const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
+  const { addTransaction } = useApp();
   const [formData, setFormData] = useState(defaultFormData);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -525,7 +527,8 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
           let okCount = 0;
           for (const exp of pendingExpenses) {
             try {
-              await transactionsAPI.create({
+              // ✅ AppContext.addTransaction kullanılıyor — bu setTransactions + refreshStats + refreshCapital çağırır
+              await addTransaction({
                 type: 'expense',
                 category: exp.category || 'Genel Gider',
                 amount: parseNumber(exp.amount),
@@ -539,7 +542,7 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
             }
           }
           if (okCount > 0) {
-            toast.success(`${okCount} masraf kaydedildi`);
+            toast.success(`${okCount} masraf kaydedildi, kasa güncellendi`);
           }
           if (okCount < pendingExpenses.length) {
             toast.error(`${pendingExpenses.length - okCount} masraf kaydedilemedi`);
