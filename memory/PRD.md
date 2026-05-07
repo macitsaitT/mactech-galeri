@@ -8,6 +8,12 @@
 
 ## Implementation Status
 
+### v5.14.2 - Inline Masraf Sermaye/Dashboard/Rapor Senkron Bug Fix (2026-05-07)
+- 🔴 **BUG**: AddCarModal'dan girilen inline masraflar Kasa/Sermaye, Dashboard "Toplam Gider" ve Raporlar'a yansımıyordu. **Kök neden**: (a) `transactionsAPI.create` doğrudan kullanılıyordu — AppContext state güncellenmiyor, refreshStats+refreshCapital tetiklenmiyor. (b) `App.js handleSaveCar` yeni car nesnesini return etmiyordu — AddCarModal `carId` alamıyor, inline expense loop hiç çalışmıyordu.
+- ✅ **FIX**: AddCarModal artık `useApp().addTransaction` çağırıyor (setTransactions + refreshStats + refreshCapital) + App.js handleSaveCar `newCar` return ediyor.
+- ✅ **"Kaydet & Masraf Ekle" butonu kaldırıldı** — gereksizdi ve return undefined yüzünden çalışmıyordu. Artık tek "Kaydet" butonu hem aracı hem inline masrafları kaydediyor.
+- ✅ **Doğrulama (curl)**: Capital 145.000 → 142.700 (-2.300 ₺ = 1.500+800 inline expenses). Cascade delete tx'leri de geri alıyor.
+
 ### v5.14.1 - Raporlardan Doğrudan Masraf Ekleme (2026-05-07)
 - [x] **ReportModal — Masraf Ekle Butonu**: "Genel" / "Araç" raporunda araç filtresi seçildiğinde dropdown yanında "Masraf Ekle" butonu (`report-add-expense-btn`) görünür → mevcut `VehicleExpensesModal` o aracın id'siyle açılır (görüntüle/ekle/düzenle/sil hepsi tek noktadan).
 - [x] **Tablo İçi Hızlı Ekleme**: Araç İşlemleri tablosundaki her satırın sonunda + ikonlu buton (`row-add-expense-{tx.id}`) — direkt o aracın masraf ekranını açar (mobile + desktop). Kasa hareketleri otomatik senkron.
