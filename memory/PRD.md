@@ -2,11 +2,17 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.13.0
+- **Version:** 5.14.0
 - **Last Updated:** 2026-05-07
-- **Status:** 8 Maddelik Backlog Tamamlandı — Telefon Validation, Fiyat Format, Branch Global, Customer Detail, Sale Revert
+- **Status:** Inline Masraf Entegrasyonu (AddCarModal) + Expense Düzenle/Sil tam çalışıyor — Backend 4/4 PASS, Frontend 100% (Iter 48)
 
 ## Implementation Status
+
+### v5.14.0 - Inline Masraf Entegrasyonu (2026-05-07)
+- [x] **AddCarModal Inline Masraf Girişi (P0)**: Yeni araç eklerken (edit modunda gizli) Genel Bilgiler tab'ında "Geliş Masrafları (Opsiyonel)" paneli. Kullanıcı kalem kalem (kategori + tutar + açıklama + tarih) masraf ekleyebilir. Submit sırasında `pending_expenses` payload'dan ayrılıp, araç oluşturulduktan sonra her satır için `transactionsAPI.create` (Gider) çağrılıyor; her create'de Kasa otomatik düşüyor. Toplam Masraf canlı gösteriliyor.
+- [x] **VehicleExpensesModal Düzenle/Sil**: Mevcut tx satırlarının yanında Edit + Trash2 ikon butonları. Sil → confirm dialog → `deleteTransaction` (DELETE /api/transactions/{id}) → backend `apply_delta` ile kasa revert + capital_applied=False. Edit → form pre-fill, PUT ile güncelleme + kasa farkı uygulanıyor.
+- [x] **Cascade Delete (Araç → Tx)**: DELETE /api/cars/{id} ilgili aktif transaction'ları soft-delete + kasa reverse (mevcuttu, doğrulandı).
+- [x] **Test Sonuçları (Iter 48)**: Backend pytest 4/4 PASS (POST tx → kasa düş, DELETE tx → kasa geri, PUT tx → fark uygula, DELETE car cascade). Frontend Playwright 100% (inline-expense butonları, satır ekle/sil, Toplam Masraf etiketi).
 
 ### v5.13.0 - 8 Maddelik Backlog (2026-05-07)
 - [x] **Veri Kurtarma paneli kaldırıldı** (Settings).
