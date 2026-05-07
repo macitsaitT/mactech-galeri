@@ -1576,9 +1576,9 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
 
         {/* Actions */}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-4 border-t border-border px-4 sm:px-6 pb-4 sm:pb-6">
-          {/* Sol: Masraf Ekle (yalnızca edit modda görünür — yeni araçta önce kaydet uyarısı) */}
+          {/* Sol: Mevcut araç düzenleniyorsa Masraf Görüntüle butonu (yeni araç eklerken inline form var) */}
           <div>
-            {editingCar?.id ? (
+            {editingCar?.id && (
               <button
                 type="button"
                 onClick={() => setExpensesModal({ open: true, carId: editingCar.id, plate: editingCar.plate || formData.plate })}
@@ -1587,43 +1587,6 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
               >
                 <Wallet size={16} />
                 Masraf Ekle / Görüntüle
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={async () => {
-                  // Önce aracı kaydet, sonra masraf modalını aç
-                  if (!validate()) { setActiveTab('general'); return; }
-                  setLoading(true);
-                  try {
-                    const submitData = {
-                      ...formData,
-                      km: formData.km?.replace(/[^\d]/g, '') || '0',
-                      purchase_price: parseNumber(formData.purchase_price),
-                      sale_price: parseNumber(formData.sale_price),
-                      employee_share: parseNumber(formData.employee_share),
-                      tramer_amount: parseNumber(formData.tramer_amount),
-                      commission_rate: parseInt(formData.commission_rate) || (formData.ownership === 'consignment' ? 5 : 0),
-                      year: parseInt(formData.year) || new Date().getFullYear(),
-                      expertise_score: parseInt(formData.expertise_score) || 0,
-                    };
-                    delete submitData.pending_expenses;
-                    const saved = await onSave(submitData);
-                    if (saved?.id) {
-                      setExpensesModal({ open: true, carId: saved.id, plate: saved.plate || formData.plate });
-                    }
-                  } catch (err) {
-                    console.error('Save error:', err);
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={loading}
-                className="px-4 sm:px-5 py-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
-                data-testid="save-and-open-expenses-btn"
-              >
-                <Wallet size={16} />
-                Kaydet & Masraf Ekle
               </button>
             )}
           </div>
