@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Receipt, TrendingDown, Plus, Edit } from 'lucide-react';
+import { Receipt, TrendingDown, Plus, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency, formatDate, formatNumberInput, parseNumber } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -16,10 +17,11 @@ const expenseCategories = [
 ];
 
 const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
-  const { transactions, addTransaction, updateTransaction } = useApp();
+  const { transactions, addTransaction, updateTransaction, deleteTransaction } = useApp();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTx, setEditingTx] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [formData, setFormData] = useState({
     category: 'Genel Gider',
     amount: '',
@@ -86,6 +88,20 @@ const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
       date: tx.date || new Date().toISOString().split('T')[0],
     });
     setShowAddForm(true);
+  };
+
+  const handleDelete = async (tx) => {
+    if (!tx?.id) return;
+    if (!window.confirm(`Bu masrafı silmek istediğinize emin misiniz?\n\n${tx.category}: ${formatCurrency(tx.amount)}\n\nKasa hareketi otomatik geri alınacaktır.`)) return;
+    setDeletingId(tx.id);
+    try {
+      await deleteTransaction(tx.id);
+      toast.success('Masraf silindi, kasa otomatik güncellendi');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Silinemedi');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (!car) return null;
@@ -207,13 +223,23 @@ const VehicleExpensesModal = ({ isOpen, onClose, car }) => {
                     <p className="font-medium text-sm truncate">{tx.category}</p>
                     <p className="text-xs text-muted-foreground truncate">{tx.description || '-'}</p>
                   </div>
-                  <div className="text-right flex items-center gap-2">
+                  <div className="text-right flex items-center gap-1.5">
                     <button
                       onClick={() => startEdit(tx)}
-                      className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                      className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                       data-testid={`edit-car-expense-${tx.id}`}
+                      title="Düzenle"
                     >
                       <Edit size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(tx)}
+                      disabled={deletingId === tx.id}
+                      className="p-1.5 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+                      data-testid={`delete-car-expense-${tx.id}`}
+                      title="Sil"
+                    >
+                      <Trash2 size={14} />
                     </button>
                     <div>
                       <p className={`font-bold text-sm tabular-nums ${tx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
