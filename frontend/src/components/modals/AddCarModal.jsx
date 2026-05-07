@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen, ShoppingCart, X as XIcon } from 'lucide-react';
+import { X, Car, FileText, Camera, Users, CheckCircle, Upload, Trash2, Loader2, FolderOpen, ShoppingCart, X as XIcon, Wallet } from 'lucide-react';
 import { formatNumberInput, parseNumber, formatPhoneInput } from '../../utils/helpers';
 import { carBrands, carModels, engineTypes, gearTypes, fuelTypes, vehicleTypes, modelYears, getEnginesForModel, getPackagesForModel, getGearsForSelection } from '../../data/carData';
 import { provinceList, getDistrictsByProvince } from '../../data/turkeyData';
 import CarExpertiseDiagram from '../CarExpertiseDiagram';
 import { fileAPI, notificationsAPI } from '../../services/api';
+import VehicleExpensesModal from './VehicleExpensesModal';
 
 // Document Category Component
 const DocumentCategory = ({ doc, docs, formData, handleChange }) => {
@@ -375,6 +376,8 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState('general');
+  // ✅ Masraf modal state — kaydedilen / düzenlenen aracın id'siyle açılır
+  const [expensesModal, setExpensesModal] = useState({ open: false, carId: null, plate: '' });
 
   useEffect(() => {
     if (editingCar) {
@@ -1425,26 +1428,88 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
         </form>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 border-t border-border px-4 sm:px-6 pb-4 sm:pb-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 sm:px-6 py-3 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors text-sm sm:text-base"
-            data-testid="cancel-car-btn"
-          >
-            İptal
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-4 sm:px-6 py-3 rounded-lg bg-foreground text-background font-semibold hover:bg-foreground/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
-            data-testid="save-car-btn"
-          >
-            <FileText size={18} />
-            {loading ? 'Kaydediliyor...' : 'Kaydet'}
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-4 border-t border-border px-4 sm:px-6 pb-4 sm:pb-6">
+          {/* Sol: Masraf Ekle (yalnızca edit modda görünür — yeni araçta önce kaydet uyarısı) */}
+          <div>
+            {editingCar?.id ? (
+              <button
+                type="button"
+                onClick={() => setExpensesModal({ open: true, carId: editingCar.id, plate: editingCar.plate || formData.plate })}
+                className="px-4 sm:px-5 py-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors text-sm font-semibold flex items-center gap-2"
+                data-testid="open-expenses-btn"
+              >
+                <Wallet size={16} />
+                Masraf Ekle / Görüntüle
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  // Önce aracı kaydet, sonra masraf modalını aç
+                  if (!validate()) { setActiveTab('general'); return; }
+                  setLoading(true);
+                  try {
+                    const submitData = {
+                      ...formData,
+                      km: formData.km?.replace(/[^\d]/g, '') || '0',
+                      purchase_price: parseNumber(formData.purchase_price),
+                      sale_price: parseNumber(formData.sale_price),
+                      employee_share: parseNumber(formData.employee_share),
+                      tramer_amount: parseNumber(formData.tramer_amount),
+                      commission_rate: parseInt(formData.commission_rate) || (formData.ownership === 'consignment' ? 5 : 0),
+                      year: parseInt(formData.year) || new Date().getFullYear(),
+                      expertise_score: parseInt(formData.expertise_score) || 0,
+                    };
+                    const saved = await onSave(submitData);
+                    if (saved?.id) {
+                      setExpensesModal({ open: true, carId: saved.id, plate: saved.plate || formData.plate });
+                    }
+                  } catch (err) {
+                    console.error('Save error:', err);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="px-4 sm:px-5 py-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+                data-testid="save-and-open-expenses-btn"
+              >
+                <Wallet size={16} />
+                Kaydet & Masraf Ekle
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 sm:px-6 py-3 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors text-sm sm:text-base"
+              data-testid="cancel-car-btn"
+            >
+              İptal
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="px-4 sm:px-6 py-3 rounded-lg bg-foreground text-background font-semibold hover:bg-foreground/90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
+              data-testid="save-car-btn"
+            >
+              <FileText size={18} />
+              {loading ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
+          </div>
         </div>
       </DialogContent>
+
+      {/* ✅ Masraf modal — kaydedilen aracın id'siyle açılır */}
+      {expensesModal.open && (
+        <VehicleExpensesModal
+          isOpen={expensesModal.open}
+          onClose={() => setExpensesModal({ open: false, carId: null, plate: '' })}
+          car={{ id: expensesModal.carId, plate: expensesModal.plate }}
+        />
+      )}
     </Dialog>
   );
 };
