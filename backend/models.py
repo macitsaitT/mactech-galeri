@@ -11,6 +11,7 @@ class UserCreate(BaseModel):
     phone: str = ""
     email_verified: bool = False
     role: str = "satis"
+    branch_id: Optional[str] = None
 
 
 class UserLogin(BaseModel):
@@ -125,6 +126,7 @@ class CustomerBase(BaseModel):
     type: str = "Potansiyel"
     notes: str = ""
     interested_car_id: str = ""
+    branch_id: Optional[str] = None
 
 
 class CustomerCreate(CustomerBase):
@@ -152,6 +154,7 @@ class TransactionBase(BaseModel):
     employee_name: Optional[str] = None
     customer_id: Optional[str] = None  # ✅ Vadeli satış / müşteri ödemesi takibi
     installment_id: Optional[str] = None  # ✅ Bir vadeli satışa bağlı ödeme
+    branch_id: Optional[str] = None
 
 
 class TransactionCreate(TransactionBase):

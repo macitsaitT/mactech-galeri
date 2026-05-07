@@ -217,13 +217,23 @@ const WantedCarsPage = () => {
               </div>
               <div>
                 <label className="text-xs uppercase text-muted-foreground mb-1 block">Min Bütçe (₺)</label>
-                <input type="number" value={form.budget_min} onChange={e => setForm(f => ({ ...f, budget_min: e.target.value }))}
-                  className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.budget_min ? Number(form.budget_min).toLocaleString('tr-TR') : ''}
+                  onChange={e => setForm(f => ({ ...f, budget_min: e.target.value.replace(/\D/g, '') }))}
+                  placeholder="0"
+                  className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm tabular-nums" />
               </div>
               <div>
                 <label className="text-xs uppercase text-muted-foreground mb-1 block">Max Bütçe (₺)</label>
-                <input type="number" value={form.budget_max} onChange={e => setForm(f => ({ ...f, budget_max: e.target.value }))}
-                  className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.budget_max ? Number(form.budget_max).toLocaleString('tr-TR') : ''}
+                  onChange={e => setForm(f => ({ ...f, budget_max: e.target.value.replace(/\D/g, '') }))}
+                  placeholder="0"
+                  className="w-full h-10 px-3 bg-background border border-border rounded-lg text-sm tabular-nums" />
               </div>
               <div>
                 <label className="text-xs uppercase text-muted-foreground mb-1 block">Yakıt</label>

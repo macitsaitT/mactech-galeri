@@ -23,10 +23,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+import CustomerDetailModal from '../components/modals/CustomerDetailModal';
 import { exportAPI, installmentsAPI } from '../services/api';
 import InstallmentModal from '../components/modals/InstallmentModal';
 
-const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, installmentSummary }) => {
+const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, onViewDetail, installmentSummary }) => {
   const interestedCar = cars.find(c => c.id === customer.interested_car_id);
   
   const getTypeColor = (type) => {
@@ -54,8 +55,12 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, in
               {customer.name?.charAt(0)?.toUpperCase() || 'M'}
             </span>
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">{customer.name}</h3>
+          <div
+            className="cursor-pointer"
+            onClick={() => onViewDetail?.(customer)}
+            data-testid={`customer-title-${customer.id}`}
+          >
+            <h3 className="font-semibold text-foreground hover:text-primary transition-colors">{customer.name}</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <Phone size={14} />
               {customer.phone || '-'}
@@ -70,6 +75,10 @@ const CustomerCard = ({ customer, cars, onEdit, onDelete, onOpenInstallments, in
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onViewDetail?.(customer)} data-testid={`detail-menu-${customer.id}`}>
+              <CreditCard size={16} className="mr-2" />
+              Müşteri Detayı
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit?.(customer)}>
               <Edit size={16} className="mr-2" />
               Düzenle
@@ -214,6 +223,8 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
   const [installments, setInstallments] = useState([]);
   const [installmentDrawer, setInstallmentDrawer] = useState({ open: false, customer: null });
   const [installmentModal, setInstallmentModal] = useState({ open: false, mode: 'create', customerId: null, installmentId: null });
+  // ✅ Müşteri detay modal state
+  const [detailCustomerId, setDetailCustomerId] = useState(null);
 
   const refreshInstallments = async () => {
     try {
@@ -414,6 +425,7 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
                   onEdit={selectionMode ? undefined : onEditCustomer}
                   onDelete={selectionMode ? undefined : onDeleteCustomer}
                   onOpenInstallments={selectionMode ? undefined : handleOpenInstallments}
+                  onViewDetail={selectionMode ? undefined : (c) => setDetailCustomerId(c.id)}
                   installmentSummary={summaryByCustomer[customer.id]}
                 />
               </div>
@@ -446,6 +458,13 @@ const CustomersPage = ({ onAddCustomer, onEditCustomer, onDeleteCustomer }) => {
         mode={installmentModal.mode}
         customerId={installmentModal.customerId}
         installmentId={installmentModal.installmentId}
+      />
+
+      {/* ✅ Müşteri Detay Modal */}
+      <CustomerDetailModal
+        open={!!detailCustomerId}
+        customerId={detailCustomerId}
+        onClose={() => setDetailCustomerId(null)}
       />
     </div>
   );

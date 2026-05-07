@@ -161,7 +161,7 @@ export const exportAPI = {
 
 // ==================== CARS ====================
 export const carsAPI = {
-  getAll: () => api.get('/cars'),
+  getAll: (params = {}) => api.get('/cars', { params }),
   create: (data) => api.post('/cars', data),
   update: (id, data) => api.put(`/cars/${id}`, data),
   patch: (id, data) => api.patch(`/cars/${id}`, data),
@@ -171,16 +171,17 @@ export const carsAPI = {
 
 // ==================== CUSTOMERS ====================
 export const customersAPI = {
-  getAll: () => api.get('/customers'),
+  getAll: (params = {}) => api.get('/customers', { params }),
   create: (data) => api.post('/customers', data),
   update: (id, data) => api.put(`/customers/${id}`, data),
   delete: (id, permanent = false) => api.delete(`/customers/${id}?permanent=${permanent}`),
   restore: (id) => api.post(`/customers/${id}/restore`),
+  getDetail: (id) => api.get(`/customers/${id}/detail`),
 };
 
 // ==================== TRANSACTIONS ====================
 export const transactionsAPI = {
-  getAll: () => api.get('/transactions'),
+  getAll: (params = {}) => api.get('/transactions', { params }),
   create: (data) => api.post('/transactions', data),
   update: (id, data) => api.put(`/transactions/${id}`, data),
   delete: (id, permanent = false) => api.delete(`/transactions/${id}?permanent=${permanent}`),
@@ -189,7 +190,7 @@ export const transactionsAPI = {
 
 // ==================== STATS ====================
 export const statsAPI = {
-  get: () => api.get('/stats'),
+  get: (params = {}) => api.get('/stats', { params }),
   employeePerformance: () => api.get('/stats/employee-performance'),
   salesBreakdown: (period = 'monthly', year) => api.get('/stats/sales-breakdown', {
     params: year ? { period, year } : { period },

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Bell, Clock, Calendar, X } from 'lucide-react';
+import { Menu, Clock, Calendar, X } from 'lucide-react';
 import NotificationCenter from '../NotificationCenter';
+import BranchSelector from './BranchSelector';
 
 const Header = ({ title, onMenuClick, appointments = [] }) => {
   const [now, setNow] = useState(new Date());
@@ -65,6 +66,11 @@ const Header = ({ title, onMenuClick, appointments = [] }) => {
 
       {/* Right side */}
       <div className="flex items-center gap-3">
+        {/* ✅ Global şube seçici */}
+        <div className="hidden sm:block">
+          <BranchSelector compact />
+        </div>
+
         {/* Live Clock */}
         <div className="hidden md:flex items-center gap-3 mr-2 border-r border-border pr-4" data-testid="live-clock">
           <div className="text-right leading-tight">

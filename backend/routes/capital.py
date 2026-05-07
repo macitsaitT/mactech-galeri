@@ -30,7 +30,33 @@ class CapitalInitialize(BaseModel):
 @router.get("/capital")
 async def read_capital(current_user: dict = Depends(get_current_user)):
     org_id = current_user.get("org_id", current_user["user_id"])
-    return await get_capital(org_id)
+    cap = await get_capital(org_id)
+
+    # ✅ Stoktaki araçlara bağlı sermaye hesabı — kullanıcı finansal panoda görmek istiyor
+    cars = await db.cars.find(
+        {"org_id": org_id, "status": "Stokta", "deleted": {"$ne": True}},
+        {"_id": 0, "purchase_price": 1, "ownership": 1, "plate": 1, "brand": 1, "model": 1, "year": 1, "id": 1},
+    ).to_list(5000)
+    # Sadece stock ownership'te sermaye bağlı (konsinye satıcının parası)
+    stock_cars = [c for c in cars if (c.get("ownership") == "stock")]
+    vehicles_capital = sum(float(c.get("purchase_price", 0) or 0) for c in stock_cars)
+
+    if isinstance(cap, dict):
+        cap["vehicles_capital"] = round(vehicles_capital, 2)
+        cap["vehicles_count"] = len(stock_cars)
+        cap["total_equity"] = round(float(cap.get("amount", 0) or 0) + vehicles_capital, 2)
+        cap["vehicles_breakdown"] = [
+            {
+                "car_id": c.get("id"),
+                "plate": (c.get("plate") or "").upper(),
+                "brand": c.get("brand", ""),
+                "model": c.get("model", ""),
+                "year": c.get("year"),
+                "purchase_price": float(c.get("purchase_price", 0) or 0),
+            }
+            for c in stock_cars
+        ]
+    return cap
 
 
 @router.post("/capital/adjust")

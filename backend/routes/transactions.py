@@ -19,8 +19,12 @@ def _tx_delta(tx: dict) -> float:
 
 
 @router.get("/transactions", response_model=List[Transaction])
-async def get_transactions(created_by: str = None, current_user: dict = Depends(get_current_user)):
-    extra = {"created_by": created_by} if created_by else {}
+async def get_transactions(created_by: str = None, branch_id: str = None, current_user: dict = Depends(get_current_user)):
+    extra = {}
+    if created_by:
+        extra["created_by"] = created_by
+    if branch_id:
+        extra["branch_id"] = branch_id
     query = build_data_filter(current_user, extra)
     return await db.transactions.find(query, {"_id": 0}).to_list(5000)
 

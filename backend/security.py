@@ -26,6 +26,35 @@ def validate_password(password: str):
         raise HTTPException(status_code=400, detail=f"Şifre en az {MIN_PASSWORD_LENGTH} karakter olmalıdır")
 
 
+def validate_phone(phone: str, required: bool = False) -> str:
+    """Türkiye formatı: tam 11 hane rakam (0XXXXXXXXXX).
+
+    - required=True ise boş kabul edilmez, 400 fırlatır.
+    - required=False ve boş ise boş string döner.
+    - Format dışı (11 haneden az/çok, rakam dışı) her zaman 400 fırlatır.
+    """
+    if phone is None:
+        phone = ""
+    raw = str(phone).strip()
+    if not raw:
+        if required:
+            raise HTTPException(status_code=400, detail="Telefon numarası zorunludur")
+        return ""
+    # Yalnızca rakamları al
+    digits = re.sub(r"\D", "", raw)
+    if len(digits) != 11:
+        raise HTTPException(
+            status_code=400,
+            detail="Telefon numarası tam 11 haneli olmalıdır (örn: 05551234567)"
+        )
+    if not digits.startswith("0"):
+        raise HTTPException(
+            status_code=400,
+            detail="Telefon numarası 0 ile başlamalıdır (örn: 05551234567)"
+        )
+    return digits
+
+
 # ==================== MONGODB INJECTION PREVENTION ====================
 
 def sanitize_string(value: str) -> str:

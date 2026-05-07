@@ -9,8 +9,9 @@ router = APIRouter()
 
 
 @router.get("/stats")
-async def get_stats(current_user: dict = Depends(get_current_user)):
-    query = build_data_filter(current_user, include_deleted=False)
+async def get_stats(branch_id: str = None, current_user: dict = Depends(get_current_user)):
+    extra = {"branch_id": branch_id} if branch_id else None
+    query = build_data_filter(current_user, extra, include_deleted=False)
 
     cars = await db.cars.find(query, {"_id": 0}).to_list(1000)
 
@@ -19,14 +20,15 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
     sold_cars = [c for c in cars if c.get("status") == "Satıldı"]
     deposit_cars = [c for c in cars if c.get("status") == "Kapora Alındı"]
 
-    transactions = await db.transactions.find(build_data_filter(current_user, include_deleted=False), {"_id": 0}).to_list(5000)
+    tx_query = build_data_filter(current_user, extra, include_deleted=False)
+    transactions = await db.transactions.find(tx_query, {"_id": 0}).to_list(5000)
 
     total_income = sum(t.get("amount", 0) for t in transactions if t.get("type") == "income")
     total_expense = sum(t.get("amount", 0) for t in transactions if t.get("type") == "expense")
 
     stock_value = sum(c.get("purchase_price", 0) for c in stock_cars)
 
-    cust_query = build_data_filter(current_user, include_deleted=False)
+    cust_query = build_data_filter(current_user, extra, include_deleted=False)
     customers = await db.customers.count_documents(cust_query)
 
     return {

@@ -210,7 +210,7 @@ const AppContent = () => {
     }
 
     try {
-      // Update car status with sold_by info
+      // ⚡ 1. Adım: Önce araç status'unu güncelle (transaction'ların doğru işlemesi için şart)
       await patchCar(carId, {
         status: 'Satıldı',
         sale_price: price,
@@ -223,22 +223,24 @@ const AppContent = () => {
       const deposit = car.deposit_amount || 0;
       const finalIncome = price - deposit;
 
-      // Add sale income transaction
+      // ⚡ 2. Adım: Kalan işlemleri PARALEL yap (birbirinden bağımsız, ~3x hızlanma)
+      const parallelOps = [];
+
       if (finalIncome > 0) {
-        await addTransaction({
+        parallelOps.push(addTransaction({
           type: 'income',
           category: 'Araç Satışı',
           amount: finalIncome,
           date: saleDate,
           description: `Satış - ${car.plate?.toUpperCase()} ${car.brand} ${car.model}${deposit > 0 ? ' (Kalan Tutar)' : ''}`,
-          car_id: carId
-        });
+          car_id: carId,
+          customer_id: customerId || undefined,
+        }));
       }
 
-      // Add employee share expense
       if (employeeShare > 0) {
         const empLabel = employeeName ? ` (${employeeName})` : '';
-        await addTransaction({
+        parallelOps.push(addTransaction({
           type: 'expense',
           category: 'Çalışan Payı',
           amount: employeeShare,
@@ -246,26 +248,25 @@ const AppContent = () => {
           description: `Çalışan Payı${empLabel} - ${car.plate?.toUpperCase()}`,
           car_id: carId,
           employee_name: employeeName || null
-        });
+        }));
       }
 
-      // Add owner payment for consignment ONLY
-      // NOT: Stok araçlar için alış gideri satış sırasında DEĞİL, araç eklenirken kaydedilir
       if (car.ownership === 'consignment' && car.purchase_price > 0) {
-        await addTransaction({
+        parallelOps.push(addTransaction({
           type: 'expense',
           category: 'Araç Sahibine Ödeme',
           amount: car.purchase_price,
           date: saleDate,
           description: `Araç Sahibine Ödeme - ${car.plate?.toUpperCase()} - ${car.owner_name || 'Konsinye'}`,
           car_id: carId
-        });
+        }));
       }
 
-      // Update customer type if selected
       if (customerId) {
-        await updateCustomer(customerId, { type: 'Satış Yapıldı' });
+        parallelOps.push(updateCustomer(customerId, { type: 'Satış Yapıldı' }));
       }
+
+      await Promise.all(parallelOps);
 
       // ✅ NOT: Modal'ı burada kapatmıyoruz — SaleModal "Satış Tamamlandı / WhatsApp Gönder"
       // post-success ekranını gösterir, kullanıcı oradan kendi kapatır.

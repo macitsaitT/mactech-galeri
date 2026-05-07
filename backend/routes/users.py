@@ -5,7 +5,7 @@ import uuid
 from db import db
 from auth import get_current_user, hash_password
 from models import UserCreate
-from security import validate_email, validate_password
+from security import validate_email, validate_password, validate_phone
 from helpers import log_activity
 from services.mactech_subuser_sync import (
     sync_sub_user_created, sync_sub_user_deleted, fire_and_forget,
@@ -89,6 +89,7 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
         raise HTTPException(status_code=403, detail="Sadece admin kullanici ekleyebilir")
     clean_email = validate_email(user.email)
     validate_password(user.password)
+    clean_phone = validate_phone(user.phone or "", required=True)
     org_id = current_user.get("org_id", current_user["user_id"])
 
     # ✅ Email kontrolü org_id'ye scope'lu — multi-tenant pattern.
@@ -104,9 +105,10 @@ async def create_user(user: UserCreate, current_user: dict = Depends(get_current
     
     user_doc = {
         "id": user_id, "email": clean_email, "password_hash": hash_password(user.password),
-        "company_name": user.company_name, "phone": user.phone,
+        "company_name": user.company_name, "phone": clean_phone,
         "address": "", "logo_url": "", "theme": "dark",
         "role": user.role, "org_id": org_id, "email_verified": True,
+        "branch_id": getattr(user, "branch_id", None) or None,
         "created_at": datetime.now(timezone.utc).isoformat(),
         # Admin'in abonelik bilgilerini kopyala (aynı organizasyonda)
         "subscription": admin.get("subscription", "free"),
@@ -140,10 +142,12 @@ async def update_user(user_id: str, updates: dict, current_user: dict = Depends(
     target = await db.users.find_one({"id": user_id, "org_id": org_id})
     if not target:
         raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
-    allowed = {"role", "company_name", "phone", "email"}
+    allowed = {"role", "company_name", "phone", "email", "branch_id"}
     safe_updates = {k: v for k, v in updates.items() if k in allowed and v is not None}
     if "email" in safe_updates:
         safe_updates["email"] = validate_email(safe_updates["email"])
+    if "phone" in safe_updates:
+        safe_updates["phone"] = validate_phone(safe_updates["phone"], required=True)
     if "password" in updates and updates["password"]:
         validate_password(updates["password"])
         safe_updates["password_hash"] = hash_password(updates["password"])

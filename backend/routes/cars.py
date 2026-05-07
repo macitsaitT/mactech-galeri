@@ -12,8 +12,12 @@ router = APIRouter()
 
 
 @router.get("/cars", response_model=List[Car])
-async def get_cars(created_by: str = None, current_user: dict = Depends(get_current_user)):
-    extra = {"created_by": created_by} if created_by else {}
+async def get_cars(created_by: str = None, branch_id: str = None, current_user: dict = Depends(get_current_user)):
+    extra = {}
+    if created_by:
+        extra["created_by"] = created_by
+    if branch_id:
+        extra["branch_id"] = branch_id
     query = build_data_filter(current_user, extra)
     return await db.cars.find(query, {"_id": 0}).to_list(1000)
 
@@ -90,6 +94,23 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
     if updates.get("status") and updates["status"] != "Satıldı" and existing.get("status") == "Satıldı":
         updates["sold_by_user_id"] = ""
         updates["sold_by_name"] = ""
+        # ✅ Satış iptal — müşterinin "Satış Yapıldı" type'ını geri al (eğer bu müşterinin
+        # BAŞKA aktif satışı yoksa)
+        sold_customer_id = existing.get("customer_id") or existing.get("sold_customer_id")
+        if sold_customer_id:
+            # Bu müşterinin hâlâ Satıldı durumundaki başka araçları var mı?
+            other_sold = await db.cars.count_documents({
+                "org_id": org_id,
+                "customer_id": sold_customer_id,
+                "status": "Satıldı",
+                "deleted": {"$ne": True},
+                "id": {"$ne": car_id},
+            })
+            if other_sold == 0:
+                await db.customers.update_one(
+                    {"id": sold_customer_id, "org_id": org_id},
+                    {"$set": {"type": "Potansiyel"}},
+                )
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.cars.update_one({"id": car_id}, {"$set": updates})
 

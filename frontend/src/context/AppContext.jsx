@@ -30,6 +30,9 @@ export const AppProvider = ({ children }) => {
   const [permissions, setPermissions] = useState(null);
   const [orgOwner, setOrgOwner] = useState(null);
   const [capital, setCapital] = useState({ amount: 0 }); // ✅ Kasa / Sermaye bakiyesi
+  // ✅ Aktif şube filtresi — tüm sayfalara yayılır. Boş '' → tümü (birleşik görünüm).
+  const [selectedBranchId, setSelectedBranchId] = useState(() => localStorage.getItem('crm_selected_branch') || '');
+  const [branches, setBranches] = useState([]);
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -52,15 +55,17 @@ export const AppProvider = ({ children }) => {
     
     if (!silent) setLoading(true);
     try {
-      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes, ownerRes, capitalRes] = await Promise.all([
-        carsAPI.getAll(),
-        customersAPI.getAll(),
-        transactionsAPI.getAll(),
-        statsAPI.get(),
+      const params = selectedBranchId ? { branch_id: selectedBranchId } : {};
+      const [carsRes, customersRes, transactionsRes, statsRes, appointmentsRes, permRes, ownerRes, capitalRes, branchesRes] = await Promise.all([
+        carsAPI.getAll(params),
+        customersAPI.getAll(params),
+        transactionsAPI.getAll(params),
+        selectedBranchId ? statsAPI.get({ branch_id: selectedBranchId }) : statsAPI.get(),
         appointmentsAPI.getAll(),
         permissionsAPI.get().catch(() => ({ data: null })),
         api.get('/org/owner').catch(() => ({ data: null })),
         capitalAPI.get().catch(() => ({ data: { amount: 0 } })),
+        api.get('/branches').catch(() => ({ data: [] })),
       ]);
 
       setCars(carsRes.data || []);
@@ -69,6 +74,7 @@ export const AppProvider = ({ children }) => {
       setStats(statsRes.data || null);
       setAppointments(appointmentsRes.data || []);
       setCapital(capitalRes.data || { amount: 0 });
+      setBranches(branchesRes.data || []);
       if (ownerRes.data) setOrgOwner(ownerRes.data);
       if (permRes.data) {
         setPermissions({
@@ -81,7 +87,13 @@ export const AppProvider = ({ children }) => {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, selectedBranchId]);
+
+  // Seçili şube değişince localStorage'a yaz
+  useEffect(() => {
+    if (selectedBranchId) localStorage.setItem('crm_selected_branch', selectedBranchId);
+    else localStorage.removeItem('crm_selected_branch');
+  }, [selectedBranchId]);
 
   // Initial data fetch
   useEffect(() => {
@@ -411,6 +423,11 @@ export const AppProvider = ({ children }) => {
     theme,
     setTheme,
     toggleTheme,
+
+    // ✅ Şube filtresi (global)
+    selectedBranchId,
+    setSelectedBranchId,
+    branches,
   };
 
   return (

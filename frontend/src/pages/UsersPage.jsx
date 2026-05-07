@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { usersAPI } from '../services/api';
-import { formatPhoneInput } from '../utils/helpers';
-import { UserPlus, Edit, Trash2, Shield, Calculator, ShoppingCart, X, Check } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { usersAPI, branchesAPI } from '../services/api';
+import { formatPhoneInput, isValidPhone } from '../utils/helpers';
+import { UserPlus, Edit, Trash2, Shield, Calculator, ShoppingCart, Building2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -17,16 +18,22 @@ const roleConfig = {
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [branchFilter, setBranchFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [formData, setFormData] = useState({ email: '', password: '', company_name: '', phone: '', role: 'satis' });
+  const [formData, setFormData] = useState({ email: '', password: '', company_name: '', phone: '', role: 'satis', branch_id: '' });
   const [saving, setSaving] = useState(false);
 
   const fetchUsers = async () => {
     try {
-      const res = await usersAPI.getAll();
-      setUsers(res.data);
+      const [usersRes, branchesRes] = await Promise.all([
+        usersAPI.getAll(),
+        branchesAPI.list().catch(() => ({ data: [] })),
+      ]);
+      setUsers(usersRes.data);
+      setBranches(branchesRes.data || []);
     } catch (err) {
       console.error('Error fetching users:', err);
     } finally {
@@ -38,7 +45,7 @@ const UsersPage = () => {
 
   const openAdd = () => {
     setEditingUser(null);
-    setFormData({ email: '', password: '', company_name: '', phone: '', role: 'satis' });
+    setFormData({ email: '', password: '', company_name: '', phone: '', role: 'satis', branch_id: '' });
     setModalOpen(true);
   };
 
@@ -50,6 +57,7 @@ const UsersPage = () => {
       company_name: user.company_name || '',
       phone: user.phone || '',
       role: user.role || 'satis',
+      branch_id: user.branch_id || '',
     });
     setModalOpen(true);
   };
@@ -57,20 +65,26 @@ const UsersPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email) return;
+    // ✅ 11 hane telefon zorunlu
+    if (!isValidPhone(formData.phone)) {
+      toast.error('Telefon numarası tam 11 haneli olmalıdır (örn: 0532 123 45 67)');
+      return;
+    }
     setSaving(true);
     try {
+      const payload = { ...formData, branch_id: formData.branch_id || null };
       if (editingUser) {
-        const updates = { ...formData };
+        const updates = { ...payload };
         if (!updates.password) delete updates.password;
         await usersAPI.update(editingUser.id, updates);
       } else {
-        if (!formData.password) { alert('Şifre gerekli'); setSaving(false); return; }
-        await usersAPI.create(formData);
+        if (!formData.password) { toast.error('Şifre gerekli'); setSaving(false); return; }
+        await usersAPI.create(payload);
       }
       setModalOpen(false);
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Hata oluştu');
+      toast.error(err.response?.data?.detail || 'Hata oluştu');
     } finally {
       setSaving(false);
     }
@@ -85,28 +99,50 @@ const UsersPage = () => {
       // Sonra arka planda gerçek state'i çek
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Silme hatası');
+      toast.error(err.response?.data?.detail || 'Silme hatası');
       // Hata durumunda da listeyi yenile (real state'e dön)
       fetchUsers();
     }
   };
 
+  const filteredUsers = useMemo(() => {
+    if (!branchFilter) return users;
+    if (branchFilter === '__none__') return users.filter(u => !u.branch_id);
+    return users.filter(u => u.branch_id === branchFilter);
+  }, [users, branchFilter]);
+
   return (
     <div className="space-y-6 pb-24 md:pb-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="font-heading font-bold text-xl" data-testid="users-page-title">Kullanıcı Yönetimi</h2>
-          <p className="text-sm text-muted-foreground">{users.length} kullanıcı</p>
+          <p className="text-sm text-muted-foreground">{filteredUsers.length} / {users.length} kullanıcı</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
-          data-testid="add-user-btn"
-        >
-          <UserPlus size={18} />
-          Kullanıcı Ekle
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {branches.length > 0 && (
+            <select
+              value={branchFilter}
+              onChange={(e) => setBranchFilter(e.target.value)}
+              className="h-10 px-3 bg-background border border-border rounded-lg text-sm"
+              data-testid="users-branch-filter"
+            >
+              <option value="">Tüm Şubeler</option>
+              <option value="__none__">Şubesiz (Genel)</option>
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+            data-testid="add-user-btn"
+          >
+            <UserPlus size={18} />
+            Kullanıcı Ekle
+          </button>
+        </div>
       </div>
 
       {/* Users Grid */}
@@ -114,13 +150,14 @@ const UsersPage = () => {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         </div>
-      ) : users.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">Kullanıcı bulunamadı</div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">Bu filtreye uygun kullanıcı yok</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map((user) => {
+          {filteredUsers.map((user) => {
             const rc = roleConfig[user.role] || roleConfig.satis;
             const Icon = rc.icon;
+            const branch = branches.find(b => b.id === user.branch_id);
             return (
               <div
                 key={user.id}
@@ -138,10 +175,18 @@ const UsersPage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <span className={`px-2.5 py-1 text-xs font-bold rounded-full border ${rc.color}`}>
                     {rc.label}
                   </span>
+                  {branch && (
+                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500/15 text-blue-500 border border-blue-500/30 inline-flex items-center gap-1" data-testid={`user-branch-${user.id}`}>
+                      <Building2 size={10} /> {branch.name}
+                    </span>
+                  )}
+                  {!branch && user.branch_id && (
+                    <span className="text-[10px] text-muted-foreground">(Şube)</span>
+                  )}
                   {user.phone && <span className="text-xs text-muted-foreground">{user.phone}</span>}
                 </div>
                 <div className="flex gap-2">
@@ -226,6 +271,21 @@ const UsersPage = () => {
                 maxLength={14}
                 data-testid="user-phone-input"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Şube (Opsiyonel)</label>
+              <select
+                value={formData.branch_id}
+                onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                className="w-full h-12 px-4 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors"
+                data-testid="user-branch-select"
+              >
+                <option value="">— Genel (Şubesiz) —</option>
+                {branches.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>
