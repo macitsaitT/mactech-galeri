@@ -132,10 +132,32 @@ async def patch_car(car_id: str, updates: dict, current_user: dict = Depends(get
     if not existing:
         raise HTTPException(status_code=404, detail="Car not found")
     if updates.get("status") == "Satıldı":
-        user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
-        if user:
-            updates["sold_by_user_id"] = current_user["user_id"]
-            updates["sold_by_name"] = user.get("company_name", user.get("email", ""))
+        # ✅ Frontend (SaleModal) seçilen satış personelini gönderiyorsa **onu kullan**;
+        # yoksa current_user'a düş (geriye uyumluluk).
+        provided_uid = updates.get("sold_by_user_id")
+        provided_name = updates.get("sold_by_name")
+        if provided_uid:
+            seller_user = await db.users.find_one({"id": provided_uid, "org_id": org_id}, {"_id": 0})
+            if seller_user:
+                updates["sold_by_user_id"] = provided_uid
+                updates["sold_by_name"] = (
+                    provided_name
+                    or seller_user.get("name")
+                    or seller_user.get("company_name")
+                    or seller_user.get("email", "")
+                )
+            else:
+                # Geçersiz user_id → kayıttan kaldır, current_user'a düş
+                updates.pop("sold_by_user_id", None)
+                updates.pop("sold_by_name", None)
+                provided_uid = None
+        if not provided_uid:
+            user = await db.users.find_one({"id": current_user["user_id"]}, {"_id": 0})
+            if user:
+                updates["sold_by_user_id"] = current_user["user_id"]
+                updates["sold_by_name"] = (
+                    user.get("name") or user.get("company_name") or user.get("email", "")
+                )
     if updates.get("status") and updates["status"] != "Satıldı" and existing.get("status") == "Satıldı":
         updates["sold_by_user_id"] = ""
         updates["sold_by_name"] = ""

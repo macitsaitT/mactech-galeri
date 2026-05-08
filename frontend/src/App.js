@@ -232,7 +232,7 @@ const AppContent = () => {
   };
 
   // Sale handler
-  const handleConfirmSale = async ({ carId, price, employeeShare, employeeName, customerId, saleDate }) => {
+  const handleConfirmSale = async ({ carId, price, employeeShare, employeeName, employeeUserId, customerId, saleDate }) => {
     const car = saleModal.car;
     if (!car) return;
     if (car.status === 'Satıldı') {
@@ -249,6 +249,9 @@ const AppContent = () => {
         sold_date: saleDate,
         employee_share: employeeShare,
         sold_by: employeeName || '',
+        // ✅ Satışı yapan personelin gerçek user_id ve adı — backend bu alanları override etmemeli
+        sold_by_user_id: employeeUserId || undefined,
+        sold_by_name: employeeName || undefined,
         customer_id: customerId || ''
       });
 

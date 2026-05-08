@@ -17,6 +17,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
     price: '',
     employee_share: '',
     employee_name: '',
+    employee_user_id: '',
     customer_id: '',
     sale_date: new Date().toISOString().split('T')[0]
   });
@@ -35,6 +36,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         price: formatNumberInput(car.sale_price),
         employee_share: '',
         employee_name: '',
+        employee_user_id: '',
         customer_id: '',
         sale_date: new Date().toISOString().split('T')[0]
       });
@@ -90,6 +92,7 @@ const SaleModal = ({ isOpen, onClose, car, onConfirmSale }) => {
         price: parseNumber(formData.price),
         employeeShare: parseNumber(formData.employee_share),
         employeeName: formData.employee_name,
+        employeeUserId: formData.employee_user_id || null,
         customerId: formData.customer_id,
         saleDate: formData.sale_date
       });
@@ -373,7 +376,7 @@ ${companyName}`;
                 <div className="mt-1 bg-card border border-border rounded-lg overflow-hidden shadow-lg" data-testid="employee-list">
                   <button
                     type="button"
-                    onClick={() => { setFormData(prev => ({ ...prev, employee_name: '' })); setShowEmployeeList(false); }}
+                    onClick={() => { setFormData(prev => ({ ...prev, employee_name: '', employee_user_id: '' })); setShowEmployeeList(false); }}
                     className={`w-full px-4 py-3 text-left text-sm hover:bg-muted/60 transition-colors border-b border-border ${!formData.employee_name ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground'}`}
                   >
                     Çalışan seçilmedi
@@ -382,7 +385,7 @@ ${companyName}`;
                     <button
                       key={emp.id}
                       type="button"
-                      onClick={() => { setFormData(prev => ({ ...prev, employee_name: emp.name })); setShowEmployeeList(false); }}
+                      onClick={() => { setFormData(prev => ({ ...prev, employee_name: emp.name, employee_user_id: emp.id })); setShowEmployeeList(false); }}
                       className={`w-full px-4 py-3 text-left text-sm hover:bg-muted/60 transition-colors border-b border-border last:border-0 ${formData.employee_name === emp.name ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'}`}
                       data-testid={`employee-option-${emp.id}`}
                     >

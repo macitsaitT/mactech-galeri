@@ -8,6 +8,17 @@
 
 ## Implementation Status
 
+### v5.18.4 - Satış Personeli Bug Fix (Dashboard "Belirtilmemiş") (2026-05-07)
+- 🐛 **BUG**: Dashboard "Satış Elemanları" widget'ında 5 satışın hepsi "Belirtilmemiş" altında gözüküyordu — halbuki SaleModal'da personel seçiliyordu. **Kök neden 3 noktada**:
+  1. **SaleModal**: Çalışan seçildiğinde sadece `employee_name` (string) tutuluyordu, **user_id tutulmuyordu**.
+  2. **App.js handleConfirmSale**: Backend'e sadece `sold_by` (string) gönderiyordu, `sold_by_user_id` yoktu.
+  3. **Backend `PATCH /cars`**: "Satıldı" durumuna geçince frontend'in gönderdiğini **YOK SAYIP** zorla `current_user`'ı (admin'i) `sold_by_user_id` yapıyordu.
+- ✅ **Fix**:
+  - SaleModal: `employee_user_id` state ekledi, dropdown'da `emp.id`'yi de saklıyor.
+  - App.js: `employeeUserId` parametresi backend'e `sold_by_user_id` + `sold_by_name` olarak gidiyor.
+  - Backend `patch_car`: Frontend `sold_by_user_id` gönderdiyse onu öncelikli kullanır (DB'den name'i de doğru çeker), yoksa current_user'a düşer.
+- ✅ **E2E test**: "Mehmet Yılmaz" satış kullanıcısı oluşturuldu → araç PATCH ile satışa kapandı, `sold_by_user_id` Mehmet'in ID'si + `sold_by_name` "Mehmet Yılmaz" doğru kaydedildi (admin değil!).
+
 ### v5.18.3 - Personel Adı Bug Fix (2026-05-07)
 - 🐛 **BUG**: SalesPersonalView'da "Hoş geldin, Satışçı" görünüyordu — kullanıcının gerçek adı yerine generic fallback. Kök neden: backend'in 3 noktası `name` alanını saklamıyor/döndürmüyordu.
 - ✅ **Fix kapsamı (3 backend, 4 frontend)**:
