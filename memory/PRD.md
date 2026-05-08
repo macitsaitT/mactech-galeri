@@ -2,11 +2,27 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.20.0
-- **Last Updated:** 2026-02-XX (Iter 50 + UX)
-- **Status:** Gider Analizi UX İyileştirmesi + Final Backend Regression Tamamlandı
+- **Version:** 5.21.0
+- **Last Updated:** 2026-02-XX (Iter 51)
+- **Status:** Backlog Closure (P3 + P2 + Cash Flow Visual) Tamamlandı — 14/14 backend + frontend smoke PASS
 
 ## Implementation Status
+
+### v5.21.0 - P3 Field Exposure + P2 Refactor + Cash Flow Visual (Iter 51)
+- ✅ **P3 — Car Pydantic modeli genişletildi** (`models.py:80-82`): `sold_by_user_id`, `sold_by_name` Optional alanlar olarak `CarBase`'e eklendi. Artık `GET /api/cars` response'unda dönüyorlar (önceden `extra='ignore'` ile stripleniyordu). 2 yeni pytest doğruladı.
+- ✅ **P2 — Dashboard.jsx refactor** (1021 → 808 satır, -213): Alt componentler `/app/frontend/src/components/dashboard/` altına ayrıştırıldı:
+  - `StatCard.jsx` (44 ln) — başlık + değer + ikon + opsiyonel ⓘ tooltip
+  - `CapitalSummaryCard.jsx` (89 ln) — Toplam Sermaye kartı (Nakit + Araç chips)
+  - `CustomTooltip.jsx` (19 ln) — Recharts tooltip
+  - `ExpenseBreakdownBar.jsx` (78 ln) — Stok Yatırımı vs İşletme Gideri ayrımı
+  - `CashFlowVisual.jsx` (121 ln) — **YENİ** Dönem Nakit Akışı waterfall görseli
+  - `dateRange.js` (39 ln) — preset listesi + getDateRange util
+- ✅ **P2 — ReportModal.jsx refactor** (1454 → 1137 satır, -317): `/app/frontend/src/components/modals/reportParts/` altına ayrıştırıldı:
+  - `reportConfig.js` (31 ln) — reportTypes + reportTitles + getLogoUrl
+  - `buildPrintHTML.js` (169 ln) — yazdırılabilir rapor üreteci (pure function)
+  - `ExpensesReportBody.jsx` (132 ln) — Araç Masrafları Raporu component
+- ✅ **Cash Flow Visual (Potansiyel İyileştirme)**: Dashboard'a yeni "Dönem Nakit Akışı" widget'ı. 4 kutu yatay waterfall: `[+ Kasaya Giren] → [− Stoka Bağlanan] → [− İşletme Gideri] = [Net Kasa Hareketi]`. Net pozitif/negatif duruma göre yeşil/kırmızı sonuç + açıklayıcı satır altında. Net Kâr ile Kasa arasındaki farkı görsel olarak açıklıyor.
+- ✅ **Test**: Backend 14/14 PASS (12 iter50 regression + 2 yeni iter51 sold_by exposure). Frontend smoke: zero console error, capital-card render, ExpensesReportBody render, refactor sıfır regresyon.
 
 ### v5.20.0 - Dashboard Gider Analizi UX İyileştirmesi
 - 🐛 **UX Sorun**: "Toplam Gider" kartı, satılmak için alınan araçların alış maliyetlerini de içeriyordu — kullanıcı parasının "gittiğini" sanıyor, oysa para stoktaki araçlarda varlık olarak duruyor. Net Kâr ile kasa nakit arasındaki farkı da kavramsal olarak anlamıyorlardı.
