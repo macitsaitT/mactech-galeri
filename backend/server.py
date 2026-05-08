@@ -162,6 +162,13 @@ async def startup():
             })
     logger.info("Permissions migration complete")
 
+    # ✅ Eski satışların sold_by_user_id alanını backfill et — Dashboard "Satış Elemanları" widget'ı
+    try:
+        from migrations.migrate_sold_by_user_id import backfill_sold_by_user_id
+        await backfill_sold_by_user_id(db)
+    except Exception as e:
+        logger.warning(f"sold_by backfill failed: {e}")
+
     # ✅ Digest scheduler — saatlik tick, kullanıcı başına day/hour kontrolü digest.py içinde
     try:
         from apscheduler.schedulers.asyncio import AsyncIOScheduler
