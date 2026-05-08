@@ -77,7 +77,9 @@ class CarBase(BaseModel):
     customer_id: Optional[str] = None
     customer_name: Optional[str] = None
     employee_share: float = 0
-    sold_by: str = ""  # Satışı yapan çalışan
+    sold_by: str = ""  # Satışı yapan çalışan (legacy string — geriye uyumluluk)
+    sold_by_user_id: Optional[str] = ""  # ✅ Satışı yapan user.id — Dashboard "Satış Elemanları" widget'ı bunu kullanır
+    sold_by_name: Optional[str] = ""  # ✅ Satışı yapan kullanıcının adı (kayıt anında snapshot)
     muayene_tarihi: str = ""  # Muayene bitiş tarihi
     sigorta_bitis_tarihi: str = ""  # Sigorta bitiş tarihi
     insurance_start: str = ""
