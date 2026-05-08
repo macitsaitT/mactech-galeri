@@ -4,7 +4,7 @@ import { formatCurrency } from '../utils/helpers';
 import {
   Car, TrendingUp, Wallet, Package, ShoppingCart, CreditCard, FileText, Calendar,
   BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter, Plus,
-  Coins, Car as CarIcon, AlertTriangle, Clock, MessageCircle, ArrowRight
+  Coins, Car as CarIcon, AlertTriangle, Clock, MessageCircle, ArrowRight, Info
 } from 'lucide-react';
 import CapitalModal from '../components/modals/CapitalModal';
 import CapitalDetailModal from '../components/modals/CapitalDetailModal';
@@ -62,7 +62,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle }) => {
+const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle, tooltip }) => {
   const colorClasses = {
     default: 'bg-card border-border',
     primary: 'bg-primary/10 border-primary/30',
@@ -81,9 +81,16 @@ const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle }) => 
     <div className={`border rounded-xl p-4 ${colorClasses[color]}`} data-testid={`stat-${title.toLowerCase().replace(/\s+/g, '-')}`}>
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1 truncate">{title}</p>
+          <div className="flex items-center gap-1 mb-1">
+            <p className="text-[10px] text-muted-foreground uppercase font-medium truncate">{title}</p>
+            {tooltip && (
+              <span title={tooltip} className="inline-flex" data-testid={`stat-tooltip-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+                <Info size={11} className="text-muted-foreground/70 hover:text-primary transition-colors cursor-help" />
+              </span>
+            )}
+          </div>
           <p className="font-heading font-bold text-lg sm:text-2xl tabular-nums truncate">{value}</p>
-          {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
         </div>
         <div className={`p-2 sm:p-3 rounded-lg bg-background/50 flex-shrink-0 ${iconColors[color]}`}>
           <Icon size={20} className="sm:w-6 sm:h-6" />
@@ -227,6 +234,15 @@ const Dashboard = ({ onOpenReport }) => {
   const totalIncome = filteredTx.filter(t => t.type === 'income').reduce((s, t) => s + (t.amount || 0), 0);
   const totalExpense = filteredTx.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
   const soldCount = filteredSoldCars.length;
+
+  // ✅ Gider Ayrıştırma: "Stok Yatırımı" (Araç Alımı + Sahibine Ödeme) varlıktır, gider değildir.
+  // İşletme Gideri = Toplam Gider − Stok Yatırımı (yani gerçekten cebinden çıkan operasyonel maliyet)
+  const stockInvestmentInExpense = useMemo(() => {
+    return filteredTx
+      .filter(t => t.type === 'expense' && (t.category === 'Araç Alımı' || t.category === 'Araç Sahibine Ödeme'))
+      .reduce((s, t) => s + (t.amount || 0), 0);
+  }, [filteredTx]);
+  const operatingExpense = Math.max(0, totalExpense - stockInvestmentInExpense);
 
   // ✅ Net Kâr: Satılan araçlardan elde edilen TOPLAM net kâr (zararlar dahil).
   // Formül: her satılan araç için (sale_price − alış_maliyeti − sahibine_ödeme − araç_giderleri − çalışan_payı)
@@ -503,11 +519,93 @@ const Dashboard = ({ onOpenReport }) => {
       {/* Stats Grid — finansal kartlar (Gelir/Gider/Kâr) sadece admin/muhasebe görebilir */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {canSeeCapital && <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />}
-        {canSeeCapital && <StatCard title="TOPLAM GİDER" value={formatCurrency(totalExpense)} icon={ArrowDownRight} color="destructive" />}
-        {canSeeCapital && <StatCard title="NET KÂR" value={formatCurrency(netProfit)} icon={TrendingUp} color="success" />}
+        {canSeeCapital && (
+          <StatCard
+            title="TOPLAM GİDER"
+            value={formatCurrency(totalExpense)}
+            icon={ArrowDownRight}
+            color="destructive"
+            subtitle={stockInvestmentInExpense > 0 ? `${formatCurrency(stockInvestmentInExpense)} stok yatırımı` : undefined}
+            tooltip="Bu rakam araç alış maliyetlerini de içerir. Alış bedelleri 'gider' değil stoktaki araçlarda duran VARLIKTIR — kasanızdan çıkmadı, sadece nakit → araç olarak şekil değiştirdi."
+          />
+        )}
+        {canSeeCapital && (
+          <StatCard
+            title="NET KÂR"
+            value={formatCurrency(netProfit)}
+            icon={TrendingUp}
+            color="success"
+            subtitle="Sadece satılan araçlardan"
+            tooltip="Net Kâr ≠ Kasadaki Nakit. Kâr, yalnızca SATIŞI tamamlanmış araçlardan hesaplanır. Kasanızdaki nakit miktarı stoktaki araçlara yapılan yatırımı da yansıtır — bu yüzden ikisi nadiren eşittir."
+          />
+        )}
         <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : undefined} />
         <StatCard title="STOK / KONSİNYE" value={`${stockCars.length} / ${consignmentCars.length}`} icon={Package} color="default" subtitle={`${depositCars.length} kapora`} />
       </div>
+
+      {/* ✅ Gider Analizi — Stok Yatırımı (Varlık) vs İşletme Gideri ayrımı */}
+      {canSeeCapital && totalExpense > 0 && stockInvestmentInExpense > 0 && (
+        <div
+          className="bg-gradient-to-r from-amber-500/5 via-card to-card border border-amber-500/20 rounded-xl p-4 sm:p-5"
+          data-testid="expense-breakdown-bar"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 flex-shrink-0">
+              <Info size={18} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                <h4 className="font-heading font-semibold text-sm">Gider Analizi — Toplam Giderin Dağılımı</h4>
+                <span className="text-[11px] text-muted-foreground">"Toplam Gider"in {Math.round((stockInvestmentInExpense / totalExpense) * 100)}%'i aslında stoktaki araçlarda duran varlığınız</span>
+              </div>
+
+              {/* Stacked progress bar */}
+              <div className="flex h-2.5 rounded-full overflow-hidden bg-muted/40 mb-3">
+                <div
+                  className="bg-amber-500 transition-all"
+                  style={{ width: `${(stockInvestmentInExpense / totalExpense) * 100}%` }}
+                  data-testid="expense-stock-bar"
+                />
+                <div
+                  className="bg-red-500 transition-all"
+                  style={{ width: `${(operatingExpense / totalExpense) * 100}%` }}
+                  data-testid="expense-operating-bar"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 bg-background/60 border border-amber-500/20 rounded-lg p-3" data-testid="expense-stock-card">
+                  <div className="w-1 h-10 bg-amber-500 rounded-full flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <Package size={12} className="text-amber-500" />
+                      <span className="text-[11px] text-muted-foreground uppercase font-medium">Stok Yatırımı (Varlık)</span>
+                    </div>
+                    <p className="font-heading font-bold text-base sm:text-lg tabular-nums text-amber-500 mt-0.5">
+                      {formatCurrency(stockInvestmentInExpense)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Araç alım bedelleri — satıldıkça nakde döner</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 bg-background/60 border border-red-500/20 rounded-lg p-3" data-testid="expense-operating-card">
+                  <div className="w-1 h-10 bg-red-500 rounded-full flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <ArrowDownRight size={12} className="text-red-500" />
+                      <span className="text-[11px] text-muted-foreground uppercase font-medium">İşletme Gideri</span>
+                    </div>
+                    <p className="font-heading font-bold text-base sm:text-lg tabular-nums text-red-500 mt-0.5">
+                      {formatCurrency(operatingExpense)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Bakım, kira, maaş, vergi vb. gerçek giderler</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Charts Row 1: Bar + Pie */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

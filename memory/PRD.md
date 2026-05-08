@@ -2,11 +2,21 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.19.0
-- **Last Updated:** 2026-02-XX (Iter 50)
-- **Status:** Retroactive Sales Migration + Final Backend Regression Tamamlandı — 14/14 pytest PASS
+- **Version:** 5.20.0
+- **Last Updated:** 2026-02-XX (Iter 50 + UX)
+- **Status:** Gider Analizi UX İyileştirmesi + Final Backend Regression Tamamlandı
 
 ## Implementation Status
+
+### v5.20.0 - Dashboard Gider Analizi UX İyileştirmesi
+- 🐛 **UX Sorun**: "Toplam Gider" kartı, satılmak için alınan araçların alış maliyetlerini de içeriyordu — kullanıcı parasının "gittiğini" sanıyor, oysa para stoktaki araçlarda varlık olarak duruyor. Net Kâr ile kasa nakit arasındaki farkı da kavramsal olarak anlamıyorlardı.
+- ✅ **Çözüm (Dashboard.jsx)**:
+  - **Hesaplama**: `stockInvestmentInExpense` (Araç Alımı + Araç Sahibine Ödeme) ayrıştırıldı, `operatingExpense = totalExpense − stockInvestmentInExpense`.
+  - **TOPLAM GİDER kartı**: Subtitle olarak "X TL stok yatırımı" gösteriyor + ⓘ tooltip ("Bu rakam araç alış maliyetlerini içerir. Stok varlığıdır, kasanızdan çıkmadı — şekil değiştirdi").
+  - **NET KÂR kartı**: Subtitle "Sadece satılan araçlardan" + ⓘ tooltip ("Net Kâr ≠ Kasadaki Nakit. Kâr yalnızca satılmış araçlardan; nakit miktarı stok yatırımını da yansıtır").
+  - **Yeni "Gider Analizi" Info Bar** (stats grid altında, sadece admin/muhasebe + stok yatırımı > 0): Stacked progress bar (amber=Stok / red=İşletme) + iki ayrı detay kartı (Stok Yatırımı sarı = "Varlık", İşletme Gideri kırmızı = "Gerçek Gider") + dağılım yüzdesi açıklaması.
+  - **Görsel Hiyerarşi**: Amber-tonlu gradient sol kenar (info-vurgu rengi), Info ikonu, profesyonel finans uygulaması estetiği.
+- ✅ Lint clean, var olan veri akışı (filteredTx) üzerine kurulu — yeni API yok.
 
 ### v5.19.0 - Retroactive Sales Migration + Final Regression (Iter 50)
 - ✅ **Migration**: `/app/backend/migrations/migrate_sold_by_user_id.py` FastAPI startup event'ine bağlandı (server.py:166-170, try/except guarded — boot asla kırılmaz). Eski "Satıldı" kayıtlarındaki `sold_by` (string) → `users.name`/`company_name`/`email` ile fuzzy eşleştirilip `sold_by_user_id` + `sold_by_name` doldurulur. Idempotent ($or query already-migrated rows'u dışlar).
