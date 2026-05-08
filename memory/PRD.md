@@ -2,11 +2,17 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.16.0
-- **Last Updated:** 2026-05-07
-- **Status:** Batch Transactions Endpoint + AddCarModal Refactor Tamamlandı — 2/2 pytest PASS
+- **Version:** 5.19.0
+- **Last Updated:** 2026-02-XX (Iter 50)
+- **Status:** Retroactive Sales Migration + Final Backend Regression Tamamlandı — 14/14 pytest PASS
 
 ## Implementation Status
+
+### v5.19.0 - Retroactive Sales Migration + Final Regression (Iter 50)
+- ✅ **Migration**: `/app/backend/migrations/migrate_sold_by_user_id.py` FastAPI startup event'ine bağlandı (server.py:166-170, try/except guarded — boot asla kırılmaz). Eski "Satıldı" kayıtlarındaki `sold_by` (string) → `users.name`/`company_name`/`email` ile fuzzy eşleştirilip `sold_by_user_id` + `sold_by_name` doldurulur. Idempotent ($or query already-migrated rows'u dışlar).
+- ✅ **DB doğrulama**: 2/2 "Satıldı" kaydının her ikisi de `sold_by_user_id` + `sold_by_name` dolu.
+- ✅ **Backend regression (Iter 50, 14/14 PASS)**: startup health, sold_by attribution (PATCH+revert), batch transactions (atomicity + 50-cap), satis role 403 (capital, movements, adjust), user.name persist + auth/me, permissions version bump, Satıcı multi-car lifecycle, migration idempotency.
+- ⚠️ **OPEN P3 (opsiyonel)**: `models.py:115` Car Pydantic modeline `sold_by_user_id` + `sold_by_name` opsiyonel alanlar eklenebilir → şu an `extra='ignore'` ile GET /api/cars response'undan stripleniyor (frontend bu alanları `/api/stats/employee-performance` üzerinden alıyor, persistence sağlam).
 
 ### v5.18.4 - Satış Personeli Bug Fix (Dashboard "Belirtilmemiş") (2026-05-07)
 - 🐛 **BUG**: Dashboard "Satış Elemanları" widget'ında 5 satışın hepsi "Belirtilmemiş" altında gözüküyordu — halbuki SaleModal'da personel seçiliyordu. **Kök neden 3 noktada**:
