@@ -2,11 +2,25 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.21.0
-- **Last Updated:** 2026-02-XX (Iter 51)
-- **Status:** Backlog Closure (P3 + P2 + Cash Flow Visual) Tamamlandı — 14/14 backend + frontend smoke PASS
+- **Version:** 5.22.0
+- **Last Updated:** 2026-02-XX (Iter 52)
+- **Status:** Capital Card 4-Tile Hiyerarşi + Founding Capital — 20/20 backend, 8/8 frontend PASS
 
 ## Implementation Status
+
+### v5.22.0 - Sermaye Kartı 4-Tile Hiyerarşi (Iter 52)
+- 🎯 **Kullanıcı isteği**: Dashboard üst sermaye kartını dörtlü hiyerarşiye çevir — Sermaye / Net Kâr / Araç Masraf / Toplam Sermaye. Araç Masraf otomatik hesaplansın.
+- ✅ **Backend**:
+  - `db.org_settings` koleksiyonuna `founding_capital` (Kuruluş Sermayesi) alanı (per-org)
+  - `GET /api/capital` response'a `founding_capital` eklendi (default 0)
+  - **YENİ** `PUT /api/capital/founding {amount}` endpoint — satis role 403, validation ge=0 → 422
+- ✅ **Frontend**:
+  - `CapitalSummaryCard.jsx` yeniden tasarlandı: 4 tile (founding/netprofit/aracmasraf/total) + mevcut Nakit/Araç chip'leri korundu
+  - **Araç Masraf formülü**: `Toplam Sermaye − Kuruluş Sermayesi − Net Kâr` (otomatik, negatifte kırmızı, pozitifte amber)
+  - Founding tile tıklanabilir → `window.prompt` (TR formatlı binlik ayraç parser) → `capitalAPI.setFounding(amount)` → `refreshCapital()`
+  - `capitalAPI.setFounding()` eklendi
+  - data-testid'ler: capital-tile-founding, capital-tile-netprofit, capital-tile-aracmasraf, capital-tile-total (mevcutlar korundu)
+- ✅ **Test**: 20/20 backend (6 yeni iter52 + 14 regression). 8/8 frontend testids + e2e prompt→PUT→refresh flow PASS. Sıfır console error.
 
 ### v5.21.0 - P3 Field Exposure + P2 Refactor + Cash Flow Visual (Iter 51)
 - ✅ **P3 — Car Pydantic modeli genişletildi** (`models.py:80-82`): `sold_by_user_id`, `sold_by_name` Optional alanlar olarak `CarBase`'e eklendi. Artık `GET /api/cars` response'unda dönüyorlar (önceden `extra='ignore'` ile stripleniyordu). 2 yeni pytest doğruladı.
