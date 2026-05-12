@@ -33,7 +33,7 @@ const Dashboard = ({ onOpenReport }) => {
   const isSalesRole = (user?.role || 'admin') === 'satis';
 
 
-  const [preset, setPreset] = useState('month');
+  const [preset, setPreset] = useState('year');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [showCustom, setShowCustom] = useState(false);
