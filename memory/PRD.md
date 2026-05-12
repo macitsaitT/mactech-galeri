@@ -2,11 +2,18 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.22.0
-- **Last Updated:** 2026-02-XX (Iter 52)
-- **Status:** Capital Card 4-Tile Hiyerarşi + Founding Capital — 20/20 backend, 8/8 frontend PASS
+- **Version:** 5.22.1
+- **Last Updated:** 2026-02-XX (Iter 53)
+- **Status:** Araç Masraf Tile Bug Fix — 20/20 regression + e2e PASS
 
 ## Implementation Status
+
+### v5.22.1 - Bug Fix: Araç Masraf Tile Gerçek Tx Toplamı (Iter 53)
+- 🐛 **BUG (kullanıcı bildirimi)**: Dashboard "Araç Masraf" tile'ı `Toplam Sermaye − Sermaye − Net Kâr` formülünden derive ediliyordu (ekran görüntüsünde ₺9.965.570 göründü). Kullanıcı: "Buradaki masraf TOPLAM masraf değil, ARAÇLARA YAPILAN GİDER masrafı". Yani gerçekten araçlara yapılmış bakım/onarım/boya gider tx'lerinin toplamı olmalı.
+- ✅ **Fix** (frontend-only):
+  - `Dashboard.jsx`: `vehicleExpensesTotal` useMemo eklendi — `tx.type==='expense' AND tx.car_id AND tx.category NOT IN ('Araç Alımı', 'Araç Sahibine Ödeme') AND !deleted`. Tüm zamanlar (date filter uygulanmaz — sermaye baseline gösterir).
+  - `CapitalSummaryCard.jsx`: `vehicleExpenses` prop'u olarak alıyor, `aracMasraf = Number(vehicleExpenses||0)`. Eski formula derivation kaldırıldı. Tile rengi her zaman amber (gerçek gider ≥ 0). Tooltip güncellendi: "Araçlara yapılan gider toplamı (bakım, onarım, boya, ekspertiz vb.) — alış bedeli ve sahibine ödeme hariç".
+- ✅ **Test**: Backend 20/20 regression (iter50+51+52). Frontend e2e: tile ₺0 → POST Bakım tx ₺1.500 → tile ₺1.500 → POST Araç Alımı tx ₺99.999 → tile STILL ₺1.500 (excluded category) → DELETE both → tile ₺0. Cleanup verified.
 
 ### v5.22.0 - Sermaye Kartı 4-Tile Hiyerarşi (Iter 52)
 - 🎯 **Kullanıcı isteği**: Dashboard üst sermaye kartını dörtlü hiyerarşiye çevir — Sermaye / Net Kâr / Araç Masraf / Toplam Sermaye. Araç Masraf otomatik hesaplansın.
