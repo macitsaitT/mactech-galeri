@@ -2,11 +2,20 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.22.1
-- **Last Updated:** 2026-02-XX (Iter 53)
-- **Status:** Araç Masraf Tile Bug Fix — 20/20 regression + e2e PASS
+- **Version:** 5.23.0
+- **Last Updated:** 2026-02-XX (Iter 54)
+- **Status:** Dashboard Yıl Filtresi Eklendi — 20/20 backend + 10/10 frontend e2e PASS
 
 ## Implementation Status
+
+### v5.23.0 - Dashboard Yıl Filtresi (Iter 54)
+- 🎯 **Kullanıcı isteği**: "Filtre yıl olarak çeksin" — tarih aralığı filtresinde tek tek yıl (2024, 2025...) seçimi.
+- ✅ **Fix** (frontend-only):
+  - `dateRange.js`: `getYearRange(year)` helper eklendi (`{y}-01-01` → `{y}-12-31`).
+  - `Dashboard.jsx`: `selectedYear` state + `dateRange` useMemo precedence güncellendi (`selectedYear > custom > preset`).
+  - UI: Preset chip'lerin yanına native `<select data-testid="year-select">` eklendi — son 7 yıl (current + 6 previous) listelenir.
+  - Mutual exclusion: preset/custom seçimi → year reset; year seçimi → showCustom=false.
+- ✅ **Test**: 20/20 backend regression + 10/10 frontend e2e assertions. Sıfır console error.
 
 ### v5.22.1 - Bug Fix: Araç Masraf Tile Gerçek Tx Toplamı (Iter 53)
 - 🐛 **BUG (kullanıcı bildirimi)**: Dashboard "Araç Masraf" tile'ı `Toplam Sermaye − Sermaye − Net Kâr` formülünden derive ediliyordu (ekran görüntüsünde ₺9.965.570 göründü). Kullanıcı: "Buradaki masraf TOPLAM masraf değil, ARAÇLARA YAPILAN GİDER masrafı". Yani gerçekten araçlara yapılmış bakım/onarım/boya gider tx'lerinin toplamı olmalı.
