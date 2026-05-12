@@ -12,6 +12,7 @@ export const CapitalSummaryCard = ({
   cashAmount,
   foundingCapital = 0,
   netProfit = 0,
+  vehicleExpenses = 0,
   onOpenDetail,
   onOpenAction,
   onFoundingUpdated,
@@ -25,8 +26,9 @@ export const CapitalSummaryCard = ({
   );
   const total = cashAmount + vehicleValue;
 
-  // Otomatik hesap — kullanıcı isteği
-  const aracMasraf = total - foundingCapital - netProfit;
+  // ✅ Araç Masraf — araçlara yapılan GİDER tx'lerinin toplamı (bakım/onarım/boya vb.)
+  // Alış bedeli ve sahibine ödeme HARİÇ. Dashboard.jsx'te hesaplanıp prop ile gelir.
+  const aracMasraf = Number(vehicleExpenses || 0);
 
   const [saving, setSaving] = useState(false);
 
@@ -120,21 +122,17 @@ export const CapitalSummaryCard = ({
           </div>
         </div>
 
-        {/* Araç Masraf (auto-calculated) */}
+        {/* Araç Masraf — gerçek araç gider toplamı (bakım/onarım/boya vb.) */}
         <div
-          className={`flex flex-col rounded-xl border p-3 ${
-            aracMasraf >= 0
-              ? 'border-amber-500/30 bg-amber-500/5'
-              : 'border-destructive/30 bg-destructive/5'
-          }`}
+          className="flex flex-col rounded-xl border border-amber-500/30 bg-amber-500/5 p-3"
           data-testid="capital-tile-aracmasraf"
-          title="Toplam Sermaye − Sermaye − Net Kâr"
+          title="Araçlara yapılan gider toplamı (bakım, onarım, boya, ekspertiz vb.) — alış bedeli ve sahibine ödeme hariç"
         >
           <div className="flex items-center gap-1.5 min-w-0">
-            <ArrowDownRight size={14} className={`shrink-0 ${aracMasraf >= 0 ? 'text-amber-500' : 'text-destructive'}`} />
+            <ArrowDownRight size={14} className="shrink-0 text-amber-500" />
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">Araç Masraf</span>
           </div>
-          <div className={`mt-1 text-sm sm:text-base font-bold tabular-nums truncate ${aracMasraf >= 0 ? 'text-amber-500' : 'text-destructive'}`}>
+          <div className="mt-1 text-sm sm:text-base font-bold tabular-nums truncate text-amber-500">
             {formatCurrency(aracMasraf)}
           </div>
         </div>

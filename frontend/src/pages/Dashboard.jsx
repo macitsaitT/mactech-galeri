@@ -77,6 +77,16 @@ const Dashboard = ({ onOpenReport }) => {
   }, [filteredTx]);
   const operatingExpense = Math.max(0, totalExpense - stockInvestmentInExpense);
 
+  // ✅ Araç Masraf — sadece ARAÇLARA yapılan gider tx'leri (bakım/onarım/boya/ekspertiz vb.)
+  // Alış bedeli (Araç Alımı) ve Sahibine Ödeme HARİÇ — bunlar varlık tarafıdır.
+  // Tüm zamanlar (date filter UYGULANMAZ) — sermaye kartı baseline gösterir.
+  const vehicleExpensesTotal = useMemo(() => {
+    const EXCLUDE = new Set(['Araç Alımı', 'Araç Sahibine Ödeme']);
+    return activeTransactions
+      .filter(t => t.type === 'expense' && t.car_id && !EXCLUDE.has(t.category))
+      .reduce((s, t) => s + (t.amount || 0), 0);
+  }, [activeTransactions]);
+
   // ✅ Net Kâr: Satılan araçlardan elde edilen TOPLAM net kâr (zararlar dahil).
   // Formül: her satılan araç için (sale_price − alış_maliyeti − sahibine_ödeme − araç_giderleri − çalışan_payı)
   // Sermaye değişimi ile uyumlu olması için zararlı satışlar da gerçek değeriyle yansır.
@@ -287,6 +297,7 @@ const Dashboard = ({ onOpenReport }) => {
           cashAmount={Number(capital?.amount || 0)}
           foundingCapital={Number(capital?.founding_capital || 0)}
           netProfit={netProfit}
+          vehicleExpenses={vehicleExpensesTotal}
           onOpenDetail={() => setCapitalDetailOpen(true)}
           onOpenAction={() => setCapitalModalOpen(true)}
           onFoundingUpdated={refreshCapital}
