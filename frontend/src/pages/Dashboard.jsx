@@ -27,7 +27,7 @@ const CHART_COLORS = ['#d4a030', '#22c55e', '#ef4444', '#3b82f6', '#a855f7'];
 const PIE_COLORS = ['#d4a030', '#f59e0b', '#22c55e', '#3b82f6'];
 
 const Dashboard = ({ onOpenReport }) => {
-  const { cars, transactions, loading, capital, user } = useApp();
+  const { cars, transactions, loading, capital, user, refreshCapital } = useApp();
   // ✅ 'satis' rolü Sermaye/Kasa modülünü göremez
   const canSeeCapital = (user?.role || 'admin') !== 'satis';
   const isSalesRole = (user?.role || 'admin') === 'satis';
@@ -285,8 +285,11 @@ const Dashboard = ({ onOpenReport }) => {
         <CapitalSummaryCard
           cars={cars}
           cashAmount={Number(capital?.amount || 0)}
+          foundingCapital={Number(capital?.founding_capital || 0)}
+          netProfit={netProfit}
           onOpenDetail={() => setCapitalDetailOpen(true)}
           onOpenAction={() => setCapitalModalOpen(true)}
+          onFoundingUpdated={refreshCapital}
         />
       )}
 

@@ -55,10 +55,17 @@ async def read_capital(current_user: dict = Depends(get_current_user)):
     stock_cars = [c for c in cars if (c.get("ownership") == "stock")]
     vehicles_capital = sum(float(c.get("purchase_price", 0) or 0) for c in stock_cars)
 
+    # ✅ Kuruluş/Başlangıç Sermayesi — admin tarafından ayarlanan sabit baseline
+    founding_doc = await db.org_settings.find_one(
+        {"org_id": org_id}, {"_id": 0, "founding_capital": 1}
+    )
+    founding_capital = float((founding_doc or {}).get("founding_capital", 0) or 0)
+
     if isinstance(cap, dict):
         cap["vehicles_capital"] = round(vehicles_capital, 2)
         cap["vehicles_count"] = len(stock_cars)
         cap["total_equity"] = round(float(cap.get("amount", 0) or 0) + vehicles_capital, 2)
+        cap["founding_capital"] = round(founding_capital, 2)
         cap["vehicles_breakdown"] = [
             {
                 "car_id": c.get("id"),
@@ -71,6 +78,26 @@ async def read_capital(current_user: dict = Depends(get_current_user)):
             for c in stock_cars
         ]
     return cap
+
+
+class FoundingCapitalSet(BaseModel):
+    amount: float = Field(..., ge=0, description="Kuruluş / başlangıç sermayesi (sabit baseline)")
+
+
+@router.put("/capital/founding")
+async def set_founding_capital(body: FoundingCapitalSet, current_user: dict = Depends(get_current_user)):
+    """Kuruluş sermayesini ayarla — Dashboard'daki 'Sermaye' tile'ı bu değeri gösterir.
+    Bu değer hesaplama formülünde sabit baseline'dır:
+        Araç Masraf = Toplam Sermaye − Kuruluş Sermayesi − Net Kâr
+    """
+    _require_finance_role(current_user)
+    org_id = current_user.get("org_id", current_user["user_id"])
+    await db.org_settings.update_one(
+        {"org_id": org_id},
+        {"$set": {"founding_capital": float(body.amount), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"ok": True, "founding_capital": float(body.amount)}
 
 
 @router.post("/capital/adjust")
