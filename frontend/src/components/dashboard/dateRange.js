@@ -37,3 +37,12 @@ export const getDateRange = (preset) => {
   }
   return { start, end };
 };
+
+// ✅ Tek bir yılın tam aralığı (1 Ocak — 31 Aralık)
+export const getYearRange = (year) => {
+  const y = Number(year);
+  return {
+    start: `${y}-01-01`,
+    end: `${y}-12-31`,
+  };
+};

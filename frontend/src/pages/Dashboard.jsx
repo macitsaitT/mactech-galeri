@@ -21,7 +21,7 @@ import { CapitalSummaryCard } from '../components/dashboard/CapitalSummaryCard';
 import { CustomTooltip } from '../components/dashboard/CustomTooltip';
 import { ExpenseBreakdownBar } from '../components/dashboard/ExpenseBreakdownBar';
 import { CashFlowVisual } from '../components/dashboard/CashFlowVisual';
-import { presets, getDateRange } from '../components/dashboard/dateRange';
+import { presets, getDateRange, getYearRange } from '../components/dashboard/dateRange';
 
 const CHART_COLORS = ['#d4a030', '#22c55e', '#ef4444', '#3b82f6', '#a855f7'];
 const PIE_COLORS = ['#d4a030', '#f59e0b', '#22c55e', '#3b82f6'];
@@ -37,13 +37,15 @@ const Dashboard = ({ onOpenReport }) => {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [showCustom, setShowCustom] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(''); // ✅ Yıl filtresi — boş ise preset/custom geçerli
   const [capitalModalOpen, setCapitalModalOpen] = useState(false);
   const [capitalDetailOpen, setCapitalDetailOpen] = useState(false);
 
   const dateRange = useMemo(() => {
+    if (selectedYear) return getYearRange(selectedYear);
     if (showCustom && customStart && customEnd) return { start: customStart, end: customEnd };
     return getDateRange(preset);
-  }, [preset, showCustom, customStart, customEnd]);
+  }, [preset, showCustom, customStart, customEnd, selectedYear]);
 
   const activeCars = useMemo(() => cars.filter(c => !c.deleted), [cars]);
   const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted), [transactions]);
@@ -321,13 +323,13 @@ const Dashboard = ({ onOpenReport }) => {
           <Filter size={16} className="text-primary" />
           <span className="text-sm font-semibold">Tarih Aralığı</span>
         </div>
-        <div className="flex flex-wrap gap-1.5 mb-2">
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
           {presets.map(p => (
             <button
               key={p.id}
-              onClick={() => { setPreset(p.id); setShowCustom(false); }}
+              onClick={() => { setPreset(p.id); setShowCustom(false); setSelectedYear(''); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                preset === p.id && !showCustom
+                preset === p.id && !showCustom && !selectedYear
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted/60 text-muted-foreground hover:bg-muted'
               }`}
@@ -339,6 +341,7 @@ const Dashboard = ({ onOpenReport }) => {
           <button
             onClick={() => {
               setShowCustom(true);
+              setSelectedYear('');
               if (!customStart) setCustomStart(dateRange.start);
               if (!customEnd) setCustomEnd(dateRange.end);
             }}
@@ -351,6 +354,32 @@ const Dashboard = ({ onOpenReport }) => {
           >
             Özel
           </button>
+
+          {/* ✅ Yıl seçici — kullanıcı belirli bir yılı tek tıkla filtreleyebilir */}
+          <select
+            value={selectedYear}
+            onChange={(e) => {
+              const y = e.target.value;
+              setSelectedYear(y);
+              if (y) setShowCustom(false);
+            }}
+            className={`h-[30px] px-2 rounded-lg text-xs font-semibold transition-colors border ${
+              selectedYear
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-muted/60 text-muted-foreground border-transparent hover:bg-muted'
+            }`}
+            data-testid="year-select"
+          >
+            <option value="">Yıl Seç…</option>
+            {(() => {
+              const currentYear = new Date().getFullYear();
+              const years = [];
+              for (let y = currentYear; y >= currentYear - 6; y--) years.push(y);
+              return years.map(y => (
+                <option key={y} value={String(y)} className="bg-background text-foreground">{y}</option>
+              ));
+            })()}
+          </select>
         </div>
         {showCustom && (
           <div className="flex items-center gap-2 mt-2">
