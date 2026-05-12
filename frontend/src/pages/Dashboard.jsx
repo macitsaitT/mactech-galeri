@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import CapitalModal from '../components/modals/CapitalModal';
 import CapitalDetailModal from '../components/modals/CapitalDetailModal';
+import StockExpensesDetailModal from '../components/modals/StockExpensesDetailModal';
 import SalesPersonalView from './SalesPersonalView';
 import { installmentsAPI } from '../services/api';
 import { computeUpcomingPayments, buildPaymentReminderText } from '../utils/installmentReminders';
@@ -40,6 +41,7 @@ const Dashboard = ({ onOpenReport }) => {
   const [selectedYear, setSelectedYear] = useState(''); // ✅ Yıl filtresi — boş ise preset/custom geçerli
   const [capitalModalOpen, setCapitalModalOpen] = useState(false);
   const [capitalDetailOpen, setCapitalDetailOpen] = useState(false);
+  const [stockExpensesOpen, setStockExpensesOpen] = useState(false);
 
   const dateRange = useMemo(() => {
     if (selectedYear) return getYearRange(selectedYear);
@@ -79,15 +81,45 @@ const Dashboard = ({ onOpenReport }) => {
   }, [filteredTx]);
   const operatingExpense = Math.max(0, totalExpense - stockInvestmentInExpense);
 
-  // ✅ Araç Masraf — sadece ARAÇLARA yapılan gider tx'leri (bakım/onarım/boya/ekspertiz vb.)
-  // Alış bedeli (Araç Alımı) ve Sahibine Ödeme HARİÇ — bunlar varlık tarafıdır.
-  // Tüm zamanlar (date filter UYGULANMAZ) — sermaye kartı baseline gösterir.
+  // ✅ Araç Masraf — sadece STOK'taki (henüz satılmamış, silinmemiş) araçlara yapılan gider tx'leri.
+  // Satılan veya silinen araçların masrafları bu rakama dahil edilmez (sermaye tile'ı yalnızca
+  // mevcut envantere bağlanmış parayı yansıtır). Alış bedeli ve Sahibine Ödeme hariç.
+  const stockCarIds = useMemo(
+    () => new Set(activeCars.filter(c => c.status !== 'Satıldı').map(c => c.id)),
+    [activeCars]
+  );
+
   const vehicleExpensesTotal = useMemo(() => {
     const EXCLUDE = new Set(['Araç Alımı', 'Araç Sahibine Ödeme']);
     return activeTransactions
-      .filter(t => t.type === 'expense' && t.car_id && !EXCLUDE.has(t.category))
+      .filter(t =>
+        t.type === 'expense' &&
+        t.car_id &&
+        stockCarIds.has(t.car_id) &&
+        !EXCLUDE.has(t.category)
+      )
       .reduce((s, t) => s + (t.amount || 0), 0);
-  }, [activeTransactions]);
+  }, [activeTransactions, stockCarIds]);
+
+  // ✅ Per-car breakdown — detay modalı için. Sadece masrafı olan stok araçlar.
+  const stockCarExpenseBreakdown = useMemo(() => {
+    const EXCLUDE = new Set(['Araç Alımı', 'Araç Sahibine Ödeme']);
+    const map = new Map();
+    for (const car of activeCars) {
+      if (car.status === 'Satıldı') continue;
+      map.set(car.id, { car, txs: [], total: 0 });
+    }
+    for (const tx of activeTransactions) {
+      if (tx.type !== 'expense' || !tx.car_id || EXCLUDE.has(tx.category)) continue;
+      const entry = map.get(tx.car_id);
+      if (!entry) continue;
+      entry.txs.push(tx);
+      entry.total += Number(tx.amount || 0);
+    }
+    return Array.from(map.values())
+      .filter(e => e.total > 0)
+      .sort((a, b) => b.total - a.total);
+  }, [activeCars, activeTransactions]);
 
   // ✅ Net Kâr: Satılan araçlardan elde edilen TOPLAM net kâr (zararlar dahil).
   // Formül: her satılan araç için (sale_price − alış_maliyeti − sahibine_ödeme − araç_giderleri − çalışan_payı)
@@ -302,6 +334,7 @@ const Dashboard = ({ onOpenReport }) => {
           vehicleExpenses={vehicleExpensesTotal}
           onOpenDetail={() => setCapitalDetailOpen(true)}
           onOpenAction={() => setCapitalModalOpen(true)}
+          onOpenVehicleExpenses={() => setStockExpensesOpen(true)}
           onFoundingUpdated={refreshCapital}
         />
       )}
@@ -310,6 +343,12 @@ const Dashboard = ({ onOpenReport }) => {
         <>
           <CapitalModal isOpen={capitalModalOpen} onClose={() => setCapitalModalOpen(false)} />
           <CapitalDetailModal isOpen={capitalDetailOpen} onClose={() => setCapitalDetailOpen(false)} />
+          <StockExpensesDetailModal
+            isOpen={stockExpensesOpen}
+            onClose={() => setStockExpensesOpen(false)}
+            breakdown={stockCarExpenseBreakdown}
+            grandTotal={vehicleExpensesTotal}
+          />
         </>
       )}
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Wallet, Coins, Car as CarIcon, Plus, TrendingUp, ArrowDownRight, Pencil } from 'lucide-react';
+import { Wallet, Coins, Car as CarIcon, Plus, TrendingUp, ArrowDownRight, Pencil, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { capitalAPI } from '../../services/api';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ export const CapitalSummaryCard = ({
   vehicleExpenses = 0,
   onOpenDetail,
   onOpenAction,
+  onOpenVehicleExpenses,
   onFoundingUpdated,
 }) => {
   const stockCars = useMemo(() => (cars || []).filter(c =>
@@ -123,19 +124,27 @@ export const CapitalSummaryCard = ({
         </div>
 
         {/* Araç Masraf — gerçek araç gider toplamı (bakım/onarım/boya vb.) */}
-        <div
-          className="flex flex-col rounded-xl border border-amber-500/30 bg-amber-500/5 p-3"
+        <button
+          type="button"
+          onClick={onOpenVehicleExpenses}
+          disabled={!onOpenVehicleExpenses}
+          className="group flex flex-col rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-left transition-colors hover:bg-amber-500/10 hover:border-amber-500/50 disabled:cursor-default disabled:hover:bg-amber-500/5 disabled:hover:border-amber-500/30"
           data-testid="capital-tile-aracmasraf"
-          title="Araçlara yapılan gider toplamı (bakım, onarım, boya, ekspertiz vb.) — alış bedeli ve sahibine ödeme hariç"
+          title="Stoktaki araçlara yapılan gider toplamı — detay için tıkla"
         >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <ArrowDownRight size={14} className="shrink-0 text-amber-500" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">Araç Masraf</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <ArrowDownRight size={14} className="shrink-0 text-amber-500" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">Araç Masraf</span>
+            </div>
+            {onOpenVehicleExpenses && (
+              <ChevronRight size={12} className="text-muted-foreground/50 group-hover:text-amber-500 transition-colors shrink-0" />
+            )}
           </div>
           <div className="mt-1 text-sm sm:text-base font-bold tabular-nums truncate text-amber-500">
             {formatCurrency(aracMasraf)}
           </div>
-        </div>
+        </button>
 
         {/* Toplam Sermaye (büyük, vurgulu) */}
         <button

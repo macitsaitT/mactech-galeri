@@ -1,0 +1,53 @@
+{
+  "summary": "Iter 55 validated end-to-end. New iter55 backend test (2/2 PASS) proves the data layer behind the stock-only 'Araç Masraf' tile: POST expense on stock car → total += amount; PATCH car status='Satıldı' → total drops (car leaves stock set); PATCH revert to 'Stokta' → total re-includes; DELETE tx?permanent=true → back to baseline. Also verified excluded categories ('Araç Alımı','Araç Sahibine Ödeme') do NOT count. Regression: iter50+iter51+iter52 all PASS (20/20). Frontend e2e: capital-tile-aracmasraf is now <button>, clicking it opens stock-expenses-modal with stock-expenses-total + empty-state copy ('Stoktaki araçlara henüz bir masraf girilmemiş.') for the test org (5 stock cars, 0 vehicle-expense tx). Modal dismisses via Escape; tile re-clickable. Full backend run = 22/22 PASS.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PATCH /api/cars/{id}", "issue": "Car model declares 'sale_price: float = 0' (not Optional). Backend ACCEPTS sale_price=None on PATCH and writes null to Mongo, but subsequent GET /api/cars then 500s with Pydantic ResponseValidationError ('Input should be a valid number'). Reproduced during initial test run — fixed corrupted doc directly in Mongo (1 BMW 320i set back to 0). Test was adjusted to PATCH sale_price=0 instead of None. RECOMMEND: change to `sale_price: Optional[float] = 0` OR strip None in PATCH coerce layer."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend iter55 — TestStockExpensesReactivity.test_full_flow (POST tx→ tile += 2500; PATCH Satıldı→ tile -=2500; PATCH revert→ tile +=2500; DELETE tx→ baseline)",
+    "Backend iter55 — TestStockExpensesReactivity.test_excluded_categories_do_not_count (Araç Alımı tx does NOT affect tile)",
+    "Backend regression iter50 — 12/12 PASS (health, sold-by, batch tx, satis-role 403, perms version, migration idempotency)",
+    "Backend regression iter51 — 2/2 PASS (sold_by_user_id/name fields in /api/cars response)",
+    "Backend regression iter52 — 6/6 PASS (founding_capital GET/PUT/validation/role-guard)",
+    "Frontend — capital-tile-aracmasraf renders as <button> (was <div>) with ChevronRight affordance",
+    "Frontend — click on Araç Masraf tile opens StockExpensesDetailModal (data-testid='stock-expenses-modal')",
+    "Frontend — stock-expenses-total renders correctly (₺0 for empty org state)",
+    "Frontend — Modal title 'Stok Araç Masrafları' + 'Sadece henüz satılmamış araçlar' subtitle present",
+    "Frontend — Empty-state copy 'Stoktaki araçlara henüz bir masraf girilmemiş.' displayed when no stock-car expenses exist",
+    "Frontend — Modal dismissable via Escape key; tile re-clickable after close (no stale state)"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter55_stock_expenses.py",
+    "/app/test_reports/pytest/iter55_full.xml"
+  ],
+  "action_items": [
+    "OPTIONAL/MINOR: Make Car.sale_price Optional[float] in /app/backend/models.py so PATCH with null doesn't poison subsequent GET /api/cars (this affected the test transiently; data was patched back to 0 in Mongo)."
+  ],
+  "critical_code_review_comments": [
+    "Dashboard.jsx:87-102 — stockCarIds Set + vehicleExpensesTotal useMemo correctly filter to (status!='Satıldı', !deleted) stock-car ids and EXCLUDE 'Araç Alımı' & 'Araç Sahibine Ödeme'. Dependencies are activeCars/activeTransactions — reactivity is automatic when AppContext refreshes after tx CRUD or car sale/revert/delete.",
+    "Dashboard.jsx:105-122 — stockCarExpenseBreakdown builds Map keyed by car.id from stock cars then accumulates txs; final filter total>0 means modal hides zero-expense cars (good UX). Sort by total DESC. Memo deps correct.",
+    "StockExpensesDetailModal.jsx — Uses controlled local selectedCar state to layer VehicleExpensesModal on top; both close paths reset state. Empty-state path renders cleanly when breakdown=[]. data-testid coverage complete: stock-expenses-modal, stock-expenses-total, stock-expense-row-<car_id>.",
+    "CapitalSummaryCard.jsx:127-147 — Araç Masraf tile is <button type='button'>, disables when onOpenVehicleExpenses prop absent (graceful for satis-role / future contexts). ChevronRight only renders when handler provided. Hover affordance distinct.",
+    "Minor (non-blocking): The empty-state count shows '0 araç · Sadece henüz satılmamış araçlar' which is technically correct (0 cars WITH expenses) but could be confusing when the org has 5 stock cars total. Consider rephrasing to '0 / N stok aracında masraf var' for clarity. Not a bug.",
+    "Backend (existing): models.Car.sale_price is `float = 0` not Optional — PATCH with null writes null and then GET 500s. Pre-existing fragility unrelated to iter55 changes; flagged for future iteration."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter55_stock_expenses.py (NEW)"
+  ],
+  "success_rate": {"backend": "100% (22/22)", "frontend": "100% (8/8 UI assertions)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "Backend test created+deleted one temporary 'Bakım' expense tx (2500 TL) on a stock car within the test; full cleanup verified at end (assert final==baseline). Also corrected one pre-existing corrupted car doc (BMW 320i, plate '34 TST 3BA') whose sale_price was null — set back to 0 directly in Mongo (caused by initial null-PATCH; fix applied + test corrected to use 0).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 55 ships clickable Araç Masraf tile + StockExpensesDetailModal layered over VehicleExpensesModal. Test selectors: capital-tile-aracmasraf (button), stock-expenses-modal (dialog), stock-expenses-total (price), stock-expense-row-<car_id> (rows). Empty-state copy contains 'Stoktaki araçlara'. Test org currently has 5 stock cars with 0 vehicle-expense tx → modal shows empty state. To exercise non-empty path: POST /api/transactions {type:'expense', category:'Bakım', amount:N, car_id:<stock car id>, date:today} then reload Dashboard. To revert a car from Satıldı, ALWAYS send sale_price=0 (not null) — backend Car.sale_price is non-Optional float and null will 500 subsequent GET /api/cars. Backend regression file: /app/backend/tests/test_iter55_stock_expenses.py — reusable.",
+  "rca of the issue": "N/A — feature validated. Transient issue during initial run was self-inflicted (test sent sale_price=None during revert PATCH, exposing a latent backend non-Optional schema). Test corrected + data restored; underlying schema fragility logged as a minor backend action item."
+}
