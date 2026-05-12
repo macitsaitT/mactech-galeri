@@ -51,7 +51,7 @@ class CarBase(BaseModel):
     km: str = ""
     vehicle_type: str = "Sedan"
     purchase_price: float = 0
-    sale_price: float = 0
+    sale_price: Optional[float] = 0
     description: str = ""
     status: str = "Stokta"
     entry_date: str = ""

@@ -2,11 +2,21 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.23.0
-- **Last Updated:** 2026-02-XX (Iter 54)
-- **Status:** Dashboard Yıl Filtresi Eklendi — 20/20 backend + 10/10 frontend e2e PASS
+- **Version:** 5.24.0
+- **Last Updated:** 2026-02-XX (Iter 55)
+- **Status:** Stok Araç Masraf Detay Modal + Reactivity — 22/22 backend, 8/8 frontend PASS
 
 ## Implementation Status
+
+### v5.24.0 - Araç Masraf Tile: Stok-Only + Detay Modal (Iter 55)
+- 🎯 **Kullanıcı isteği**: "Stok araçlarda kalan araçların giderleri gözükmeli ve bu kısımdaki her şeye tıklayınca detaylı görünsün. Araçların giderleri silinirse veya araç silinirse/satılırsa o kısım düzenlensin."
+- ✅ **Fix**:
+  - **Dashboard.jsx**: `stockCarIds` (Set) + `vehicleExpensesTotal` formülü sadece `status != 'Satıldı'` araçların gider'lerini topluyor. `stockCarExpenseBreakdown` useMemo per-araç detay (modal için).
+  - **CapitalSummaryCard.jsx**: "Araç Masraf" tile `<button>` oldu (ChevronRight affordance) + `onOpenVehicleExpenses` prop.
+  - **YENİ** `StockExpensesDetailModal.jsx`: Stok araçların gider listesi (toplam DESC sort), boş durum mesajı, tıklanan araç için nested `VehicleExpensesModal` açılır → tx ekle/düzenle/sil.
+  - **Reactivity**: `useApp().transactions/cars` state değiştiğinde useMemo otomatik yeniden hesaplar. Araç sat/sil/revert ⇒ tile + modal anında günceller.
+- ✅ **Backend (minor fix)**: `models.py` `Car.sale_price: Optional[float] = 0` (PATCH null koruması).
+- ✅ **Test**: 22/22 backend (2 yeni iter55 reactivity testi + 20 regression). Frontend 8/8 e2e: tile button davranışı, modal aç/kapat, empty-state, escape dismiss. Stock-only filtering API tarafında da doğrulandı (POST tx → tile +; PATCH Satıldı → tile −; PATCH revert → tile +; DELETE tx → baseline).
 
 ### v5.23.0 - Dashboard Yıl Filtresi (Iter 54)
 - 🎯 **Kullanıcı isteği**: "Filtre yıl olarak çeksin" — tarih aralığı filtresinde tek tek yıl (2024, 2025...) seçimi.
