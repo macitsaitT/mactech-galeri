@@ -2,11 +2,26 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.24.0
-- **Last Updated:** 2026-02-XX (Iter 55)
-- **Status:** Stok Araç Masraf Detay Modal + Reactivity — 22/22 backend, 8/8 frontend PASS
+- **Version:** 5.25.0
+- **Last Updated:** 2026-02-XX (Iter 56)
+- **Status:** OCR (Ruhsat + Kimlik) — 28/28 backend, 5/5 frontend PASS
 
 ## Implementation Status
+
+### v5.25.0 - OCR: Ruhsat + Kimlik Otomatik Doldurma (Iter 56)
+- 🎯 **Kullanıcı isteği**: Ruhsat veya kimlik fotoğrafından alanların formlara otomatik dolması (hız kazanımı).
+- ✅ **Backend**:
+  - **YENİ** `POST /api/ocr` — multipart `file` + `type` ('ruhsat'|'kimlik'). 401 auth, 400 MIME, 413 >10MB.
+  - Gemini 2.5 Pro Vision via `emergentintegrations.llm.chat.LlmChat` + EMERGENT_LLM_KEY (universal).
+  - Strict-JSON prompt + `_parse_json_response` (```json fence + brace-bounded extraction).
+  - Pydantic `RuhsatOCRResult` (10 alan) ve `KimlikOCRResult` (5 alan) — hepsi Optional, partial OCR graceful.
+  - Yanıt ~8-9s. Doğruluk synthetic test JPG'lerde 100%.
+- ✅ **Frontend**:
+  - **YENİ** `OCRScanButton.jsx` (reusable) — `<input type="file" hidden>` + button, MIME/size pre-flight, sonner toast (loading/success/error), Loader2 spinner.
+  - `ocrAPI.extract(file, type)` — axios, 60s timeout, multipart.
+  - `AddCarModal` (Genel Bilgiler tab) — Ruhsat tara banner + button → plaka/marka/model/yıl/yakit/vites otomatik, motor_no/sasi_no/renk description'a eklenir.
+  - `AddCustomerModal` (sadece **yeni** müşteride) — Kimlik tara banner + button → ad-soyad merge, TC/doğum tarihi/yeri notes'a.
+- ✅ **Test**: 28/28 backend (6 yeni OCR + 22 regression) + 5/5 frontend e2e. Sıfır console error.
 
 ### v5.24.0 - Araç Masraf Tile: Stok-Only + Detay Modal (Iter 55)
 - 🎯 **Kullanıcı isteği**: "Stok araçlarda kalan araçların giderleri gözükmeli ve bu kısımdaki her şeye tıklayınca detaylı görünsün. Araçların giderleri silinirse veya araç silinirse/satılırsa o kısım düzenlensin."
