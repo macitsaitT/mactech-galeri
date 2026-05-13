@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import './index.css';
+import { Toaster } from 'sonner';
 import { requestNotificationPermission, startNotificationService, stopNotificationService } from './utils/notifications';
 
 // Layout Components
@@ -588,6 +589,7 @@ const AppContent = () => {
 function App() {
   return (
     <AppProvider>
+      <Toaster position="top-right" richColors closeButton theme="dark" />
       <Routes>
         <Route path="/sso-callback" element={<SSOCallbackPage />} />
         <Route path="*" element={<AppContent />} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { Share2, Download, MessageCircle, X, Sparkles, Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import { statusConfig, carParts } from '../CarExpertiseDiagram';
@@ -84,7 +84,7 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
 
   const handleDownload = async () => {
     const dataUrl = await generateImage();
-    if (!dataUrl) return alert('Görsel oluşturulamadı.');
+    if (!dataUrl) return toast.error('Görsel oluşturulamadı');
     const a = document.createElement('a');
     a.href = dataUrl;
     a.download = `${(car.plate || car.id || 'arac').toString().replace(/\s+/g, '_')}-paylasim.png`;
@@ -117,7 +117,7 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
   //    document/file olarak değil). Web Share API yoksa fallback indir + wa.me text.
   const handleSmartShare = async () => {
     const dataUrl = await generateImage();
-    if (!dataUrl) return alert('Görsel oluşturulamadı.');
+    if (!dataUrl) return toast.error('Görsel oluşturulamadı');
 
     const file = await dataUrlToFile(dataUrl, `${(car.plate || 'arac').toString().replace(/\s+/g, '_')}.png`);
     const text = buildText();
@@ -198,6 +198,9 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
             <Share2 size={22} className="text-primary" />
             Paylaşım Kartı
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Aracın görselini sosyal medya formatında oluşturun, AI ile dramatik render edin ve paylaşın.
+          </DialogDescription>
         </DialogHeader>
 
         {/* ✅ Format Seçici — Klasik / Story / Kare */}

@@ -2,11 +2,28 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.25.0
-- **Last Updated:** 2026-02-XX (Iter 56)
-- **Status:** OCR (Ruhsat + Kimlik) — 28/28 backend, 5/5 frontend PASS
+- **Version:** 5.26.0
+- **Last Updated:** 2026-02-XX (Iter 57)
+- **Status:** Sosyal Medya Paylaşım (HTML2Canvas + Nano Banana AI) — 32/32 backend, 8/8 frontend PASS
 
 ## Implementation Status
+
+### v5.26.0 - Sosyal Medya Paylaşım: HTML2Canvas + Nano Banana (Iter 57)
+- 🎯 **Kullanıcı isteği**: Stoktaki aracın görselini Instagram Story / WhatsApp Durum formatında, hazır şablonlarla ve isteğe bağlı AI render ile paylaşma (seçim 1c — her ikisi).
+- ✅ **Backend**:
+  - **YENİ** `POST /api/ai/render-car` — multipart `file` + `style` ('studio_dark'|'dramatic_lighting'|'billboard'|'showroom') + opsiyonel `extra` prompt. 401/400/413/422 doğrulamalar.
+  - Gemini 3.1 Flash Image Preview (Nano Banana) via `emergentintegrations` + EMERGENT_LLM_KEY.
+  - Image-to-image: araç fotosu reference + 4 stil önayar (her biri otomotiv reklam standartlarında prompt). "Keep car identity 100%" instruction → renk/plaka/tekerlek korunur.
+  - Yanıt ~24-31s. base64 ~600-770 KB PNG/JPG.
+- ✅ **Frontend** (`ShareCardModal.jsx` zenginleştirildi):
+  - **Format Seçici**: Klasik (1080×1458), Story 9:16 (1080×1920), Kare 1:1 (1080×1080). Dinamik `aspect-ratio` ile preview gerçek zamanlı değişir.
+  - **AI Render Panel**: 4 stil butonu + "Render Et" → araç fotosunu dramatik stüdyo zeminine alır. "Orijinal" butonu ile geri dönüş.
+  - `aiRenderAPI.renderCar` (120s timeout) — toast loading/success/error.
+  - `originalPhotoUrl` ↔ `photoUrl` toggle ile karşılaştırma.
+  - `alert()` → `sonner toast` (UX tutarlılığı).
+  - `DialogDescription` (sr-only) — Radix a11y.
+- ✅ **App.js**: `<Toaster position="top-right" richColors closeButton theme="dark" />` mount edildi (önceden eksikti — sonner toast'ları gözükmüyordu).
+- ✅ **Test**: 32/32 backend (6 yeni AI render + 22 regression + 4 iter56 spot) + 8/8 frontend e2e. Sıfır console error.
 
 ### v5.25.0 - OCR: Ruhsat + Kimlik Otomatik Doldurma (Iter 56)
 - 🎯 **Kullanıcı isteği**: Ruhsat veya kimlik fotoğrafından alanların formlara otomatik dolması (hız kazanımı).
