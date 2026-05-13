@@ -41,6 +41,7 @@ from routes.data_recovery import router as recovery_router
 from routes.activity_logs import router as activity_logs_router
 from routes.digest import router as digest_router, run_weekly_digest_for_all
 from routes.wanted_cars import router as wanted_cars_router
+from routes.ocr import router as ocr_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ api_router.include_router(recovery_router)
 api_router.include_router(activity_logs_router)
 api_router.include_router(digest_router)
 api_router.include_router(wanted_cars_router)
+api_router.include_router(ocr_router)
 
 
 @api_router.get("/")

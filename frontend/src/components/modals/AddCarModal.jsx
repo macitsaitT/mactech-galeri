@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import DocumentCategory from './addCarParts/DocumentCategory';
 import PhotoUploadTab from './addCarParts/PhotoUploadTab';
 import SellerSelector from './addCarParts/SellerSelector';
+import OCRScanButton from '../ocr/OCRScanButton';
 
 const INLINE_EXPENSE_CATEGORIES = [
   'Genel Gider', 'Boya', 'Mekanik Bakım', 'Yedek Parça',
@@ -397,6 +398,30 @@ const AddCarModal = ({ isOpen, onClose, onSave, editingCar = null }) => {
           {/* General Tab */}
           {activeTab === 'general' && (
             <div className="space-y-4 py-4">
+              {/* ✅ OCR — Ruhsat fotoğrafından otomatik doldurma */}
+              <div className="flex items-center justify-between gap-2 p-3 rounded-xl border border-primary/20 bg-primary/5 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold text-primary">Ruhsat fotoğrafı ile hızlı giriş</div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Plaka, marka, model, yıl, motor/şasi no, renk vb. alanlar otomatik dolar.</p>
+                </div>
+                <OCRScanButton
+                  type="ruhsat"
+                  onExtract={(d) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      plate: (d.plaka || prev.plate || '').replace(/\s+/g, ' ').trim().toUpperCase(),
+                      brand: d.marka || prev.brand,
+                      model: d.model || prev.model,
+                      year: d.yil ? Number(d.yil) || prev.year : prev.year,
+                      fuel_type: d.yakit || prev.fuel_type,
+                      gear: d.vites || prev.gear,
+                      description: [prev.description, d.motor_no && `Motor No: ${d.motor_no}`, d.sasi_no && `Şasi No: ${d.sasi_no}`, d.renk && `Renk: ${d.renk}`]
+                        .filter(Boolean).join(' · '),
+                    }));
+                  }}
+                />
+              </div>
+
               {/* Basic Info Row 1 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>

@@ -326,4 +326,17 @@ export const notificationsAPI = {
   generateICS: (carId, eventType) => api.get(`/notifications/generate-ics/${carId}`, { params: { event_type: eventType } })
 };
 
+// ✅ OCR — Ruhsat/Kimlik foto → otomatik alan çıkarımı (Gemini 2.5 Pro Vision)
+export const ocrAPI = {
+  extract: (file, type) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('type', type); // 'ruhsat' veya 'kimlik'
+    return api.post('/ocr', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000, // OCR çağrısı uzun sürebilir
+    });
+  },
+};
+
 export default api;
