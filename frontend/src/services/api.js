@@ -339,4 +339,18 @@ export const ocrAPI = {
   },
 };
 
+// ✅ AI Render — Araç fotosunu Nano Banana ile dramatik render et
+export const aiRenderAPI = {
+  renderCar: (file, style, extra) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('style', style); // 'studio_dark' | 'dramatic_lighting' | 'billboard' | 'showroom'
+    if (extra) fd.append('extra', extra);
+    return api.post('/ai/render-car', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000, // Nano Banana ~30-60s sürebilir
+    });
+  },
+};
+
 export default api;

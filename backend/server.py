@@ -42,6 +42,7 @@ from routes.activity_logs import router as activity_logs_router
 from routes.digest import router as digest_router, run_weekly_digest_for_all
 from routes.wanted_cars import router as wanted_cars_router
 from routes.ocr import router as ocr_router
+from routes.ai_render import router as ai_render_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ api_router.include_router(activity_logs_router)
 api_router.include_router(digest_router)
 api_router.include_router(wanted_cars_router)
 api_router.include_router(ocr_router)
+api_router.include_router(ai_render_router)
 
 
 @api_router.get("/")
