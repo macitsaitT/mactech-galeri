@@ -94,6 +94,11 @@ async def create_contract(body: ContractCreate, current_user: dict = Depends(get
     if not customer:
         raise HTTPException(status_code=404, detail="Müşteri bulunamadı")
 
+    car_label_parts = [str(car.get("brand", "")), str(car.get("model", ""))]
+    if car.get("year"):
+        car_label_parts.append(f"({car.get('year')})")
+    car_label = " ".join(p for p in car_label_parts if p).strip()
+
     doc = {
         "id": str(uuid.uuid4()),
         "org_id": org_id,
@@ -103,7 +108,8 @@ async def create_contract(body: ContractCreate, current_user: dict = Depends(get
         "customer_id": body.customer_id,
         "customer_name": customer.get("name", ""),
         "car_plate": (car.get("plate") or "").upper(),
-        "car_label": f"{car.get('brand', '')} {car.get('model', '')}".strip(),
+        "car_label": car_label,
+        "car_year": car.get("year"),
         "sale_price": float(body.sale_price or 0),
         "deposit_amount": float(body.deposit_amount or 0),
         "payment_method": body.payment_method or "",

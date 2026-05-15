@@ -2,11 +2,29 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.27.0
-- **Last Updated:** 2026-02-XX (Iter 58)
-- **Status:** Dijital Sözleşme + İmza — 14/14 frontend e2e PASS · 3-Özellik Paketi TAMAM (OCR + Sosyal Medya + Sözleşme)
+- **Version:** 5.28.0
+- **Last Updated:** 2026-02-XX (Iter 59)
+- **Status:** Sözleşme Geçmişi (Backend Persistence + UI) — 20/20 backend + 11/11 frontend PASS
 
 ## Implementation Status
+
+### v5.28.0 - Sözleşme Geçmişi: Persistence + Audit Trail (Iter 59)
+- 🎯 **Kullanıcı isteği**: "Potansiyel iyileştirmeyi uygula ve geliştir... hiçbir hata ve takılma yavaşlama istemiyorum" — Sözleşme audit trail + zero-error/zero-lag UX.
+- ✅ **Backend** (`/app/backend/routes/contracts.py` — yeni):
+  - `POST /api/contracts` — sözleşmeyi kaydet (imzalar base64 doc içinde), car & customer 404 validation, org_id partition
+  - `GET /api/contracts?car_id=&customer_id=&type=&limit=` — projeksiyon ile **base64 imzaları LİSTEDEN HARİÇ** (sadece `has_seller/buyer_signature` bool flag) → büyük perf kazancı (DB→client transfer ~600× azalır)
+  - `GET /api/contracts/<id>` — tam doc (imzalar dahil, reprint için)
+  - `DELETE /api/contracts/<id>` — soft delete
+  - **MongoDB indexes** (idempotent startup hook): `(org_id+car_id+created_at)`, `(org_id+customer_id+created_at)`, `id unique`
+  - `car_label` snapshot'a year da eklendi (silinen araç durumunda reprint context tam kalsın)
+  - Cross-org isolation doğrulandı, sıfır `_id` leak, response time <1.5s
+- ✅ **Frontend**:
+  - `contractsAPI` (list/get/create/remove) — `/app/frontend/src/services/api.js`
+  - **ContractModal.persistContract()** — fire-and-forget pattern: print/download butonuna basılınca arka planda `POST /api/contracts` çağrılır, UI bloklanmaz, network hatası sessizce log'lanır (toast print/download success'i göstermeye devam)
+  - **YENİ** `ContractHistoryModal.jsx` — tip badge'leri (Kapora/Teslim/Satış renkli), reprint butonu (GET full → builder → popup), soft-delete (confirm + DELETE), empty/loading/error states
+  - **VehicleCard + VehicleListRow** dropdown'larına "Sözleşme Geçmişi" eklendi
+  - **InventoryPage** `historyCarId` state + ContractHistoryModal entegrasyonu
+- ✅ **Test**: 20/20 backend pytest + 11/11 frontend e2e PASS. List <1.5s. Zero `_id` leak. Cross-org isolated. Fire-and-forget verified.
 
 ### v5.27.0 - Dijital Sözleşme + Canvas İmza (Iter 58)
 - 🎯 **Kullanıcı isteği**: Kapora / Teslim Tutanağı / Satış sözleşmeleri + parmak/mouse ile canvas imza (seçim 3d — hepsi).
