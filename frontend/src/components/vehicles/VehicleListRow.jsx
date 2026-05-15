@@ -19,6 +19,7 @@ const VehicleListRow = ({
   onSale,
   onCancelSale,
   onShare,
+  onContract,
   onConsignmentPdf,
   showActions = true,
 }) => {
@@ -108,6 +109,9 @@ const VehicleListRow = ({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onShare?.(car)}>
                 <Share2 size={16} className="mr-2" /> WhatsApp Paylaş
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onContract?.(car)} data-testid={`contract-row-${car.id}`}>
+                <FileText size={16} className="mr-2" /> Sözleşme Oluştur
               </DropdownMenuItem>
               {car.ownership === 'consignment' && (
                 <DropdownMenuItem onClick={() => onConsignmentPdf?.(car)}>

@@ -4,6 +4,7 @@ import VehicleCard from '../components/vehicles/VehicleCard';
 import VehicleListRow from '../components/vehicles/VehicleListRow';
 import ShareCardModal from '../components/modals/ShareCardModal';
 import MultiShareModal from '../components/modals/MultiShareModal';
+import ContractModal from '../components/modals/ContractModal';
 import { Search, SlidersHorizontal, Car, Download, CheckCircle, Share2, X as XIcon, Check, LayoutGrid, List } from 'lucide-react';
 import { exportAPI } from '../services/api';
 import { downloadBlob, formatCurrency } from '../utils/helpers';
@@ -23,6 +24,7 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
   const [soldStart, setSoldStart] = useState('');
   const [soldEnd, setSoldEnd] = useState('');
   const [shareCarId, setShareCarId] = useState(null);
+  const [contractCarId, setContractCarId] = useState(null);
   // ✅ Görünüm modu (kart / liste) — localStorage'da kalıcı
   const [viewMode, setViewMode] = useState(() => {
     try { return localStorage.getItem('inventory_view_mode') || 'grid'; } catch { return 'grid'; }
@@ -310,6 +312,7 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
                     onSale={selectionMode || !canSell ? undefined : onSale}
                     onCancelSale={selectionMode || !canEdit ? undefined : onCancelSale}
                     onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
+                    onContract={selectionMode ? undefined : (c) => setContractCarId(c.id)}
                     onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
                   />
                 ) : (
@@ -323,6 +326,7 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
                     onSale={selectionMode || !canSell ? undefined : onSale}
                     onCancelSale={selectionMode || !canEdit ? undefined : onCancelSale}
                     onShare={selectionMode ? undefined : (c) => setShareCarId(c.id)}
+                    onContract={selectionMode ? undefined : (c) => setContractCarId(c.id)}
                     onConsignmentPdf={selectionMode ? undefined : handleConsignmentPdf}
                   />
                 )}
@@ -337,6 +341,13 @@ const InventoryPage = ({ viewType = 'inventory', onEditCar, onViewCar, onExpense
         isOpen={!!shareCarId}
         onClose={() => setShareCarId(null)}
         car={cars.find(c => c.id === shareCarId)}
+      />
+
+      {/* Sözleşme Oluşturma */}
+      <ContractModal
+        isOpen={!!contractCarId}
+        onClose={() => setContractCarId(null)}
+        car={cars.find(c => c.id === contractCarId)}
       />
 
       {/* Çoklu (Stok Kataloğu) Paylaşım */}
