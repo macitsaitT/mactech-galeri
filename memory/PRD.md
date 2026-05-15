@@ -2,11 +2,23 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.28.0
-- **Last Updated:** 2026-02-XX (Iter 59)
-- **Status:** Sözleşme Geçmişi (Backend Persistence + UI) — 20/20 backend + 11/11 frontend PASS
+- **Version:** 5.29.0
+- **Last Updated:** 2026-02-XX (Iter 60)
+- **Status:** Müşteri Sözleşme Geçmişi — 17/17 frontend e2e PASS
 
 ## Implementation Status
+
+### v5.29.0 - Müşteri Profil İçinde Sözleşme Geçmişi (Iter 60)
+- 🎯 **Kullanıcı isteği**: Müşteri profil sayfasında o müşteriye ait tüm sözleşmeleri görme (cross-vehicle).
+- ✅ **Frontend-only**:
+  - `CustomerDetailModal.jsx` — paralel `contractsAPI.list({customer_id, limit: 5})` fetch (fire-and-forget, silent error)
+  - Yeni "Sözleşme Geçmişi" özet bölümü: renkli tip badge (Kapora amber / Teslim mavi / Satış emerald) + car_label (year dahil) + plaka + tarih + tutar
+  - "Tümünü Gör" → `ContractHistoryModal` (customer prop ile)
+  - Her satır tıklanabilir → aynı history modal
+  - **Nested modal pattern**: ContractHistoryModal sibling olarak (React fragment) render edilir — focus-trap conflict yok, ESC sadece üstteki kapatır
+  - State cleanup: modal kapanınca contracts/data sıfırlanır (stale flash yok)
+- ✅ **Backend**: Sadece minor `car_label` enhancement (year dahil edildi — iter59 minor fix)
+- ✅ **Test**: 17/17 frontend e2e PASS. Tüm iter50-59 regresyon sağlam. Sıfır hata, sıfır takılma.
 
 ### v5.28.0 - Sözleşme Geçmişi: Persistence + Audit Trail (Iter 59)
 - 🎯 **Kullanıcı isteği**: "Potansiyel iyileştirmeyi uygula ve geliştir... hiçbir hata ve takılma yavaşlama istemiyorum" — Sözleşme audit trail + zero-error/zero-lag UX.
