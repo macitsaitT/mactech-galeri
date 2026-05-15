@@ -2,11 +2,22 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.26.0
-- **Last Updated:** 2026-02-XX (Iter 57)
-- **Status:** Sosyal Medya Paylaşım (HTML2Canvas + Nano Banana AI) — 32/32 backend, 8/8 frontend PASS
+- **Version:** 5.27.0
+- **Last Updated:** 2026-02-XX (Iter 58)
+- **Status:** Dijital Sözleşme + İmza — 14/14 frontend e2e PASS · 3-Özellik Paketi TAMAM (OCR + Sosyal Medya + Sözleşme)
 
 ## Implementation Status
+
+### v5.27.0 - Dijital Sözleşme + Canvas İmza (Iter 58)
+- 🎯 **Kullanıcı isteği**: Kapora / Teslim Tutanağı / Satış sözleşmeleri + parmak/mouse ile canvas imza (seçim 3d — hepsi).
+- ✅ **Frontend-only** (yeni backend endpoint yok, yarn add signature_pad@5.1.3):
+  - **YENİ** `SignaturePadComponent.jsx` — `signature_pad` library wrapper, retina-aware canvas, imperative ref API (`isEmpty/toDataURL/clear`), dashed→solid border state transitions.
+  - **YENİ** `contractTemplates.js` — `buildKaporaContract / buildDeliveryContract / buildSaleContract` pure fonksiyonları. A4 print-ready HTML, otomatik `window.print()` (300ms gecikme), inline base64 imza img, XSS-safe HTML escape.
+  - **YENİ** `ContractModal.jsx` — sözleşme tipi seçici (3 buton), dinamik form alanları (kapora=deposit+due_date, sale=price+payment+delivery+prev_deposit, delivery=notes), 2 imza pad (satıcı + alıcı), `Yazdır/PDF` + `HTML İndir` action'lar, sonner validation toast.
+  - **VehicleCard + VehicleListRow** dropdown menülerine "Sözleşme Oluştur" eklendi.
+  - **InventoryPage**: `contractCarId` state + ContractModal entegrasyonu (ShareCardModal ile simetrik pattern).
+- ✅ **Auto-fill**: Aracın customer_id / sale_price / deposit_amount / km / motor_no / sasi_no otomatik yansır. Kimlik OCR ile kaydedilmiş müşteri notları içinden TC otomatik çıkarılır (`/TC[:\s]+(\d{11})/` regex).
+- ✅ **Test**: 14/14 frontend e2e PASS (3 tip + alan koşulları + canvas draw simülasyonu empty→filled + clear + print popup + HTML download). Sıfır console error. Backend sanity 200 OK.
 
 ### v5.26.0 - Sosyal Medya Paylaşım: HTML2Canvas + Nano Banana (Iter 57)
 - 🎯 **Kullanıcı isteği**: Stoktaki aracın görselini Instagram Story / WhatsApp Durum formatında, hazır şablonlarla ve isteğe bağlı AI render ile paylaşma (seçim 1c — her ikisi).
