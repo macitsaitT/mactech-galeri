@@ -1,16 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { X, Phone, Car as CarIcon, Calendar, DollarSign, AlertCircle } from 'lucide-react';
-import { customersAPI } from '../../services/api';
+import { Phone, Car as CarIcon, Calendar, DollarSign, AlertCircle, FileSignature, ChevronRight, Loader2 } from 'lucide-react';
+import { customersAPI, contractsAPI } from '../../services/api';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
+import ContractHistoryModal from './ContractHistoryModal';
+
+const TYPE_LABEL = { kapora: 'Kapora', delivery: 'Teslim', sale: 'Satış' };
+const TYPE_COLOR = {
+  kapora:   'bg-amber-500/10 text-amber-600 border-amber-500/30',
+  delivery: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  sale:     'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+};
 
 const CustomerDetailModal = ({ customerId, open, onClose }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [contracts, setContracts] = useState([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
-    if (!open || !customerId) return;
+    if (!open || !customerId) {
+      // modal kapanınca state'i sıfırla — bir sonraki açılışta stale data göstermesin
+      if (!open) { setData(null); setContracts([]); }
+      return;
+    }
     (async () => {
       setLoading(true);
       try {
@@ -22,6 +37,18 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
         setLoading(false);
       }
     })();
+    // ✅ Sözleşme geçmişi paralel yüklenir (UI'yı bloklamaz, hata sessiz)
+    (async () => {
+      setContractsLoading(true);
+      try {
+        const { data: list } = await contractsAPI.list({ customer_id: customerId, limit: 5 });
+        setContracts(Array.isArray(list) ? list : []);
+      } catch {
+        // sessiz hata — sözleşme yoksa veya endpoint hata verirse
+      } finally {
+        setContractsLoading(false);
+      }
+    })();
   }, [open, customerId]);
 
   if (!open) return null;
@@ -29,6 +56,7 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
   const totals = data?.totals || {};
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="p-5 border-b border-border">
@@ -217,6 +245,58 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
                 </div>
               )}
 
+              {/* ✅ Sözleşme Geçmişi (özet — ilk 5 + Tümünü Gör) */}
+              <div data-testid="customer-contracts-section">
+                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <FileSignature size={16} className="text-primary" />
+                    Sözleşme Geçmişi
+                    {contractsLoading && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+                  </h3>
+                  {contracts.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setHistoryOpen(true)}
+                      className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-0.5"
+                      data-testid="customer-contracts-view-all"
+                    >
+                      Tümünü Gör <ChevronRight size={12} />
+                    </button>
+                  )}
+                </div>
+                {contracts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic" data-testid="customer-contracts-empty">
+                    {contractsLoading ? 'Yükleniyor…' : 'Bu müşteriye ait sözleşme yok.'}
+                  </p>
+                ) : (
+                  <div className="space-y-1.5" data-testid="customer-contracts-list">
+                    {contracts.slice(0, 5).map(item => (
+                      <button
+                        type="button"
+                        key={item.id}
+                        onClick={() => setHistoryOpen(true)}
+                        className="w-full text-left p-2.5 border border-border bg-card rounded-lg hover:bg-muted/40 transition-colors flex items-center gap-2"
+                        data-testid={`customer-contract-row-${item.id}`}
+                      >
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${TYPE_COLOR[item.type] || 'border-border'}`}>
+                          {TYPE_LABEL[item.type] || item.type}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-medium truncate">
+                            {item.car_label || '—'} <span className="text-muted-foreground">· {item.car_plate || '—'}</span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {formatDate(item.created_at)}
+                            {Number(item.sale_price) > 0 && <> · {formatCurrency(item.sale_price)}</>}
+                          </div>
+                        </div>
+                        <ChevronRight size={14} className="text-muted-foreground/50 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Ödeme geçmişi */}
               <div>
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
@@ -249,6 +329,14 @@ const CustomerDetailModal = ({ customerId, open, onClose }) => {
         </div>
       </DialogContent>
     </Dialog>
+
+      {/* ✅ Sözleşme Geçmişi tam görünüm — bu müşteriye ait tüm sözleşmeler */}
+      <ContractHistoryModal
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        customer={data?.customer || (customerId ? { id: customerId } : null)}
+      />
+    </>
   );
 };
 
