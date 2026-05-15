@@ -353,4 +353,12 @@ export const aiRenderAPI = {
   },
 };
 
+// ✅ Contracts — Dijital sözleşme kayıtları
+export const contractsAPI = {
+  list:   (params = {}) => api.get('/contracts', { params }),
+  get:    (id) => api.get(`/contracts/${id}`),
+  create: (payload) => api.post('/contracts', payload),
+  remove: (id) => api.delete(`/contracts/${id}`),
+};
+
 export default api;

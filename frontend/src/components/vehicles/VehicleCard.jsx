@@ -36,6 +36,7 @@ const VehicleCard = ({
   onCancelSale,
   onShare,
   onContract,
+  onContractHistory,
   onConsignmentPdf,
   showActions = true 
 }) => {
@@ -105,6 +106,10 @@ const VehicleCard = ({
                 <DropdownMenuItem onClick={() => onContract?.(car)} data-testid={`contract-${car.id}`}>
                   <FileText size={16} className="mr-2" />
                   Sözleşme Oluştur
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onContractHistory?.(car)} data-testid={`contract-history-${car.id}`}>
+                  <FileText size={16} className="mr-2" />
+                  Sözleşme Geçmişi
                 </DropdownMenuItem>
                 {car.ownership === 'consignment' && (
                   <DropdownMenuItem onClick={() => onConsignmentPdf?.(car)} data-testid={`consign-pdf-${car.id}`}>

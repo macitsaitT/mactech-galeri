@@ -6,6 +6,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import SignaturePadComponent from '../contracts/SignaturePadComponent';
 import { buildKaporaContract, buildDeliveryContract, buildSaleContract } from '../contracts/contractTemplates';
+import { contractsAPI } from '../../services/api';
 import { toast } from 'sonner';
 
 const CONTRACT_TYPES = [
@@ -88,17 +89,43 @@ const ContractModal = ({ isOpen, onClose, car }) => {
     return true;
   };
 
-  const handlePrint = () => {
+  // ✅ Sözleşmeyi backend'e kaydet (geçmişe ekle) — print/download yan akışı
+  const persistContract = async (ctx) => {
+    try {
+      await contractsAPI.create({
+        type,
+        car_id: car.id,
+        customer_id: buyerId,
+        contract_no: ctx.contractNo,
+        sale_price: Number(salePrice) || 0,
+        deposit_amount: Number(depositAmount) || 0,
+        payment_method: paymentMethod || '',
+        notes: notes || '',
+        due_date: dueDate || '',
+        delivery_date: deliveryDate || '',
+        seller_signature: ctx.sellerSig || '',
+        buyer_signature: ctx.buyerSig || '',
+      });
+    } catch (e) {
+      // Sessiz hata — yazdırma yine de çalışmaya devam etsin
+      console.warn('Contract persist failed:', e?.response?.data?.detail || e?.message);
+    }
+  };
+
+  const handlePrint = async () => {
     const err = validate();
     if (err) return toast.error(err);
     const ctx = buildContext();
     const cfg = CONTRACT_TYPES.find(c => c.id === type);
     if (!cfg) return;
     const html = cfg.build(ctx);
-    if (openPrintable(html)) toast.success('Sözleşme açıldı — yazdır veya PDF olarak kaydet');
+    if (openPrintable(html)) {
+      toast.success('Sözleşme açıldı — yazdır veya PDF olarak kaydet');
+      persistContract(ctx); // ✅ fire-and-forget, UI'yı bloklamaz
+    }
   };
 
-  const handleDownloadHTML = () => {
+  const handleDownloadHTML = async () => {
     const err = validate();
     if (err) return toast.error(err);
     const ctx = buildContext();
@@ -111,7 +138,8 @@ const ContractModal = ({ isOpen, onClose, car }) => {
     a.download = `${ctx.contractNo}_${type}.html`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast.success('HTML dosyası indirildi');
+    toast.success('HTML dosyası indirildi · geçmişe kaydedildi');
+    persistContract(ctx); // ✅ fire-and-forget
   };
 
   if (!car) return null;

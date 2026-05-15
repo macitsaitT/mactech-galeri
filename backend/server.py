@@ -43,6 +43,7 @@ from routes.digest import router as digest_router, run_weekly_digest_for_all
 from routes.wanted_cars import router as wanted_cars_router
 from routes.ocr import router as ocr_router
 from routes.ai_render import router as ai_render_router
+from routes.contracts import router as contracts_router, ensure_indexes as ensure_contracts_indexes
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ api_router.include_router(digest_router)
 api_router.include_router(wanted_cars_router)
 api_router.include_router(ocr_router)
 api_router.include_router(ai_render_router)
+api_router.include_router(contracts_router)
 
 
 @api_router.get("/")
@@ -171,7 +173,14 @@ async def startup():
         from migrations.migrate_sold_by_user_id import backfill_sold_by_user_id
         await backfill_sold_by_user_id(db)
     except Exception as e:
-        logger.warning(f"sold_by backfill failed: {e}")
+        logger.warning(f"sold_by migration deferred: {e}")
+
+    # ✅ Sözleşme indexleri (idempotent)
+    try:
+        await ensure_contracts_indexes()
+        logger.info("Contracts indexes ensured")
+    except Exception as e:
+        logger.warning(f"contracts index ensure deferred: {e}")
 
     # ✅ Digest scheduler — saatlik tick, kullanıcı başına day/hour kontrolü digest.py içinde
     try:
