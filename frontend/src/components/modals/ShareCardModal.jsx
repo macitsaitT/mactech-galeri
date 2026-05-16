@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import { Share2, Download, MessageCircle, X, Sparkles, Loader2 } from 'lucide-react';
+import { Share2, Download, MessageCircle, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
 import { statusConfig, carParts } from '../CarExpertiseDiagram';
-import { aiRenderAPI } from '../../services/api';
 import { toast } from 'sonner';
 
 // ✅ Sosyal medya şablon önayarları — kullanıcı format seçer.
@@ -18,29 +17,17 @@ const FORMAT_PRESETS = {
   square_1_1: { id: 'square_1_1', label: 'Kare 1:1',       ratio: '1080 / 1080', maxWidth: 540, layout: 'square'   },
 };
 
-// ✅ AI Render stilleri — backend STYLE_PRESETS ile eşleşir.
-const AI_STYLES = [
-  { id: 'studio_dark',       label: 'Stüdyo (Koyu)' },
-  { id: 'dramatic_lighting', label: 'Dramatik Işık' },
-  { id: 'billboard',         label: 'Billboard' },
-  { id: 'showroom',          label: 'Showroom' },
-];
-
 /**
  * WhatsApp Paylaşım Kartı - araç fotoğrafı + temel özelliklerden zarif bir görsel kart üretir.
  * - "Görseli İndir" → PNG indirir.
  * - "Paylaş" → native Web Share API (mobil) ile sosyal medyaya iletilir.
- * - "AI ile Render Et" → araç fotosunu Nano Banana ile dramatik render eder (background replace).
  */
 const ShareCardModal = ({ isOpen, onClose, car }) => {
   const cardRef = useRef(null);
   const [generating, setGenerating] = useState(false);
   const { user } = useApp();
   const [photoUrl, setPhotoUrl] = useState(null);
-  const [originalPhotoUrl, setOriginalPhotoUrl] = useState(null);
   const [format, setFormat] = useState('classic');
-  const [aiStyle, setAiStyle] = useState('studio_dark');
-  const [aiLoading, setAiLoading] = useState(false);
 
   const fmt = FORMAT_PRESETS[format];
 
@@ -53,7 +40,6 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     else if (first?.url) url = first.url;
     else if (first?.data) url = first.data;
     setPhotoUrl(url);
-    setOriginalPhotoUrl(url);
   }, [isOpen, car]);
 
   const generateImage = async () => {
@@ -154,40 +140,6 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     }
   };
 
-  // ✅ AI Render — araç fotosunu Nano Banana ile yeniden render et (image-to-image)
-  const handleAIRender = async () => {
-    if (!originalPhotoUrl) {
-      toast.error('Araç fotoğrafı yok — önce araca foto ekleyin');
-      return;
-    }
-    setAiLoading(true);
-    const toastId = toast.loading('AI render üretiliyor (~30-60 saniye)…');
-    try {
-      // dataURL veya http URL → File
-      const blob = await (await fetch(originalPhotoUrl)).blob();
-      const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-      const file = new File([blob], `car.${ext}`, { type: blob.type || 'image/jpeg' });
-
-      const { data } = await aiRenderAPI.renderCar(file, aiStyle);
-      const mime = data?.mime_type || 'image/png';
-      const dataUrl = `data:${mime};base64,${data.image_base64}`;
-      setPhotoUrl(dataUrl);
-      toast.success('AI render hazır — kartı kontrol edin', { id: toastId });
-    } catch (err) {
-      const msg = err?.response?.data?.detail || err?.message || 'AI render başarısız';
-      toast.error(msg, { id: toastId });
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const handleAIRevert = () => {
-    if (originalPhotoUrl) {
-      setPhotoUrl(originalPhotoUrl);
-      toast.success('Orijinal foto geri yüklendi');
-    }
-  };
-
   if (!car) return null;
 
   return (
@@ -221,56 +173,6 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
               {p.label}
             </button>
           ))}
-        </div>
-
-        {/* ✅ AI Render Kontrolleri */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5 space-y-2" data-testid="ai-render-panel">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Sparkles size={14} className="text-primary" />
-            <span className="text-[11px] font-semibold text-primary">AI ile arka plan render et</span>
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {AI_STYLES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setAiStyle(s.id)}
-                disabled={aiLoading}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-colors disabled:opacity-50 ${
-                  aiStyle === s.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background/60 text-muted-foreground hover:bg-muted'
-                }`}
-                data-testid={`ai-style-${s.id}`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleAIRender}
-              disabled={aiLoading || !originalPhotoUrl}
-              className="flex-1 h-9 rounded-md bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-              data-testid="ai-render-btn"
-            >
-              {aiLoading ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
-              {aiLoading ? 'Render ediliyor…' : 'Render Et'}
-            </button>
-            {photoUrl !== originalPhotoUrl && originalPhotoUrl && (
-              <button
-                type="button"
-                onClick={handleAIRevert}
-                disabled={aiLoading}
-                className="h-9 px-2.5 rounded-md border border-border text-xs hover:bg-muted disabled:opacity-50 transition-colors"
-                data-testid="ai-render-revert-btn"
-                title="Orijinal fotoyu geri yükle"
-              >
-                Orijinal
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Card preview - dinamik aspect ratio */}

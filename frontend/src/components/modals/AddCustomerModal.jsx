@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Users } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatPhoneInput } from '../../utils/helpers';
-import OCRScanButton from '../ocr/OCRScanButton';
 import {
   Dialog,
   DialogContent,
@@ -83,28 +82,6 @@ const AddCustomerModal = ({ isOpen, onClose, onSave, editingCustomer = null }) =
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {/* ✅ OCR — Kimlik kartı fotoğrafından otomatik doldurma */}
-          {!editingCustomer && (
-            <div className="flex items-center justify-between gap-2 p-3 rounded-xl border border-primary/20 bg-primary/5 flex-wrap">
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold text-primary">Kimlik fotoğrafı ile hızlı kayıt</div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Ad-soyad, TC, doğum tarihi otomatik dolar.</p>
-              </div>
-              <OCRScanButton
-                type="kimlik"
-                onExtract={(d) => {
-                  const fullName = [d.ad, d.soyad].filter(Boolean).join(' ').trim();
-                  setFormData(prev => ({
-                    ...prev,
-                    name: fullName || prev.name,
-                    notes: [prev.notes, d.tc_kimlik_no && `TC: ${d.tc_kimlik_no}`, d.dogum_tarihi && `Doğum: ${d.dogum_tarihi}`, d.dogum_yeri && `Yer: ${d.dogum_yeri}`]
-                      .filter(Boolean).join(' · '),
-                  }));
-                }}
-              />
-            </div>
-          )}
-
           <div>
             <label className="block text-sm font-medium mb-2">İsim Soyisim *</label>
             <input

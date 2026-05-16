@@ -2,11 +2,28 @@
 
 ## Project Overview
 - **Project Name:** MACTech Oto Galeri CRM
-- **Version:** 5.29.0
-- **Last Updated:** 2026-02-XX (Iter 60)
-- **Status:** Müşteri Sözleşme Geçmişi — 17/17 frontend e2e PASS
+- **Version:** 5.30.0
+- **Last Updated:** 2026-02-XX (Iter 61)
+- **Status:** Emergent Bağımlılığı Tamamen Kaldırıldı — 22/22 backend regresyon PASS
 
 ## Implementation Status
+
+### v5.30.0 - Emergent-Free Build (Iter 61)
+- 🎯 **Kullanıcı isteği**: "Emergent altyapısı kullanılmasın, backend/frontend'de hata istemiyorum." → seçim B (özellikleri kaldır).
+- ✅ **Silinen dosyalar**:
+  - `/app/backend/routes/ocr.py` (Gemini Vision OCR — Ruhsat/Kimlik)
+  - `/app/backend/routes/ai_render.py` (Nano Banana image-to-image)
+  - `/app/frontend/src/components/ocr/OCRScanButton.jsx`
+  - `/app/backend/tests/test_iter56_ocr.py`, `test_iter57_ai_render.py`
+- ✅ **Temizlenen referanslar**:
+  - `server.py`: 2 import + 2 include_router satırı çıkarıldı
+  - `requirements.txt`: `--extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/` ve `emergentintegrations` satırları silindi
+  - `api.js`: `ocrAPI` + `aiRenderAPI` export'ları kaldırıldı
+  - `AddCarModal.jsx`: Ruhsat OCR banner + button + import silindi
+  - `AddCustomerModal.jsx`: Kimlik OCR banner + button + import silindi
+  - `ShareCardModal.jsx`: AI Render panel (4 stil butonu, Render Et/Orijinal toggle, handleAIRender/handleAIRevert, AI_STYLES, aiStyle/aiLoading/originalPhotoUrl state, Sparkles/Loader2 import) tamamen çıkarıldı — Format Seçici (Klasik/Story/Kare) korundu, html2canvas çalışmaya devam
+- ✅ **Doğrulama**: Backend boot temiz (sıfır hata), `/api/ocr` ve `/api/ai/render-car` artık 404. Frontend compile clean, sıfır console/page error, login render sağlam. 22/22 backend regresyon (iter50/51/52/55) PASS. Kalan emergent referansı: 0 (production kodda).
+- 🟢 **Deploy hazır**: pip install -r requirements.txt artık Emergent CloudFront index'ine ihtiyaç duymadan vanilla PyPI'dan tüm bağımlılıkları çekebilir.
 
 ### v5.29.0 - Müşteri Profil İçinde Sözleşme Geçmişi (Iter 60)
 - 🎯 **Kullanıcı isteği**: Müşteri profil sayfasında o müşteriye ait tüm sözleşmeleri görme (cross-vehicle).

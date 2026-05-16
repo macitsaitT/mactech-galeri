@@ -41,8 +41,6 @@ from routes.data_recovery import router as recovery_router
 from routes.activity_logs import router as activity_logs_router
 from routes.digest import router as digest_router, run_weekly_digest_for_all
 from routes.wanted_cars import router as wanted_cars_router
-from routes.ocr import router as ocr_router
-from routes.ai_render import router as ai_render_router
 from routes.contracts import router as contracts_router, ensure_indexes as ensure_contracts_indexes
 
 logging.basicConfig(level=logging.INFO)
@@ -82,8 +80,6 @@ api_router.include_router(recovery_router)
 api_router.include_router(activity_logs_router)
 api_router.include_router(digest_router)
 api_router.include_router(wanted_cars_router)
-api_router.include_router(ocr_router)
-api_router.include_router(ai_render_router)
 api_router.include_router(contracts_router)
 
 
