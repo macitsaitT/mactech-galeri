@@ -146,9 +146,15 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen gradient-asphalt flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8 animate-fade-in flex justify-center">
-          <Logo variant="full" size="2xl" data-testid="auth-logo" />
+        {/* Logo — Ti-Cari Otomotiv Transparent */}
+        <div className="text-center mb-6 animate-fade-in flex justify-center">
+          <img
+            src="/assets/images/ti-cari-logo-transparent.png"
+            alt="Ti-Cari Otomotiv • Powered by MacTech"
+            className="h-44 sm:h-52 w-auto object-contain select-none"
+            draggable={false}
+            data-testid="auth-logo"
+          />
         </div>
 
         {/* Verification Form */}
@@ -408,9 +414,19 @@ const LoginPage = () => {
           </div>
         )}
 
-        <p className="text-center text-muted-foreground text-xs mt-8">
-          © {new Date().getFullYear()} Ti-Cari Otomotiv · Powered by <span className="text-ti-gold font-semibold">MacTech</span>
-        </p>
+        {/* Powered by MacTech — Kurumsal İmza */}
+        <div className="mt-6 flex flex-col items-center gap-1.5 animate-fade-in" data-testid="powered-by-mactech">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent via-ti-gold/50 to-ti-gold/80" />
+            <span className="text-[10px] font-semibold tracking-[0.4em] text-ti-gold uppercase">
+              Powered by <span className="text-white">MacTech</span>
+            </span>
+            <span className="h-px w-12 bg-gradient-to-l from-transparent via-ti-gold/50 to-ti-gold/80" />
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 tracking-wider mt-2">
+            © {new Date().getFullYear()} Ti-Cari Otomotiv · Tüm hakları saklıdır.
+          </p>
+        </div>
       </div>
     </div>
   );

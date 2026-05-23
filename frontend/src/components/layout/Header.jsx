@@ -66,6 +66,16 @@ const Header = ({ title, onMenuClick, appointments = [] }) => {
 
       {/* Right side */}
       <div className="flex items-center gap-3">
+        {/* Ti-Cari Yatay Logo — Kurumsal kimlik (sağ üst) */}
+        <div className="hidden lg:flex items-center pr-3 border-r border-ti-gold/20 mr-1" data-testid="header-logo">
+          <img
+            src="/assets/images/ti-cari-logo-horizontal-dark.png"
+            alt="Ti-Cari Otomotiv • Powered by MacTech"
+            className="h-9 w-auto object-contain select-none opacity-95 hover:opacity-100 transition-opacity"
+            draggable={false}
+          />
+        </div>
+
         {/* ✅ Global şube seçici */}
         <div className="hidden sm:block">
           <BranchSelector compact />
