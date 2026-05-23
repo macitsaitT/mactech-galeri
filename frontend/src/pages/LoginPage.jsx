@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { authAPI } from '../services/api';
 import { formatPhoneInput } from '../utils/helpers';
 import { Eye, EyeOff, Loader2, Mail, ArrowLeft, CheckCircle2, QrCode, Smartphone, Monitor, RefreshCw } from 'lucide-react';
+import { Logo } from '../components/brand/Logo';
 
 const LoginPage = () => {
   const { login, register, setUser, setToken } = useApp();
@@ -146,8 +147,8 @@ const LoginPage = () => {
     <div className="min-h-screen gradient-asphalt flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8 animate-fade-in">
-          <img src="/logo-mactech.png" alt="MACTech" className="h-36 w-auto object-contain mx-auto" />
+        <div className="text-center mb-8 animate-fade-in flex justify-center">
+          <Logo variant="full" size="2xl" data-testid="auth-logo" />
         </div>
 
         {/* Verification Form */}
@@ -250,7 +251,7 @@ const LoginPage = () => {
                       level="H"
                       includeMargin={false}
                       imageSettings={{
-                        src: "/logo-mactech.png",
+                        src: "/assets/images/ti-cari-logo-mark.png",
                         x: undefined,
                         y: undefined,
                         height: 40,
@@ -408,7 +409,7 @@ const LoginPage = () => {
         )}
 
         <p className="text-center text-muted-foreground text-xs mt-8">
-          © 2024 MACTech. Tüm hakları saklıdır.
+          © {new Date().getFullYear()} Ti-Cari Otomotiv · Powered by <span className="text-ti-gold font-semibold">MacTech</span>
         </p>
       </div>
     </div>

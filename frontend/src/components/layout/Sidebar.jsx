@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
+import { Logo } from '../brand/Logo';
 
 // Kategori bazlı menü yapısı — her grup collapsible bir panel
 const menuGroups = [
@@ -144,12 +145,12 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
         )}
         data-testid="sidebar"
       >
-        {/* Header */}
-        <div className="h-24 flex items-center justify-between px-4 border-b border-white/10">
-          <img src="/logo-mactech.png" alt="MACTech" className="h-14 w-auto object-contain" />
+        {/* Header — Ti-Cari Otomotiv Kurumsal Kimlik */}
+        <div className="h-24 flex items-center justify-between px-4 border-b border-ti-gold/15 bg-gradient-to-b from-black to-[#0a0a0a]">
+          <Logo variant="horizontal" size="md" data-testid="sidebar-logo" />
           <button
             onClick={onClose}
-            className="md:hidden p-2 text-white/70 hover:text-white transition-colors"
+            className="md:hidden p-2 text-white/70 hover:text-ti-gold transition-colors"
             data-testid="sidebar-close-btn"
           >
             <X size={20} />

@@ -9,58 +9,73 @@
 
 @layer base {
   :root {
+    /* Ti-Cari Gold = #C5A267 → hsl(38, 45%, 59%) */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 43 45% 56%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 38 45% 59%;
+    --primary-foreground: 0 0% 6%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215 16% 47%;
-    --accent: 43 45% 56%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 38 45% 59%;
+    --accent-foreground: 0 0% 6%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 43 45% 56%;
+    --ring: 38 45% 59%;
     --radius: 0.5rem;
     
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    --warning: 43 45% 56%;
+    --warning: 38 45% 59%;
     --warning-foreground: 0 0% 0%;
+
+    /* Ti-Cari brand tokens */
+    --ti-gold: 38 45% 59%;      /* #C5A267 */
+    --ti-gold-light: 38 55% 70%; /* hover/glow */
+    --ti-gold-dark: 36 40% 42%;  /* deeper accent */
+    --ti-black: 0 0% 4%;
+    --ti-charcoal: 0 0% 8%;
   }
 
   .dark {
+    /* Ti-Cari Dark Theme — Deep Black + Gold (#C5A267) */
     --background: 0 0% 4%;
-    --foreground: 0 0% 95%;
+    --foreground: 0 0% 98%;
     --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
+    --card-foreground: 0 0% 98%;
     --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 43 45% 56%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 38 45% 59%;
     --primary-foreground: 0 0% 4%;
     --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 43 45% 56%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 43 20% 20%;
-    --input: 0 0% 16%;
-    --ring: 43 45% 56%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 38 45% 59%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 38 20% 18%;
+    --input: 0 0% 14%;
+    --ring: 38 45% 59%;
     
-    --success: 142 76% 36%;
+    --success: 142 76% 40%;
     --success-foreground: 0 0% 100%;
-    --warning: 43 45% 56%;
-    --warning-foreground: 0 0% 0%;
+    --warning: 38 45% 59%;
+    --warning-foreground: 0 0% 4%;
+
+    --ti-gold: 38 45% 59%;
+    --ti-gold-light: 38 55% 70%;
+    --ti-gold-dark: 36 40% 42%;
+    --ti-black: 0 0% 4%;
+    --ti-charcoal: 0 0% 8%;
   }
 }
 
@@ -111,20 +126,20 @@
     @apply bg-background/80 backdrop-blur-md;
   }
 
-  /* MACTech Gold gradient */
+  /* Ti-Cari Gold gradient (#C5A267 → deeper) */
   .gradient-gold {
-    background: linear-gradient(135deg, hsl(43, 45%, 56%) 0%, hsl(40, 40%, 45%) 100%);
+    background: linear-gradient(135deg, hsl(38, 55%, 65%) 0%, hsl(36, 45%, 48%) 100%);
   }
 
-  /* Asphalt gradient background */
+  /* Asphalt gradient background — pure black */
   .gradient-asphalt {
-    background: radial-gradient(ellipse at top, hsl(0, 0%, 8%) 0%, hsl(0, 0%, 4%) 100%);
+    background: radial-gradient(ellipse at top, hsl(0, 0%, 8%) 0%, hsl(0, 0%, 3%) 100%);
   }
 
-  /* Text gradient */
+  /* Text gradient gold */
   .text-gradient-gold {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(43, 45%, 56%) 0%, hsl(40, 40%, 45%) 100%);
+    background-image: linear-gradient(135deg, hsl(38, 60%, 70%) 0%, hsl(36, 45%, 50%) 100%);
   }
 
   /* Number formatting */

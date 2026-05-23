@@ -20,6 +20,8 @@ router = APIRouter()
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://image-gallery-live.preview.emergentagent.com")
+LOGO_URL = f"{PUBLIC_BASE_URL}/assets/images/ti-cari-logo.png"
 
 if RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
@@ -96,9 +98,10 @@ def _build_html(company_name: str, period_label: str, stats: dict) -> str:
   <table cellpadding="0" cellspacing="0" width="100%" style="background:#f4f4f6;padding:24px 0;">
     <tr><td align="center">
       <table cellpadding="0" cellspacing="0" width="600" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <tr><td style="background:#0a0a0a;padding:24px;text-align:center;">
-          <div style="color:#d4af37;font-size:14px;letter-spacing:2px;font-weight:bold;">MACTECH</div>
-          <div style="color:#ffffff;font-size:22px;font-weight:700;margin-top:4px;">Haftalık Özet</div>
+        <tr><td style="background:#0a0a0a;padding:28px 24px;text-align:center;border-bottom:2px solid #C5A267;">
+          <img src="{LOGO_URL}" alt="Ti-Cari Otomotiv • Powered by MacTech" width="120" height="120" style="display:block;margin:0 auto 12px;width:120px;height:auto;border:0;outline:none;text-decoration:none;" />
+          <div style="color:#C5A267;font-size:11px;letter-spacing:4px;font-weight:bold;text-transform:uppercase;">Ti-Cari Otomotiv</div>
+          <div style="color:#ffffff;font-size:22px;font-weight:700;margin-top:6px;font-family:Arial,sans-serif;">Haftalık Özet</div>
           <div style="color:#aaaaaa;font-size:12px;margin-top:4px;">{period_label}</div>
         </td></tr>
 
@@ -125,7 +128,7 @@ def _build_html(company_name: str, period_label: str, stats: dict) -> str:
             </tr>
           </table>
 
-          <h3 style="margin:0 0 10px;font-size:14px;color:#0a0a0a;border-bottom:2px solid #d4af37;padding-bottom:6px;">Hareket Özeti</h3>
+          <h3 style="margin:0 0 10px;font-size:14px;color:#0a0a0a;border-bottom:2px solid #C5A267;padding-bottom:6px;">Hareket Özeti</h3>
           <table cellpadding="0" cellspacing="0" width="100%" style="font-size:13px;color:#333;margin-bottom:20px;">
             <tr><td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">🚗 Yeni eklenen araç</td><td align="right" style="border-bottom:1px solid #f0f0f0;"><strong>{stats['new_car_count']}</strong></td></tr>
             <tr><td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">💰 Fiyat değişikliği</td><td align="right" style="border-bottom:1px solid #f0f0f0;"><strong>{stats['price_change_count']}</strong></td></tr>
@@ -134,18 +137,18 @@ def _build_html(company_name: str, period_label: str, stats: dict) -> str:
             <tr><td style="padding:6px 0;">📦 Aktif stok sayısı</td><td align="right"><strong>{stats['stock_count']}</strong></td></tr>
           </table>
 
-          <h3 style="margin:0 0 10px;font-size:14px;color:#0a0a0a;border-bottom:2px solid #d4af37;padding-bottom:6px;">🏆 Haftanın En İyi Satıcısı</h3>
+          <h3 style="margin:0 0 10px;font-size:14px;color:#0a0a0a;border-bottom:2px solid #C5A267;padding-bottom:6px;">🏆 Haftanın En İyi Satıcısı</h3>
           <p style="margin:0 0 24px;font-size:14px;color:#333;">{top_line}</p>
 
           <div style="background:#fafaf2;border:1px solid #e8e0c3;border-radius:8px;padding:14px 16px;margin-top:8px;">
             <p style="margin:0;font-size:12px;color:#6b5d1c;line-height:1.6;">
-              Bu özet otomatik olarak MACTech CRM tarafından oluşturuldu. Aboneliği durdurmak için e-posta ile bize ulaşabilirsiniz.
+              Bu özet otomatik olarak <strong>Ti-Cari Otomotiv CRM</strong> tarafından oluşturuldu. Aboneliği durdurmak için e-posta ile bize ulaşabilirsiniz.
             </p>
           </div>
         </td></tr>
 
-        <tr><td style="background:#f8f8fa;padding:18px;text-align:center;font-size:11px;color:#888;">
-          © {datetime.now(timezone.utc).year} MACTech — Oto Galeri CRM
+        <tr><td style="background:#0a0a0a;padding:18px;text-align:center;font-size:11px;color:#888;border-top:1px solid #C5A267;">
+          © {datetime.now(timezone.utc).year} <span style="color:#C5A267;font-weight:600;">Ti-Cari Otomotiv</span> — Powered by <span style="color:#C5A267;">MacTech</span>
         </td></tr>
       </table>
     </td></tr>
@@ -171,7 +174,7 @@ async def _send_digest_to_org(org_id: str, since: datetime, until: datetime) -> 
     stats = await _collect_digest_data(org_id, since.isoformat(), until.isoformat())
     period_label = f'{since.strftime("%d.%m.%Y")} — {until.strftime("%d.%m.%Y")}'
     html = _build_html(company_name, period_label, stats)
-    subject = f"MACTech Haftalık Özet — {since.strftime('%d.%m')}–{until.strftime('%d.%m.%Y')}"
+    subject = f"Ti-Cari Otomotiv Haftalık Özet — {since.strftime('%d.%m')}–{until.strftime('%d.%m.%Y')}"
 
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY missing — skipping send for %s", admin_email)

@@ -65,6 +65,27 @@ module.exports = {
           '3': 'hsl(var(--chart-3))',
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))'
+        },
+        // Ti-Cari brand palette (Powered by MacTech)
+        'ti-gold': {
+          DEFAULT: '#C5A267',
+          light: '#D8BC8A',
+          dark: '#8B6F3D',
+          50: '#FAF5EA',
+          100: '#F0E5C9',
+          200: '#E2CC95',
+          300: '#D4B364',
+          400: '#C5A267',
+          500: '#B08D4E',
+          600: '#8B6F3D',
+          700: '#66522D',
+          800: '#42361D',
+          900: '#1F1A0E',
+        },
+        'ti-black': {
+          DEFAULT: '#0A0A0A',
+          deep: '#050505',
+          charcoal: '#141414',
         }
       },
       keyframes: {

@@ -20,8 +20,8 @@ export const sendLocalNotification = async (title, body, tag = 'default') => {
         if (reg && typeof reg.showNotification === 'function') {
           await reg.showNotification(title, {
             body,
-            icon: '/logo-mactech.png',
-            badge: '/logo-mactech.png',
+            icon: '/assets/images/ti-cari-logo-mark.png',
+            badge: '/assets/images/ti-cari-logo-mark.png',
             tag,
             vibrate: [200, 100, 200],
             requireInteraction: false,
@@ -35,8 +35,8 @@ export const sendLocalNotification = async (title, body, tag = 'default') => {
     try {
       const notification = new Notification(title, {
         body,
-        icon: '/logo-mactech.png',
-        badge: '/logo-mactech.png',
+        icon: '/assets/images/ti-cari-logo-mark.png',
+        badge: '/assets/images/ti-cari-logo-mark.png',
         tag,
         requireInteraction: false,
       });
