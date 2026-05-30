@@ -108,6 +108,21 @@ async def download_technical_doc():
     )
 
 
+@api_router.get("/docs/marketing")
+async def download_marketing_doc():
+    """Serve the Oto-Cari Reklam Vitrini marketing doc (.docx) for download."""
+    from fastapi.responses import FileResponse
+    from fastapi import HTTPException
+    docx_path = Path("/app/OTO_CARI_REKLAM_VITRINI.docx")
+    if not docx_path.exists():
+        raise HTTPException(status_code=404, detail="Doküman bulunamadı")
+    return FileResponse(
+        path=str(docx_path),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename="OtoCari_Reklam_Vitrini.docx",
+    )
+
+
 app.include_router(api_router)
 
 # Static file serving for uploads
