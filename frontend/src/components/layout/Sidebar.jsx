@@ -146,11 +146,11 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
         data-testid="sidebar"
       >
         {/* Header — OTO-CARI Yatay Logo (Sol Üst) */}
-        <div className="h-24 flex items-center justify-between px-4 border-b border-ti-gold/15 bg-gradient-to-b from-black to-[#0a0a0a]">
+        <div className="h-28 flex items-center justify-between px-3 border-b border-ti-gold/15 bg-gradient-to-b from-black to-[#0a0a0a]">
           <img
             src="/assets/images/oto-cari-horizontal.png"
             alt="Oto-Cari Otomotiv • Powered by MacTech"
-            className="h-12 w-auto max-w-[210px] object-contain select-none"
+            className="h-20 w-auto max-w-full object-contain select-none"
             draggable={false}
             data-testid="sidebar-logo"
           />
