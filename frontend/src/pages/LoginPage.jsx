@@ -146,12 +146,12 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen gradient-asphalt flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo — Ti-Cari Otomotiv Transparent */}
+        {/* Logo — OTO-CARI Dark Theme Transparent (yazı altta) */}
         <div className="text-center mb-6 animate-fade-in flex justify-center">
           <img
-            src="/assets/images/ti-cari-logo-transparent.png"
-            alt="Ti-Cari Otomotiv • Powered by MacTech"
-            className="h-44 sm:h-52 w-auto object-contain select-none"
+            src="/assets/images/oto-cari-vertical.png"
+            alt="Oto-Cari Otomotiv • Powered by MacTech"
+            className="h-48 sm:h-56 w-auto object-contain select-none"
             draggable={false}
             data-testid="auth-logo"
           />

@@ -145,9 +145,15 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
         )}
         data-testid="sidebar"
       >
-        {/* Header — Ti-Cari Otomotiv Kurumsal Kimlik */}
+        {/* Header — OTO-CARI Yatay Logo (Sol Üst) */}
         <div className="h-24 flex items-center justify-between px-4 border-b border-ti-gold/15 bg-gradient-to-b from-black to-[#0a0a0a]">
-          <Logo variant="horizontal" size="md" data-testid="sidebar-logo" />
+          <img
+            src="/assets/images/oto-cari-horizontal.png"
+            alt="Oto-Cari Otomotiv • Powered by MacTech"
+            className="h-12 w-auto max-w-[210px] object-contain select-none"
+            draggable={false}
+            data-testid="sidebar-logo"
+          />
           <button
             onClick={onClose}
             className="md:hidden p-2 text-white/70 hover:text-ti-gold transition-colors"
