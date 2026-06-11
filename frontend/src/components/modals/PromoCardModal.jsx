@@ -3,6 +3,7 @@ import { FileText, Download, Phone } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency } from '../../utils/helpers';
 import { fileAPI } from '../../services/api';
+import { buildSedanDiagramSvg } from './promoParts/sedanDiagram';
 import {
   Dialog,
   DialogContent,
@@ -16,90 +17,20 @@ const getLogoUrl = (logoPath) => {
   return fileAPI.getUrl(logoPath);
 };
 
-const getPartColor = (status) => {
-  switch (status) {
-    case 'orijinal': return '#22c55e';
-    case 'boyali': return '#eab308';
-    case 'lokal': return '#3b82f6';
-    case 'degisen': return '#ef4444';
-    default: return '#22c55e';
-  }
-};
-const getPartBorder = (status) => {
-  switch (status) {
-    case 'orijinal': return '#15803d';
-    case 'boyali': return '#a16207';
-    case 'lokal': return '#1d4ed8';
-    case 'degisen': return '#b91c1c';
-    default: return '#15803d';
-  }
-};
-const getPartLabel = (status) => {
-  switch (status) {
-    case 'orijinal': return 'ORJ';
-    case 'boyali': return 'BOY';
-    case 'lokal': return 'LOK';
-    case 'degisen': return 'DEĞ';
-    default: return 'ORJ';
-  }
-};
-
+// ✅ Profesyonel sedan top-down diyagramı — promoParts/sedanDiagram.js'den
 const TopDownDiagram = ({ expertise }) => {
-  const p = (id) => expertise?.parts?.[id] || 'orijinal';
-  const parts = [
-    { id: 'arka_tampon', x: 30, y: 5, w: 140, h: 22, rx: 8, label: 'A.Tampon' },
-    { id: 'bagaj', x: 40, y: 30, w: 120, h: 45, rx: 4, label: 'Bagaj' },
-    { id: 'sol_arka_camurluk', x: 12, y: 30, w: 25, h: 55, rx: 4, label: '' },
-    { id: 'sag_arka_camurluk', x: 163, y: 30, w: 25, h: 55, rx: 4, label: '' },
-    { id: 'sol_arka_kapi', x: 12, y: 90, w: 25, h: 50, rx: 4, label: '' },
-    { id: 'sag_arka_kapi', x: 163, y: 90, w: 25, h: 50, rx: 4, label: '' },
-    { id: 'tavan', x: 40, y: 80, w: 120, h: 90, rx: 4, label: 'Tavan' },
-    { id: 'sol_on_kapi', x: 12, y: 145, w: 25, h: 50, rx: 4, label: '' },
-    { id: 'sag_on_kapi', x: 163, y: 145, w: 25, h: 50, rx: 4, label: '' },
-    { id: 'sol_on_camurluk', x: 12, y: 200, w: 25, h: 50, rx: 4, label: '' },
-    { id: 'sag_on_camurluk', x: 163, y: 200, w: 25, h: 50, rx: 4, label: '' },
-    { id: 'kaput', x: 40, y: 175, w: 120, h: 55, rx: 4, label: 'Kaput' },
-    { id: 'on_tampon', x: 30, y: 235, w: 140, h: 22, rx: 8, label: 'Ö.Tampon' },
-  ];
-
-  const partsHtml = parts.map(({ id, x, y, w, h, rx, label }) => {
-    const status = p(id);
-    const color = getPartColor(status);
-    const border = getPartBorder(status);
-    const lbl = getPartLabel(status);
-    const fs = w < 30 ? 7 : 9;
-    let html = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${color}" stroke="${border}" stroke-width="2"/>`;
-    html += `<text x="${x + w / 2}" y="${y + h / 2 + (label ? 0 : 4)}" text-anchor="middle" font-size="${fs}" font-weight="800" fill="#fff">${lbl}</text>`;
-    if (label && w > 30) {
-      html += `<text x="${x + w / 2}" y="${y + h / 2 + 11}" text-anchor="middle" font-size="7" fill="#fff" opacity="0.85">${label}</text>`;
-    }
-    return html;
-  }).join('');
-
-  const legendItems = [
-    { color: '#22c55e', label: 'Orijinal' },
-    { color: '#eab308', label: 'Boyalı' },
-    { color: '#3b82f6', label: 'Lokal' },
-    { color: '#ef4444', label: 'Değişen' },
-  ];
-  const legendHtml = legendItems.map((item, i) =>
-    `<g transform="translate(${i * 47}, 0)"><rect x="0" y="0" width="10" height="10" rx="2" fill="${item.color}"/><text x="13" y="8" font-size="7" font-weight="600" fill="#555">${item.label}</text></g>`
-  ).join('');
-
-  const svgContent = `
-    <rect x="30" y="25" width="140" height="210" rx="22" fill="#e8e8e8" stroke="#555" stroke-width="2"/>
-    <rect x="45" y="77" width="110" height="28" rx="4" fill="#a8d8ea" stroke="#7bb8d0" stroke-width="1"/>
-    <rect x="45" y="170" width="110" height="28" rx="4" fill="#a8d8ea" stroke="#7bb8d0" stroke-width="1"/>
-    ${partsHtml}
-    <g transform="translate(10, 268)">${legendHtml}</g>
-  `;
-
+  const svgString = buildSedanDiagramSvg(expertise, {
+    includeLegend: true,
+    includeLabels: true,
+    withWrapper: false,
+  });
   return (
     <svg
-      viewBox="0 0 200 290"
-      className="w-full mx-auto"
-      style={{ maxWidth: '220px' }}
-      dangerouslySetInnerHTML={{ __html: svgContent }}
+      viewBox="0 0 240 488"
+      className="w-full mx-auto block"
+      style={{ maxWidth: '230px' }}
+      xmlns="http://www.w3.org/2000/svg"
+      dangerouslySetInnerHTML={{ __html: svgString }}
     />
   );
 };
@@ -140,44 +71,12 @@ const PromoCardModal = ({ isOpen, onClose }) => {
     const mechSanziman = selectedCar.expertise?.mechanical?.sanziman || 'Orijinal';
     const mechYuruyen = selectedCar.expertise?.mechanical?.yuruyen || 'Orijinal';
 
-    const buildSvg = () => {
-      const parts = [
-        { id: 'arka_tampon', x: 30, y: 5, w: 140, h: 22, rx: 8 },
-        { id: 'bagaj', x: 40, y: 30, w: 120, h: 45, rx: 4 },
-        { id: 'sol_arka_camurluk', x: 12, y: 30, w: 25, h: 55, rx: 4 },
-        { id: 'sag_arka_camurluk', x: 163, y: 30, w: 25, h: 55, rx: 4 },
-        { id: 'sol_arka_kapi', x: 12, y: 90, w: 25, h: 50, rx: 4 },
-        { id: 'sag_arka_kapi', x: 163, y: 90, w: 25, h: 50, rx: 4 },
-        { id: 'tavan', x: 40, y: 80, w: 120, h: 90, rx: 4 },
-        { id: 'sol_on_kapi', x: 12, y: 145, w: 25, h: 50, rx: 4 },
-        { id: 'sag_on_kapi', x: 163, y: 145, w: 25, h: 50, rx: 4 },
-        { id: 'sol_on_camurluk', x: 12, y: 200, w: 25, h: 50, rx: 4 },
-        { id: 'sag_on_camurluk', x: 163, y: 200, w: 25, h: 50, rx: 4 },
-        { id: 'kaput', x: 40, y: 175, w: 120, h: 55, rx: 4 },
-        { id: 'on_tampon', x: 30, y: 235, w: 140, h: 22, rx: 8 },
-      ];
-      const p = (id) => selectedCar.expertise?.parts?.[id] || 'orijinal';
-      const rects = parts.map(({ id, x, y, w, h, rx }) =>
-        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${getPartColor(p(id))}" stroke="${getPartBorder(p(id))}" stroke-width="1.2"/>
-         <text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" font-size="8" font-weight="600" fill="#333">${getPartLabel(p(id))}</text>`
-      ).join('');
-      const legendItems = [
-        { color: '#22c55e', label: 'Orijinal' },
-        { color: '#eab308', label: 'Boyali' },
-        { color: '#3b82f6', label: 'Lokal' },
-        { color: '#ef4444', label: 'Degisen' },
-      ];
-      const legendHtml = legendItems.map((item, i) =>
-        `<g transform="translate(${i * 47}, 0)"><rect x="0" y="0" width="10" height="10" rx="2" fill="${item.color}"/><text x="13" y="8" font-size="7" font-weight="600" fill="#555">${item.label}</text></g>`
-      ).join('');
-      return `<svg viewBox="0 0 200 290" width="220" xmlns="http://www.w3.org/2000/svg">
-        <rect x="30" y="25" width="140" height="210" rx="22" fill="#e8e8e8" stroke="#555" stroke-width="1.5"/>
-        <rect x="45" y="77" width="110" height="28" rx="4" fill="#87CEEB" opacity="0.3" stroke="#999" stroke-width="0.8"/>
-        <rect x="45" y="170" width="110" height="28" rx="4" fill="#87CEEB" opacity="0.3" stroke="#999" stroke-width="0.8"/>
-        ${rects}
-        <g transform="translate(10, 268)">${legendHtml}</g>
-      </svg>`;
-    };
+    const buildSvg = () => buildSedanDiagramSvg(selectedCar.expertise, {
+      includeLegend: true,
+      includeLabels: true,
+      withWrapper: true,
+      maxWidth: 220,
+    });
 
     const watermarkCSS = logoDataUrl ? `.watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.06;z-index:0;pointer-events:none;}.watermark img{width:350px;height:auto;}` : '';
     const watermarkHTML = logoDataUrl ? `<div class="watermark"><img src="${logoDataUrl}"/></div>` : '';
