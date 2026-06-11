@@ -4,7 +4,6 @@ import { useApp } from '../context/AppContext';
 import { authAPI } from '../services/api';
 import { formatPhoneInput } from '../utils/helpers';
 import { Eye, EyeOff, Loader2, Mail, ArrowLeft, CheckCircle2, QrCode, Smartphone, Monitor, RefreshCw } from 'lucide-react';
-import { Logo } from '../components/brand/Logo';
 
 const LoginPage = () => {
   const { login, register, setUser, setToken } = useApp();
@@ -257,7 +256,7 @@ const LoginPage = () => {
                       level="H"
                       includeMargin={false}
                       imageSettings={{
-                        src: "/assets/images/ti-cari-logo-mark.png",
+                        src: "/assets/images/oto-cari-mark.png",
                         x: undefined,
                         y: undefined,
                         height: 40,
@@ -424,7 +423,7 @@ const LoginPage = () => {
             <span className="h-px w-12 bg-gradient-to-l from-transparent via-ti-gold/50 to-ti-gold/80" />
           </div>
           <p className="text-[10px] text-muted-foreground/70 tracking-wider mt-2">
-            © {new Date().getFullYear()} Ti-Cari Otomotiv · Tüm hakları saklıdır.
+            © {new Date().getFullYear()} Oto-Cari Otomotiv · Tüm hakları saklıdır.
           </p>
         </div>
       </div>

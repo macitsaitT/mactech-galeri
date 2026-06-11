@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { cn } from '../../lib/utils';
-import { Logo } from '../brand/Logo';
 
 // Kategori bazlı menü yapısı — her grup collapsible bir panel
 const menuGroups = [

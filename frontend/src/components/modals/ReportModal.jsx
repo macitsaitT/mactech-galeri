@@ -15,6 +15,8 @@ import {
 import { reportTypes, reportTitles, getLogoUrl } from './reportParts/reportConfig';
 import { buildPrintHTML } from './reportParts/buildPrintHTML';
 import { ExpensesReportBody } from './reportParts/ExpensesReportBody';
+import { OperatingExpenseReportBody } from './reportParts/OperatingExpenseReportBody';
+import { VehicleInvestmentReportBody } from './reportParts/VehicleInvestmentReportBody';
 
 const ReportModal = ({ isOpen, onClose }) => {
   const { user, cars, transactions } = useApp();
@@ -853,6 +855,21 @@ const ReportModal = ({ isOpen, onClose }) => {
               endDate={endDate}
               selectedCarId={selectedCarId}
               setExpensesFor={setExpensesFor}
+              formatDate={formatDate}
+            />
+          ) : reportType === 'operating' ? (
+            <OperatingExpenseReportBody
+              activeTransactions={activeTransactions}
+              startDate={startDate}
+              endDate={endDate}
+              formatDate={formatDate}
+            />
+          ) : reportType === 'investment' ? (
+            <VehicleInvestmentReportBody
+              activeCars={activeCars}
+              activeTransactions={activeTransactions}
+              startDate={startDate}
+              endDate={endDate}
               formatDate={formatDate}
             />
           ) : (

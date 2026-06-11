@@ -14,6 +14,26 @@ Araç envanteri, müşteri yönetimi, dijital sözleşmeler, çoklu şube, **MUH
 - **DB:** MongoDB (`mactech_gallery`), 19 collection
 - **Auth:** Hybrid MacTech SSO + Yerel JWT
 
+## Completed (Iter 67 — Detay Modalları + Etkileşim)
+- **OperatingBreakdownModal** — "Dönem İşletme Gideri" kartına tıklanınca açılır:
+  - Pasta grafiği (renk-kodlu kategoriler)
+  - Sıralı tablo + yüzde barları
+  - Tarih aralığı bilgisi + kafa karışıklığı önleyici uyarı notu
+- StatCard'a `onClick` desteği eklendi (interaktif kartlar için button tag, hover/active state)
+
+## Completed (Iter 66 — ReportModal Ayrımı + Branding)
+- **ReportModal** "Gider Raporu" ayrımı:
+  - `operating` → İşletme Gideri Raporu (Kira/Maaş/Reklam/Vergi)
+  - `investment` → Araç Yatırımı Raporu (alış + araç-bağlı maliyetler)
+  - Mevcut `expenses` (Araç Masrafları) geriye uyumluluk için korundu
+  - `utils/expenseClassifier.js` — backend ile birebir uyumlu frontend sınıflandırma
+- **Branding: Ti-Cari → Oto-Cari** tüm metinsel referanslar:
+  - LoginPage footer, SSO callback, notifications.js, digest.py (e-posta)
+  - index.css yorum/token comment'leri
+  - `oto-cari-mark.png` asset (logo512'den 256×256 turncate)
+  - `components/brand/Logo.jsx` silindi (artık doğrudan `<img>` kullanılıyor)
+  - Eski `ti-cari-*.png` asset'leri public/ klasöründe kaldı (sıfır referans)
+
 ## Completed (Iter 65)
 - **MUHASEBE PRENSİPLİ FİNANSAL REFORM** — `services/expense_classifier.py` ile 3-sınıf kategori sistemi (vehicle_cost / operating / neutral)
 - Yeni `/api/finance/summary` endpoint — 6 kart için tek-doğruluk-kaynağı

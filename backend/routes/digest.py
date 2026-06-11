@@ -21,7 +21,7 @@ router = APIRouter()
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://image-gallery-live.preview.emergentagent.com")
-LOGO_URL = f"{PUBLIC_BASE_URL}/assets/images/ti-cari-logo.png"
+LOGO_URL = f"{PUBLIC_BASE_URL}/assets/images/oto-cari-vertical.png"
 
 if RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
@@ -99,8 +99,8 @@ def _build_html(company_name: str, period_label: str, stats: dict) -> str:
     <tr><td align="center">
       <table cellpadding="0" cellspacing="0" width="600" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <tr><td style="background:#0a0a0a;padding:28px 24px;text-align:center;border-bottom:2px solid #C5A267;">
-          <img src="{LOGO_URL}" alt="Ti-Cari Otomotiv • Powered by MacTech" width="120" height="120" style="display:block;margin:0 auto 12px;width:120px;height:auto;border:0;outline:none;text-decoration:none;" />
-          <div style="color:#C5A267;font-size:11px;letter-spacing:4px;font-weight:bold;text-transform:uppercase;">Ti-Cari Otomotiv</div>
+          <img src="{LOGO_URL}" alt="Oto-Cari Otomotiv • Powered by MacTech" width="120" height="120" style="display:block;margin:0 auto 12px;width:120px;height:auto;border:0;outline:none;text-decoration:none;" />
+          <div style="color:#C5A267;font-size:11px;letter-spacing:4px;font-weight:bold;text-transform:uppercase;">Oto-Cari Otomotiv</div>
           <div style="color:#ffffff;font-size:22px;font-weight:700;margin-top:6px;font-family:Arial,sans-serif;">Haftalık Özet</div>
           <div style="color:#aaaaaa;font-size:12px;margin-top:4px;">{period_label}</div>
         </td></tr>
@@ -142,13 +142,13 @@ def _build_html(company_name: str, period_label: str, stats: dict) -> str:
 
           <div style="background:#fafaf2;border:1px solid #e8e0c3;border-radius:8px;padding:14px 16px;margin-top:8px;">
             <p style="margin:0;font-size:12px;color:#6b5d1c;line-height:1.6;">
-              Bu özet otomatik olarak <strong>Ti-Cari Otomotiv CRM</strong> tarafından oluşturuldu. Aboneliği durdurmak için e-posta ile bize ulaşabilirsiniz.
+              Bu özet otomatik olarak <strong>Oto-Cari Otomotiv CRM</strong> tarafından oluşturuldu. Aboneliği durdurmak için e-posta ile bize ulaşabilirsiniz.
             </p>
           </div>
         </td></tr>
 
         <tr><td style="background:#0a0a0a;padding:18px;text-align:center;font-size:11px;color:#888;border-top:1px solid #C5A267;">
-          © {datetime.now(timezone.utc).year} <span style="color:#C5A267;font-weight:600;">Ti-Cari Otomotiv</span> — Powered by <span style="color:#C5A267;">MacTech</span>
+          © {datetime.now(timezone.utc).year} <span style="color:#C5A267;font-weight:600;">Oto-Cari Otomotiv</span> — Powered by <span style="color:#C5A267;">MacTech</span>
         </td></tr>
       </table>
     </td></tr>
@@ -174,7 +174,7 @@ async def _send_digest_to_org(org_id: str, since: datetime, until: datetime) -> 
     stats = await _collect_digest_data(org_id, since.isoformat(), until.isoformat())
     period_label = f'{since.strftime("%d.%m.%Y")} — {until.strftime("%d.%m.%Y")}'
     html = _build_html(company_name, period_label, stats)
-    subject = f"Ti-Cari Otomotiv Haftalık Özet — {since.strftime('%d.%m')}–{until.strftime('%d.%m.%Y')}"
+    subject = f"Oto-Cari Otomotiv Haftalık Özet — {since.strftime('%d.%m')}–{until.strftime('%d.%m.%Y')}"
 
     if not RESEND_API_KEY:
         logger.warning("RESEND_API_KEY missing — skipping send for %s", admin_email)

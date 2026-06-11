@@ -2,7 +2,7 @@ import React from 'react';
 import { Info } from 'lucide-react';
 
 // ✅ Stat kartı — başlık, değer, ikon, opsiyonel subtitle ve ⓘ tooltip
-export const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle, tooltip }) => {
+export const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle, tooltip, onClick }) => {
   const colorClasses = {
     default: 'bg-card border-border',
     primary: 'bg-primary/10 border-primary/30',
@@ -18,8 +18,17 @@ export const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle
     destructive: 'text-destructive',
   };
   const slug = title.toLowerCase().replace(/\s+/g, '-');
+  const interactive = typeof onClick === 'function';
+  const Tag = interactive ? 'button' : 'div';
   return (
-    <div className={`border rounded-xl p-4 ${colorClasses[color]}`} data-testid={`stat-${slug}`}>
+    <Tag
+      type={interactive ? 'button' : undefined}
+      onClick={onClick}
+      className={`border rounded-xl p-4 text-left w-full ${colorClasses[color]} ${
+        interactive ? 'hover:border-ti-gold/40 hover:bg-card/90 cursor-pointer transition-all active:scale-[0.98]' : ''
+      }`}
+      data-testid={`stat-${slug}`}
+    >
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 mb-1">
@@ -37,7 +46,7 @@ export const StatCard = ({ title, value, icon: Icon, color = 'default', subtitle
           <Icon size={20} className="sm:w-6 sm:h-6" />
         </div>
       </div>
-    </div>
+    </Tag>
   );
 };
 

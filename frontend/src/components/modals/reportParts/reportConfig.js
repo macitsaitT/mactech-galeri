@@ -1,4 +1,4 @@
-import { FileText, Building2, Tag, Key, Car, TrendingUp, Wallet, CalendarDays, Plus } from 'lucide-react';
+import { FileText, Building2, Tag, Key, Car, TrendingUp, Wallet, CalendarDays, Plus, Receipt, PackagePlus } from 'lucide-react';
 import { fileAPI } from '../../../services/api';
 
 // ✅ Rapor tipleri ve başlıkları — ReportModal.jsx'ten ayrıldı (refactor)
@@ -10,6 +10,8 @@ export const reportTypes = [
   { id: 'yearend', label: 'Yıl Sonu', icon: CalendarDays },
   { id: 'deposit', label: 'Kapora', icon: Key },
   { id: 'car', label: 'Araç', icon: Car },
+  { id: 'operating', label: 'İşletme Gideri', icon: Receipt },
+  { id: 'investment', label: 'Araç Yatırımı', icon: PackagePlus },
   { id: 'expenses', label: 'Araç Masrafları', icon: Plus },
 ];
 
@@ -21,6 +23,8 @@ export const reportTitles = {
   yearend: 'Yıl Sonu Kapanış Raporu',
   deposit: 'Kapora Raporu',
   car: 'Araç Raporu',
+  operating: 'İşletme Gideri Raporu',
+  investment: 'Araç Yatırımı Raporu',
   expenses: 'Araç Masrafları Raporu',
 };
 

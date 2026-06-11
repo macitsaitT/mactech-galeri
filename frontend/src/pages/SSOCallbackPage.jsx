@@ -101,7 +101,7 @@ const SSOCallbackPage = () => {
     <div className="min-h-screen gradient-asphalt flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl p-8 shadow-xl max-w-md w-full text-center">
         {/* Logo */}
-        <img src="/assets/images/ti-cari-logo.png" alt="Ti-Cari Otomotiv • Powered by MacTech" className="h-32 w-auto object-contain mx-auto mb-6" />
+        <img src="/assets/images/oto-cari-vertical.png" alt="Oto-Cari Otomotiv • Powered by MacTech" className="h-32 w-auto object-contain mx-auto mb-6" />
         
         {status === 'loading' && (
           <>

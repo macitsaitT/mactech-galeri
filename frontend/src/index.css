@@ -9,7 +9,7 @@
 
 @layer base {
   :root {
-    /* Ti-Cari Gold = #C5A267 → hsl(38, 45%, 59%) */
+    /* Oto-Cari Gold = #C5A267 → hsl(38, 45%, 59%) */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -36,7 +36,7 @@
     --warning: 38 45% 59%;
     --warning-foreground: 0 0% 0%;
 
-    /* Ti-Cari brand tokens */
+    /* Oto-Cari brand tokens */
     --ti-gold: 38 45% 59%;      /* #C5A267 */
     --ti-gold-light: 38 55% 70%; /* hover/glow */
     --ti-gold-dark: 36 40% 42%;  /* deeper accent */
@@ -45,7 +45,7 @@
   }
 
   .dark {
-    /* Ti-Cari Dark Theme — Deep Black + Gold (#C5A267) */
+    /* Oto-Cari Dark Theme — Deep Black + Gold (#C5A267) */
     --background: 0 0% 4%;
     --foreground: 0 0% 98%;
     --card: 0 0% 8%;
@@ -126,7 +126,7 @@
     @apply bg-background/80 backdrop-blur-md;
   }
 
-  /* Ti-Cari Gold gradient (#C5A267 → deeper) */
+  /* Oto-Cari Gold gradient (#C5A267 → deeper) */
   .gradient-gold {
     background: linear-gradient(135deg, hsl(38, 55%, 65%) 0%, hsl(36, 45%, 48%) 100%);
   }

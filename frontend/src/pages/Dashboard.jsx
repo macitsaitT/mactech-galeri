@@ -10,6 +10,7 @@ import CapitalModal from '../components/modals/CapitalModal';
 import CapitalDetailModal from '../components/modals/CapitalDetailModal';
 import StockExpensesDetailModal from '../components/modals/StockExpensesDetailModal';
 import FoundingCapitalModal from '../components/modals/FoundingCapitalModal';
+import OperatingBreakdownModal from '../components/modals/OperatingBreakdownModal';
 import SalesPersonalView from './SalesPersonalView';
 import { installmentsAPI, financeAPI } from '../services/api';
 import { computeUpcomingPayments, buildPaymentReminderText } from '../utils/installmentReminders';
@@ -45,6 +46,7 @@ const Dashboard = ({ onOpenReport }) => {
   const [capitalDetailOpen, setCapitalDetailOpen] = useState(false);
   const [stockExpensesOpen, setStockExpensesOpen] = useState(false);
   const [foundingModalOpen, setFoundingModalOpen] = useState(false);
+  const [operatingBreakdownOpen, setOperatingBreakdownOpen] = useState(false);
 
   // ✅ Finansal Özet — muhasebe prensipli backend hesaplaması
   const [financeSummary, setFinanceSummary] = useState(null);
@@ -373,6 +375,13 @@ const Dashboard = ({ onOpenReport }) => {
               refreshCapital?.();
             }}
           />
+          <OperatingBreakdownModal
+            isOpen={operatingBreakdownOpen}
+            onClose={() => setOperatingBreakdownOpen(false)}
+            breakdown={financeSummary?.operating_breakdown || []}
+            totalAmount={financeSummary?.operating_expense_period || 0}
+            period={financeSummary?.period || { start: dateRange.start, end: dateRange.end }}
+          />
         </>
       )}
 
@@ -465,8 +474,9 @@ const Dashboard = ({ onOpenReport }) => {
           value={formatCurrency(financeSummary?.operating_expense_period || 0)}
           icon={ArrowDownRight}
           color="destructive"
-          subtitle="Kira · Maaş · Reklam · Vergi"
+          subtitle={(financeSummary?.operating_breakdown?.length || 0) > 0 ? 'Detay için tıkla →' : 'Kira · Maaş · Reklam · Vergi'}
           tooltip="Sadece araç-bağımsız işletme giderlerini gösterir. Araç alımları VARLIK olduğu için bu rakama dahil EDİLMEZ."
+          onClick={() => setOperatingBreakdownOpen(true)}
         />}
       </div>
 
