@@ -199,6 +199,14 @@ export const statsAPI = {
   stockAging: () => api.get('/stats/stock-aging'),
 };
 
+// ==================== FINANCE (Muhasebe Prensipli Özet) ====================
+export const financeAPI = {
+  summary: (start_date, end_date) => api.get('/finance/summary', {
+    params: start_date && end_date ? { start_date, end_date } : {},
+  }),
+  categories: () => api.get('/finance/categories'),
+};
+
 // ==================== DIGEST (Haftalık Özet E-Maili) ====================
 export const digestAPI = {
   settings: () => api.get('/digest/settings'),

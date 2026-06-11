@@ -42,6 +42,7 @@ from routes.activity_logs import router as activity_logs_router
 from routes.digest import router as digest_router, run_weekly_digest_for_all
 from routes.wanted_cars import router as wanted_cars_router
 from routes.contracts import router as contracts_router, ensure_indexes as ensure_contracts_indexes
+from routes.finance import router as finance_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ api_router.include_router(activity_logs_router)
 api_router.include_router(digest_router)
 api_router.include_router(wanted_cars_router)
 api_router.include_router(contracts_router)
+api_router.include_router(finance_router)
 
 
 @api_router.get("/")

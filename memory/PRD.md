@@ -1,45 +1,54 @@
-# MACTech Oto Galeri CRM - PRD
+# MACTech Oto-Cari CRM - PRD
 
-**Versiyon:** v5.31 (Iter 62)  
-**Son Güncelleme:** 2026-02
+**Versiyon:** v6.0 (Iter 65 — Muhasebe Prensipli Finansal Reform)
+**Son Güncelleme:** 2026-06-11
 
 ## Original Problem Statement
-Multi-tenant Türkiye odaklı oto galeri CRM (MACTech ekosistemi M-Gallery modülü).
-Araç envanteri, müşteri yönetimi, dijital sözleşmeler, çoklu şube, finansal raporlama.
-**Kritik kural:** Emergent altyapısına bağımlılık YOK (emergentintegrations kaldırıldı).
+Multi-tenant Türkiye odaklı oto galeri CRM. **Oto-Cari Otomotiv • Powered by MacTech** markası.
+Araç envanteri, müşteri yönetimi, dijital sözleşmeler, çoklu şube, **MUHASEBE PRENSİPLİ** finansal raporlama.
+**Kritik kural:** Emergent altyapısına bağımlılık YOK.
 
 ## Tech Stack
-- **Frontend:** React 19 + Tailwind + Shadcn/UI + Radix
-- **Backend:** FastAPI + Motor (MongoDB async) + PyJWT + bcrypt
-- **DB:** MongoDB (`mactech_gallery`), 19 collection, soft-delete
-- **Auth:** Hybrid - MacTech SSO (httpx) + Yerel JWT (HS256, 7d)
-- **Integrations:** Resend (e-posta), Stripe (dormant), APScheduler
+- **Frontend:** React 19 + Tailwind + Shadcn/UI
+- **Backend:** FastAPI + Motor (MongoDB async) + PyJWT
+- **DB:** MongoDB (`mactech_gallery`), 19 collection
+- **Auth:** Hybrid MacTech SSO + Yerel JWT
 
-## Completed (Iter 62)
-- Kurumsal Teknik Dokümantasyon (`/app/MACTECH_TECHNICAL_DOCUMENTATION.md`) - Markdown + DOCX
-- Download endpoint: `GET /api/docs/technical` (.docx response)
+## Completed (Iter 65)
+- **MUHASEBE PRENSİPLİ FİNANSAL REFORM** — `services/expense_classifier.py` ile 3-sınıf kategori sistemi (vehicle_cost / operating / neutral)
+- Yeni `/api/finance/summary` endpoint — 6 kart için tek-doğruluk-kaynağı
+- Yeni `FinanceSummaryCards.jsx` — 6 muhasebe kartı: Başlangıç Sermayesi, Güncel Öz Sermaye, Kasadaki Nakit, Stok Araç Değeri, Net Kâr, Toplam Varlık
+- `FoundingCapitalModal` — başlangıç sermayesi tanımlama
+- Dashboard'da eski karmaşık 4-tile + 5-stat grid kaldırıldı, net 6 kart + 4 operasyonel kart
+- Formül: `Güncel Öz Sermaye = Başlangıç + Net Kâr − İşletme Giderleri`
+- Negatif kasa açıklaması: "Kasadan çıkan para stoktaki araçlara bağlanmıştır"
+- Araç alımları artık "gider" olarak gösterilmiyor, varlık olarak
 
-## Completed (Iter 50-61)
-- Tüm `emergentintegrations` ve AI/OCR bağımlılıkları kaldırıldı
-- Dijital Sözleşmeler (Kapora/Teslim/Satış) + canvas imza + backend persistence
-- Dashboard 4-tile sermaye hiyerarşisi + yıl filtresi + StockExpensesDetailModal
-- Dashboard/ReportModal modüler refactor
-- `sold_by_user_id` retroactive migration
-- Customer-scoped Contract History
-- CashFlowVisual gider ayrımı (İşletme vs Stok Yatırımı)
+## Completed (Iter 60-64)
+- Branding: Ti-Cari → Oto-Cari logo/favicon/PWA güncellemeleri
+- Sidebar yatay logo (h-20, 3:1 aspect crop)
+- Login full transparent vertical logo + "Powered by MacTech" imzası
+- Kurumsal Teknik Dokümantasyon + Reklam Vitrini dokümanları (.md + .docx)
+- `/api/docs/technical` ve `/api/docs/marketing` download endpoint'leri
+- Dijital sözleşmeler, customer-scoped contract history
+- emergentintegrations bağımlılıkları kaldırıldı
 
 ## Backlog
-- **P1:** GA4 + Meta Pixel entegrasyonu (GTM container ID gerekir)
-- **P2:** Doküman görselleştirme (Mermaid diyagramlar)
-- **P2:** Background scheduler installment due_date tracking
-- **P3:** Iyzico ödeme entegrasyonu (Stripe yerine TR-friendly)
+- **P1:** GA4 + Meta Pixel entegrasyonu (GTM ID gerekir)
+- **P2:** Marka adı `Ti-Cari` → `Oto-Cari` tüm metinsel ref'lar (footer, e-posta digest, browser title)
+- **P2:** Migration script — geçmiş tx'lere `expense_type` field'ı ekle (şu an runtime classify yapılıyor, performans için cache edilebilir)
+- **P2:** ReportModal — "Gider Raporu" → "İşletme Gideri" + "Araç Yatırım" ayrı raporlar
+- **P3:** Iyzico ödeme entegrasyonu
 
 ## Bilinen Sorun Yok
 - Backend regression suite: 22/22 pass
-- Login healthy (kullanıcı önceki claim'i lokal cache idi)
+- Login healthy, finance summary endpoint çalışıyor
 
 ## Key Files
-- `/app/MACTECH_TECHNICAL_DOCUMENTATION.md` (+ .docx)
-- `/app/backend/server.py` (download endpoint)
-- `/app/backend/routes/contracts.py`
-- `/app/frontend/src/components/modals/ContractModal.jsx`
+- `/app/backend/services/expense_classifier.py` (YENİ)
+- `/app/backend/routes/finance.py` (YENİ)
+- `/app/frontend/src/components/dashboard/FinanceSummaryCards.jsx` (YENİ)
+- `/app/frontend/src/components/modals/FoundingCapitalModal.jsx` (YENİ)
+- `/app/frontend/src/pages/Dashboard.jsx` (güncellendi)
+- `/app/MACTECH_TECHNICAL_DOCUMENTATION.md`
+- `/app/OTO_CARI_REKLAM_VITRINI.md`

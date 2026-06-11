@@ -9,8 +9,9 @@ import {
 import CapitalModal from '../components/modals/CapitalModal';
 import CapitalDetailModal from '../components/modals/CapitalDetailModal';
 import StockExpensesDetailModal from '../components/modals/StockExpensesDetailModal';
+import FoundingCapitalModal from '../components/modals/FoundingCapitalModal';
 import SalesPersonalView from './SalesPersonalView';
-import { installmentsAPI } from '../services/api';
+import { installmentsAPI, financeAPI } from '../services/api';
 import { computeUpcomingPayments, buildPaymentReminderText } from '../utils/installmentReminders';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -19,6 +20,7 @@ import {
 // ✅ Refactor: Dashboard alt componentleri ayrı dosyalara çıkarıldı
 import { StatCard } from '../components/dashboard/StatCard';
 import { CapitalSummaryCard } from '../components/dashboard/CapitalSummaryCard';
+import { FinanceSummaryCards } from '../components/dashboard/FinanceSummaryCards';
 import { CustomTooltip } from '../components/dashboard/CustomTooltip';
 import { ExpenseBreakdownBar } from '../components/dashboard/ExpenseBreakdownBar';
 import { CashFlowVisual } from '../components/dashboard/CashFlowVisual';
@@ -42,12 +44,31 @@ const Dashboard = ({ onOpenReport }) => {
   const [capitalModalOpen, setCapitalModalOpen] = useState(false);
   const [capitalDetailOpen, setCapitalDetailOpen] = useState(false);
   const [stockExpensesOpen, setStockExpensesOpen] = useState(false);
+  const [foundingModalOpen, setFoundingModalOpen] = useState(false);
+
+  // ✅ Finansal Özet — muhasebe prensipli backend hesaplaması
+  const [financeSummary, setFinanceSummary] = useState(null);
+
+  const fetchFinanceSummary = React.useCallback(async (start, end) => {
+    if (!canSeeCapital) return;
+    try {
+      const res = await financeAPI.summary(start, end);
+      setFinanceSummary(res.data);
+    } catch (err) {
+      console.error('Finance summary fetch failed:', err);
+    }
+  }, [canSeeCapital]);
 
   const dateRange = useMemo(() => {
     if (selectedYear) return getYearRange(selectedYear);
     if (showCustom && customStart && customEnd) return { start: customStart, end: customEnd };
     return getDateRange(preset);
   }, [preset, showCustom, customStart, customEnd, selectedYear]);
+
+  // ✅ Tarih aralığı değiştikçe finansal özeti yenile
+  useEffect(() => {
+    fetchFinanceSummary(dateRange.start, dateRange.end);
+  }, [dateRange.start, dateRange.end, fetchFinanceSummary, cars.length, transactions.length]);
 
   const activeCars = useMemo(() => cars.filter(c => !c.deleted), [cars]);
   const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted), [transactions]);
@@ -324,18 +345,12 @@ const Dashboard = ({ onOpenReport }) => {
 
   return (
     <div className="space-y-5 pb-24 md:pb-6 animate-fade-in" data-testid="dashboard">
-      {/* ✅ Toplam Sermaye (Nakit + Araç Envanteri) Kartı — sadece admin/muhasebe */}
+      {/* ✅ MUHASEBE PRENSİPLİ FİNANSAL ÖZET — 6 ana kart (Başlangıç, Öz Sermaye, Nakit, Stok, Kâr, Varlık) */}
       {canSeeCapital && (
-        <CapitalSummaryCard
-          cars={cars}
-          cashAmount={Number(capital?.amount || 0)}
-          foundingCapital={Number(capital?.founding_capital || 0)}
-          netProfit={netProfit}
-          vehicleExpenses={vehicleExpensesTotal}
-          onOpenDetail={() => setCapitalDetailOpen(true)}
-          onOpenAction={() => setCapitalModalOpen(true)}
-          onOpenVehicleExpenses={() => setStockExpensesOpen(true)}
-          onFoundingUpdated={refreshCapital}
+        <FinanceSummaryCards
+          summary={financeSummary}
+          canEditFounding={true}
+          onEditFounding={() => setFoundingModalOpen(true)}
         />
       )}
 
@@ -348,6 +363,15 @@ const Dashboard = ({ onOpenReport }) => {
             onClose={() => setStockExpensesOpen(false)}
             breakdown={stockCarExpenseBreakdown}
             grandTotal={vehicleExpensesTotal}
+          />
+          <FoundingCapitalModal
+            isOpen={foundingModalOpen}
+            onClose={() => setFoundingModalOpen(false)}
+            currentValue={Number(financeSummary?.founding_capital || 0)}
+            onSaved={() => {
+              fetchFinanceSummary(dateRange.start, dateRange.end);
+              refreshCapital?.();
+            }}
           />
         </>
       )}
@@ -431,31 +455,19 @@ const Dashboard = ({ onOpenReport }) => {
         )}
       </div>
 
-      {/* Stats Grid — finansal kartlar (Gelir/Gider/Kâr) sadece admin/muhasebe görebilir */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {canSeeCapital && <StatCard title="TOPLAM GELİR" value={formatCurrency(totalIncome)} icon={ArrowUpRight} color="success" />}
-        {canSeeCapital && (
-          <StatCard
-            title="TOPLAM GİDER"
-            value={formatCurrency(totalExpense)}
-            icon={ArrowDownRight}
-            color="destructive"
-            subtitle={stockInvestmentInExpense > 0 ? `${formatCurrency(stockInvestmentInExpense)} stok yatırımı` : undefined}
-            tooltip="Bu rakam araç alış maliyetlerini de içerir. Alış bedelleri 'gider' değil stoktaki araçlarda duran VARLIKTIR — kasanızdan çıkmadı, sadece nakit → araç olarak şekil değiştirdi."
-          />
-        )}
-        {canSeeCapital && (
-          <StatCard
-            title="NET KÂR"
-            value={formatCurrency(netProfit)}
-            icon={TrendingUp}
-            color="success"
-            subtitle="Sadece satılan araçlardan"
-            tooltip="Net Kâr ≠ Kasadaki Nakit. Kâr, yalnızca SATIŞI tamamlanmış araçlardan hesaplanır. Kasanızdaki nakit miktarı stoktaki araçlara yapılan yatırımı da yansıtır — bu yüzden ikisi nadiren eşittir."
-          />
-        )}
-        <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : undefined} />
-        <StatCard title="STOK / KONSİNYE" value={`${stockCars.length} / ${consignmentCars.length}`} icon={Package} color="default" subtitle={`${depositCars.length} kapora`} />
+      {/* Stats Grid — Sadece operasyonel sayısal kartlar (finans kartları yeni 6-kart sisteminde) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard title="SATILAN ARAÇ" value={soldCount} icon={ShoppingCart} color="primary" subtitle={soldRevenue > 0 ? formatCurrency(soldRevenue) : 'Bu dönemde'} />
+        <StatCard title="STOK ARAÇ" value={stockCars.length} icon={Package} color="default" subtitle={`${consignmentCars.length} konsinye`} />
+        <StatCard title="KAPORALI" value={depositCars.length} icon={CreditCard} color="warning" subtitle="Bekleyen satış" />
+        {canSeeCapital && <StatCard
+          title="DÖNEM İŞLETME GİDERİ"
+          value={formatCurrency(financeSummary?.operating_expense_period || 0)}
+          icon={ArrowDownRight}
+          color="destructive"
+          subtitle="Kira · Maaş · Reklam · Vergi"
+          tooltip="Sadece araç-bağımsız işletme giderlerini gösterir. Araç alımları VARLIK olduğu için bu rakama dahil EDİLMEZ."
+        />}
       </div>
 
       {/* ✅ Gider Analizi — Stok Yatırımı (Varlık) vs İşletme Gideri ayrımı */}
