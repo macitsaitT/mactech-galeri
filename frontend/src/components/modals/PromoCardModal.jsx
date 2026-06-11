@@ -17,19 +17,18 @@ const getLogoUrl = (logoPath) => {
   return fileAPI.getUrl(logoPath);
 };
 
-// ✅ Profesyonel sedan top-down diyagramı — promoParts/sedanDiagram.js'den
+// ✅ Profesyonel "Otomologs tarzı" hasar diyagramı — promoParts/sedanDiagram.js
 const TopDownDiagram = ({ expertise }) => {
   const svgString = buildSedanDiagramSvg(expertise, {
     includeLegend: true,
-    includeLabels: true,
-    withWrapper: false,
+    includeSummaryList: true,
+    withWrapper: true,
+    darkBg: true,
+    maxWidth: 360,
   });
   return (
-    <svg
-      viewBox="0 0 240 488"
-      className="w-full mx-auto block"
-      style={{ maxWidth: '230px' }}
-      xmlns="http://www.w3.org/2000/svg"
+    <div
+      className="w-full flex items-center justify-center bg-black rounded-lg overflow-hidden border border-zinc-800"
       dangerouslySetInnerHTML={{ __html: svgString }}
     />
   );
@@ -73,9 +72,10 @@ const PromoCardModal = ({ isOpen, onClose }) => {
 
     const buildSvg = () => buildSedanDiagramSvg(selectedCar.expertise, {
       includeLegend: true,
-      includeLabels: true,
+      includeSummaryList: true,
       withWrapper: true,
-      maxWidth: 220,
+      darkBg: false,
+      maxWidth: 260,
     });
 
     const watermarkCSS = logoDataUrl ? `.watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.06;z-index:0;pointer-events:none;}.watermark img{width:350px;height:auto;}` : '';

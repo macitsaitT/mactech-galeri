@@ -5,7 +5,7 @@ import { Share2, Download, MessageCircle, X, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
-import { statusConfig, carParts } from '../CarExpertiseDiagram';
+import { buildSedanDiagramSvg } from './promoParts/sedanDiagram';
 import { toast } from 'sonner';
 
 // ✅ Sosyal medya şablon önayarları — kullanıcı format seçer.
@@ -385,8 +385,18 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                 {car.year && <Spec label="Model Yılı" value={String(car.year)} />}
               </div>
 
-              {/* Hasar Durumu özet şeridi */}
-              <ExpertiseSummaryStrip parts={car.expertise_parts || car.expertiseParts || {}} />
+              {/* Ekspertiz Şeması — Otomologs tarzı diyagram */}
+              {(car.expertise_parts || car.expertiseParts) && (
+                <div
+                  className="rounded-lg overflow-hidden border border-white/10 bg-black"
+                  dangerouslySetInnerHTML={{
+                    __html: buildSedanDiagramSvg(
+                      { parts: car.expertise_parts || car.expertiseParts || {} },
+                      { includeLegend: true, includeSummaryList: false, withWrapper: true, darkBg: true, maxWidth: 360 }
+                    )
+                  }}
+                />
+              )}
 
               {car.sale_price > 0 && (
                 <div className="pt-3 border-t border-white/10 flex items-center justify-between">
@@ -485,41 +495,4 @@ const Spec = ({ label, value }) => (
 
 export default ShareCardModal;
 
-// ✅ Tanıtım kartı için kompakt hasar durumu şeridi
-const ExpertiseSummaryStrip = ({ parts }) => {
-  const counts = { lokal: 0, boyali: 0, degisen: 0, orijinal: 0 };
-  carParts.forEach(p => {
-    const s = parts[p.id] || 'orijinal';
-    counts[s] = (counts[s] || 0) + 1;
-  });
-  const totalIssue = counts.lokal + counts.boyali + counts.degisen;
-
-  if (totalIssue === 0) {
-    return (
-      <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] flex items-center justify-between text-emerald-300">
-        <span className="font-semibold">EKSPERTİZ</span>
-        <span>✓ Tüm parçalar orijinal</span>
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5">
-      <div className="flex items-center justify-between text-[10px] mb-1">
-        <span className="font-semibold tracking-wider text-white/80">EKSPERTİZ</span>
-        <span className="text-white/60">{carParts.length - counts.orijinal}/{carParts.length} parça</span>
-      </div>
-      <div className="flex items-center gap-2 text-[10px]">
-        {[
-          ['lokal',   counts.lokal],
-          ['boyali',  counts.boyali],
-          ['degisen', counts.degisen],
-        ].filter(([, n]) => n > 0).map(([k, n]) => (
-          <span key={k} className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: statusConfig[k].bg }} />
-            <span className="text-white/85">{statusConfig[k].name}: <b>{n}</b></span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
+// ✅ Tanıtım kartı için kompakt hasar durumu şeridi (deprecated — yerine sedanDiagram kullanılıyor)
