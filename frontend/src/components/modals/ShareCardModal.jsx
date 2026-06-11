@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import { Share2, Download, MessageCircle, X } from 'lucide-react';
+import jsPDF from 'jspdf';
+import { Share2, Download, MessageCircle, X, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
@@ -44,7 +45,6 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
 
   const generateImage = async () => {
     if (!cardRef.current) return null;
-    setGenerating(true);
     try {
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#0b0b0c',
@@ -58,6 +58,14 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     } catch (e) {
       console.error('Image generation error:', e);
       return null;
+    }
+  };
+
+  // Wrapper that owns the loading state
+  const runWithLoader = async (fn) => {
+    setGenerating(true);
+    try {
+      return await fn();
     } finally {
       setGenerating(false);
     }
@@ -68,13 +76,125 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     return new File([blob], filename, { type: 'image/png' });
   };
 
-  const handleDownload = async () => {
+  // ✅ PDF dosya adı: önce plaka, yoksa marka/model
+  const getFileSafeName = () => {
+    const safe = (s) => String(s || '').replace(/[^a-zA-Z0-9çÇğĞıİöÖşŞüÜ_-]+/g, '_').replace(/^_+|_+$/g, '');
+    if (car.plate) return safe(car.plate.toUpperCase());
+    const brandModel = [car.brand, car.model, car.year].filter(Boolean).join('-');
+    return safe(brandModel) || 'arac';
+  };
+
+  const handleDownload = () => runWithLoader(async () => {
     const dataUrl = await generateImage();
     if (!dataUrl) return toast.error('Görsel oluşturulamadı');
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = `${(car.plate || car.id || 'arac').toString().replace(/\s+/g, '_')}-paylasim.png`;
+    a.download = `${getFileSafeName()}-paylasim.png`;
     a.click();
+  });
+
+  // ✅ PDF: A4 sayfa içine kart görseli yerleştirilir
+  //   - Dosya adı = plaka veya marka_model_yıl
+  //   - Müşterinin görmemesi gereken bilgiler (alış fiyatı, giderler) KARTTA ZATEN YOK
+  //   - Tek sayfa, kart ortalanmış, üstte galeri başlığı ile birlikte
+  const handleDownloadPDF = () => runWithLoader(async () => {
+    if (!cardRef.current) return toast.error('Kart hazır değil');
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: '#0b0b0c',
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+      // A4 dikey: 210×297 mm
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = 210;
+      const pageH = 297;
+      const margin = 12;
+      const availW = pageW - margin * 2;
+      const availH = pageH - margin * 2;
+
+      // Kart aspect ratio'sunu koruyarak ortala
+      const ratio = canvas.width / canvas.height;
+      let w = availW;
+      let h = w / ratio;
+      if (h > availH) {
+        h = availH;
+        w = h * ratio;
+      }
+      const x = (pageW - w) / 2;
+      const y = (pageH - h) / 2;
+
+      // Arka plan (premium dark sayfa)
+      pdf.setFillColor(11, 11, 12);
+      pdf.rect(0, 0, pageW, pageH, 'F');
+
+      // Üst bilgi şeridi
+      const companyName = (user?.company_name || 'Oto-Cari Otomotiv').toUpperCase();
+      pdf.setTextColor(197, 162, 103); // gold
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text(companyName, pageW / 2, 9, { align: 'center' });
+
+      // Kart görseli
+      pdf.addImage(imgData, 'JPEG', x, y, w, h, undefined, 'FAST');
+
+      // Alt iletişim şeridi
+      const contact = [user?.phone, user?.email].filter(Boolean).join('  ·  ');
+      pdf.setTextColor(180, 180, 180);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      if (contact) pdf.text(contact, pageW / 2, pageH - 8, { align: 'center' });
+      pdf.setTextColor(140, 140, 140);
+      pdf.setFontSize(7);
+      pdf.text('Powered by MacTech', pageW / 2, pageH - 4, { align: 'center' });
+
+      pdf.save(`${getFileSafeName()}.pdf`);
+      toast.success('PDF indirildi');
+    } catch (e) {
+      console.error('PDF generation error:', e);
+      toast.error('PDF oluşturulamadı');
+    }
+  });
+
+  // ✅ PDF dosyasını blob olarak oluştur (paylaşım için)
+  const buildPdfBlob = async () => {
+    if (!cardRef.current) return null;
+    const canvas = await html2canvas(cardRef.current, {
+      backgroundColor: '#0b0b0c',
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = 210, pageH = 297, margin = 12;
+    const availW = pageW - margin * 2, availH = pageH - margin * 2;
+    const ratio = canvas.width / canvas.height;
+    let w = availW, h = w / ratio;
+    if (h > availH) { h = availH; w = h * ratio; }
+    const x = (pageW - w) / 2, y = (pageH - h) / 2;
+    pdf.setFillColor(11, 11, 12);
+    pdf.rect(0, 0, pageW, pageH, 'F');
+    const companyName = (user?.company_name || 'Oto-Cari Otomotiv').toUpperCase();
+    pdf.setTextColor(197, 162, 103);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text(companyName, pageW / 2, 9, { align: 'center' });
+    pdf.addImage(imgData, 'JPEG', x, y, w, h, undefined, 'FAST');
+    const contact = [user?.phone, user?.email].filter(Boolean).join('  ·  ');
+    pdf.setTextColor(180, 180, 180);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    if (contact) pdf.text(contact, pageW / 2, pageH - 8, { align: 'center' });
+    pdf.setTextColor(140, 140, 140);
+    pdf.setFontSize(7);
+    pdf.text('Powered by MacTech', pageW / 2, pageH - 4, { align: 'center' });
+    return pdf.output('blob');
   };
 
   // ✅ Sade metin — emoji yerine basit etiketler (WhatsApp/Telegram'da temiz görünür)
@@ -101,11 +221,11 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
 
   // ✅ Tek tık: native paylaşım (mobilde WhatsApp seçilince fotoğraf "galeri görseli" olarak iletilir,
   //    document/file olarak değil). Web Share API yoksa fallback indir + wa.me text.
-  const handleSmartShare = async () => {
+  const handleSmartShare = () => runWithLoader(async () => {
     const dataUrl = await generateImage();
     if (!dataUrl) return toast.error('Görsel oluşturulamadı');
 
-    const file = await dataUrlToFile(dataUrl, `${(car.plate || 'arac').toString().replace(/\s+/g, '_')}.png`);
+    const file = await dataUrlToFile(dataUrl, `${getFileSafeName()}.png`);
     const text = buildText();
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -124,12 +244,48 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     // Fallback: indir + wa.me metnini aç
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = `${(car.plate || 'arac').toString().replace(/\s+/g, '_')}-paylasim.png`;
+    a.download = `${getFileSafeName()}-paylasim.png`;
     a.click();
     setTimeout(() => {
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }, 600);
-  };
+  });
+
+  // ✅ PDF olarak paylaş (WhatsApp Document, e-posta vs.)
+  const handleSharePDF = () => runWithLoader(async () => {
+    try {
+      const blob = await buildPdfBlob();
+      if (!blob) return toast.error('PDF oluşturulamadı');
+      const filename = `${getFileSafeName()}.pdf`;
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${car.brand} ${car.model}`,
+            text: buildText(),
+          });
+          return;
+        } catch (e) {
+          if (e?.name === 'AbortError') return;
+        }
+      }
+      // Fallback: indir + WhatsApp web aç
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(buildText())}`, '_blank');
+      }, 600);
+    } catch (e) {
+      console.error(e);
+      toast.error('PDF paylaşılamadı');
+    }
+  });
 
   const handleCopyText = async () => {
     try {
@@ -253,36 +409,57 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
         <div className="space-y-2">
           <button
             type="button"
+            onClick={handleSharePDF}
+            disabled={generating}
+            className="w-full h-12 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+            data-testid="share-card-pdf-share-btn"
+          >
+            <FileText size={18} />
+            {generating ? 'Hazırlanıyor...' : 'PDF Olarak Paylaş (Tavsiye)'}
+          </button>
+          <button
+            type="button"
             onClick={handleSmartShare}
             disabled={generating}
-            className="w-full h-12 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+            className="w-full h-11 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors text-sm"
             data-testid="share-card-smart-btn"
           >
-            <Share2 size={18} />
-            {generating ? 'Hazırlanıyor...' : "Paylaş (WhatsApp / Sosyal Medya)"}
+            <Share2 size={16} />
+            {generating ? 'Hazırlanıyor...' : 'Görsel Olarak Paylaş'}
           </button>
-          <p className="text-[11px] text-muted-foreground text-center">
-            Paylaş'a basınca cihazınızın paylaşım menüsü açılır — WhatsApp seçince fotoğraf <b>galeri görseli</b> olarak gönderilir, dosya olarak değil.
+          <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+            <b>PDF</b>: Kurumsal kart formatında belge — galeri logosu, fotoğraf ve müşteri görmeye yetkili tüm detaylar.<br />
+            <b>Görsel</b>: WhatsApp&apos;ta galeri fotoğrafı gibi anında görünür.
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              disabled={generating}
+              className="h-11 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors text-rose-400"
+              data-testid="share-card-download-pdf-btn"
+            >
+              <Download size={14} />
+              PDF
+            </button>
             <button
               type="button"
               onClick={handleDownload}
               disabled={generating}
-              className="h-11 rounded-lg border border-border hover:bg-muted text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+              className="h-11 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
               data-testid="share-card-download-btn"
             >
-              <Download size={16} />
-              Görseli İndir (PNG)
+              <Download size={14} />
+              PNG
             </button>
             <button
               type="button"
               onClick={handleCopyText}
-              className="h-11 rounded-lg border border-border hover:bg-muted text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="h-11 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
               data-testid="share-card-copy-text-btn"
             >
-              <MessageCircle size={16} />
-              Metni Kopyala
+              <MessageCircle size={14} />
+              Metin
             </button>
           </div>
           <button

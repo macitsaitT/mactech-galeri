@@ -14,6 +14,16 @@ Araç envanteri, müşteri yönetimi, dijital sözleşmeler, çoklu şube, **MUH
 - **DB:** MongoDB (`mactech_gallery`), 19 collection
 - **Auth:** Hybrid MacTech SSO + Yerel JWT
 
+## Completed (Iter 68 — PDF Araç Paylaşımı)
+- **ShareCardModal**'a PDF export desteği eklendi (`jspdf`):
+  - **"PDF Olarak Paylaş"** (kırmızı CTA) — Web Share API ile WhatsApp/e-posta'ya kurumsal PDF gönderir
+  - **"Görsel Olarak Paylaş"** (yeşil) — PNG olarak galeri görseli gibi paylaşır
+  - Alt sıra: PDF / PNG / Metin indirme butonları
+- **PDF dosya adı:** Plaka (varsa) → marka-model-yıl fallback (`getFileSafeName`)
+- **A4 dikey** sayfa: Üstte gold galeri başlığı + ortada kart görseli + altta iletişim + "Powered by MacTech"
+- **Müşteri güvenli:** Karttaki içerik zaten purchase_price ve giderleri içermiyor — sadece müşteriye gösterilebilir bilgiler (marka, model, KM, yakıt, ekspertiz özeti, satış fiyatı, iletişim)
+- `runWithLoader` helper — generating state yönetimi tek noktada
+
 ## Completed (Iter 67 — Detay Modalları + Etkileşim)
 - **OperatingBreakdownModal** — "Dönem İşletme Gideri" kartına tıklanınca açılır:
   - Pasta grafiği (renk-kodlu kategoriler)
