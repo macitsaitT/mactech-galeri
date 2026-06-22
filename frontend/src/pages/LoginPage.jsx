@@ -111,7 +111,7 @@ const LoginPage = () => {
   };
 
   const handleForgotPassword = () => {
-    window.open('https://mactech.tr/forgot-password', '_blank');
+    window.open('https://mactech.tr/sifremi-unuttum', '_blank');
   };
 
   const handleVerifyEmail = async (e) => {
