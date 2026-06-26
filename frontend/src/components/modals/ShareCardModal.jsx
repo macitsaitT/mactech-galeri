@@ -5,6 +5,7 @@ import { Share2, Download, MessageCircle, X, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { formatCurrency } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
+import { fileAPI } from '../../services/api';
 import { buildSedanDiagramSvg } from './promoParts/sedanDiagram';
 import { toast } from 'sonner';
 
@@ -32,6 +33,25 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
 
   const fmt = FORMAT_PRESETS[format];
 
+  // ✅ Expertise parts'ı çeşitli olası alanlardan normalize et
+  const expertiseParts = React.useMemo(() => {
+    if (!car) return {};
+    return (
+      car.expertise?.parts ||
+      car.expertise_parts ||
+      car.expertiseParts ||
+      {}
+    );
+  }, [car]);
+
+  // ✅ Galeri logo URL — header'da görünecek
+  const logoUrl = React.useMemo(() => {
+    const logo = user?.company_logo || user?.logo;
+    if (!logo) return null;
+    if (logo.startsWith('http')) return logo;
+    return fileAPI.getUrl(logo);
+  }, [user]);
+
   useEffect(() => {
     if (!isOpen || !car) return;
     const photos = car.photos || car.images || [];
@@ -40,18 +60,27 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
     if (typeof first === 'string') url = first;
     else if (first?.url) url = first.url;
     else if (first?.data) url = first.data;
+    // ✅ Backend path ise tam URL'e dönüştür
+    if (url && !url.startsWith('http') && !url.startsWith('data:')) {
+      url = fileAPI.getUrl(url);
+    }
     setPhotoUrl(url);
   }, [isOpen, car]);
 
   const generateImage = async () => {
     if (!cardRef.current) return null;
     try {
-      const canvas = await html2canvas(cardRef.current, {
+      const el = cardRef.current;
+      const canvas = await html2canvas(el, {
         backgroundColor: '#0b0b0c',
         scale: 3, // ✅ Yüksek çözünürlük (yaklaşık 1080×1458)
         useCORS: true,
         logging: false,
         allowTaint: true,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
       });
       // ✅ PNG → kayıpsız, WhatsApp galeride canlı görsel olarak gözükür
       return canvas.toDataURL('image/png');
@@ -100,12 +129,17 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
   const handleDownloadPDF = () => runWithLoader(async () => {
     if (!cardRef.current) return toast.error('Kart hazır değil');
     try {
-      const canvas = await html2canvas(cardRef.current, {
+      const el = cardRef.current;
+      const canvas = await html2canvas(el, {
         backgroundColor: '#0b0b0c',
         scale: 3,
         useCORS: true,
         logging: false,
         allowTaint: true,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
       });
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
 
@@ -163,12 +197,17 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
   // ✅ PDF dosyasını blob olarak oluştur (paylaşım için)
   const buildPdfBlob = async () => {
     if (!cardRef.current) return null;
-    const canvas = await html2canvas(cardRef.current, {
+    const el = cardRef.current;
+    const canvas = await html2canvas(el, {
       backgroundColor: '#0b0b0c',
       scale: 3,
       useCORS: true,
       logging: false,
       allowTaint: true,
+      width: el.scrollWidth,
+      height: el.scrollHeight,
+      windowWidth: el.scrollWidth,
+      windowHeight: el.scrollHeight,
     });
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -331,15 +370,15 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
           ))}
         </div>
 
-        {/* Card preview - dinamik aspect ratio */}
-        <div className="my-3 overflow-hidden rounded-xl border border-border flex justify-center">
+        {/* Card preview - doğal yükseklik (içerik kadar uzar) */}
+        <div className="my-3 overflow-hidden rounded-xl border border-border flex justify-center bg-black">
           <div
             ref={cardRef}
-            className="relative w-full bg-[#0b0b0c] text-white"
-            style={{ aspectRatio: fmt.ratio, maxWidth: fmt.maxWidth, fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' }}
+            className="relative w-full bg-[#0b0b0c] text-white flex flex-col"
+            style={{ maxWidth: fmt.maxWidth, fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' }}
           >
-            {/* Üst foto */}
-            <div className="relative h-[55%] w-full overflow-hidden">
+            {/* Üst foto — sabit yükseklik */}
+            <div className="relative w-full overflow-hidden flex-shrink-0" style={{ height: format === 'story_9_16' ? 320 : 260 }}>
               {photoUrl ? (
                 <img src={photoUrl} alt={car.model} className="h-full w-full object-cover" crossOrigin="anonymous" />
               ) : (
@@ -347,23 +386,28 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                   Fotoğraf yüklü değil
                 </div>
               )}
-              {/* Üst altın şerit + galerinizin adı */}
+              {/* Üst altın şerit + galeri logosu/adı */}
               <div className="absolute inset-x-0 top-0 px-4 py-2.5 bg-gradient-to-b from-black/85 to-transparent flex items-center justify-between">
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
-                  {user?.company_name || 'MACTech Galeri'}
+                <div className="flex items-center gap-2 min-w-0">
+                  {logoUrl && (
+                    <img src={logoUrl} alt="logo" crossOrigin="anonymous" className="h-7 w-7 object-contain rounded-sm" />
+                  )}
+                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary truncate">
+                    {user?.company_name || 'Oto-Cari Otomotiv'}
+                  </div>
                 </div>
                 {car.plate && (
-                  <div className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-extrabold tracking-wider">
+                  <div className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-extrabold tracking-wider flex-shrink-0">
                     {(car.plate || '').toUpperCase()}
                   </div>
                 )}
               </div>
               {/* Alt yumuşak gradyan (başlığa geçiş) */}
-              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0b0b0c] to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0b0b0c] to-transparent" />
             </div>
 
-            {/* Başlık + özellikler */}
-            <div className="px-5 pt-4 pb-5 space-y-3">
+            {/* İçerik */}
+            <div className="px-5 pt-3 pb-5 space-y-3 flex-1">
               <div>
                 <div className="text-2xl sm:text-[26px] font-extrabold leading-tight tracking-tight">
                   {car.brand} {car.model}
@@ -373,7 +417,7 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
                 </div>
               </div>
 
-              {/* Özellik grid'i — emoji yerine etiket+değer satırları */}
+              {/* Özellik grid'i */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                 {car.km !== undefined && car.km !== null && (
                   <Spec label="KM" value={`${Number(car.km).toLocaleString('tr-TR')}`} />
@@ -386,13 +430,14 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
               </div>
 
               {/* Ekspertiz Şeması — Otomologs tarzı diyagram */}
-              {(car.expertise_parts || car.expertiseParts) && (
+              {Object.keys(expertiseParts).length > 0 && (
                 <div
-                  className="rounded-lg overflow-hidden border border-white/10 bg-black"
+                  className="rounded-lg overflow-hidden border border-white/10 bg-black mx-auto"
+                  style={{ maxWidth: 320 }}
                   dangerouslySetInnerHTML={{
                     __html: buildSedanDiagramSvg(
-                      { parts: car.expertise_parts || car.expertiseParts || {} },
-                      { includeLegend: true, includeSummaryList: false, withWrapper: true, darkBg: true, maxWidth: 360 }
+                      { parts: expertiseParts },
+                      { includeLegend: true, includeSummaryList: false, withWrapper: true, darkBg: true, maxWidth: 320 }
                     )
                   }}
                 />
@@ -407,7 +452,7 @@ const ShareCardModal = ({ isOpen, onClose, car }) => {
 
               {/* Alt iletişim şeridi */}
               {(user?.phone || user?.email) && (
-                <div className="text-[10px] text-white/55 text-center pt-1">
+                <div className="text-[10px] text-white/55 text-center pt-1 truncate">
                   {[user?.phone, user?.email].filter(Boolean).join('  ·  ')}
                 </div>
               )}
