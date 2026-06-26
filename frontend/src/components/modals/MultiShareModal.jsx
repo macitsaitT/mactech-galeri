@@ -168,12 +168,133 @@ const MultiShareModal = ({ isOpen, onClose, cars = [], onShared }) => {
     return `${head}\n${body}${foot}`;
   };
 
+  /** PDF'in ilk sayfasını kurumsal kapak olarak çiz */
+  const addCoverPage = async (pdf) => {
+    const pageW = 210, pageH = 297;
+
+    // Tam karanlık arka plan
+    pdf.setFillColor(11, 11, 12);
+    pdf.rect(0, 0, pageW, pageH, 'F');
+
+    // Üst gold şerit
+    pdf.setFillColor(197, 162, 103);
+    pdf.rect(0, 0, pageW, 3, 'F');
+
+    // Galeri logosu (varsa) — merkez üst
+    let titleY = 85;
+    if (logoUrl) {
+      try {
+        const logoData = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            c.getContext('2d').drawImage(img, 0, 0);
+            resolve({ data: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+          };
+          img.onerror = reject;
+          setTimeout(reject, 3000);
+          img.src = logoUrl;
+        });
+        const maxLogoW = 60;
+        const maxLogoH = 60;
+        const ratio = logoData.w / logoData.h;
+        let lw = maxLogoW, lh = lw / ratio;
+        if (lh > maxLogoH) { lh = maxLogoH; lw = lh * ratio; }
+        const lx = (pageW - lw) / 2;
+        pdf.addImage(logoData.data, 'PNG', lx, 50, lw, lh);
+        titleY = 50 + lh + 18;
+      } catch (e) {
+        console.warn('Logo cover render failed', e);
+      }
+    }
+
+    // Galeri adı
+    const companyName = (user?.company_name || 'Oto-Cari Otomotiv').toUpperCase();
+    pdf.setTextColor(197, 162, 103);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(20);
+    pdf.text(companyName, pageW / 2, titleY, { align: 'center' });
+
+    // Alt çizgi (gold)
+    pdf.setDrawColor(197, 162, 103);
+    pdf.setLineWidth(0.6);
+    pdf.line(pageW / 2 - 30, titleY + 5, pageW / 2 + 30, titleY + 5);
+
+    // Başlık: STOK KATALOĞU
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(34);
+    pdf.text('STOK KATALOĞU', pageW / 2, titleY + 25, { align: 'center' });
+
+    // Alt başlık: Ay Yıl
+    const now = new Date();
+    const months = ['OCAK','ŞUBAT','MART','NİSAN','MAYIS','HAZİRAN','TEMMUZ','AĞUSTOS','EYLÜL','EKİM','KASIM','ARALIK'];
+    const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(13);
+    pdf.setTextColor(200, 200, 200);
+    pdf.text(monthYear, pageW / 2, titleY + 36, { align: 'center' });
+
+    // Araç sayısı kutusu (ortada)
+    const boxY = pageH / 2 + 20;
+    const boxW = 70;
+    const boxH = 40;
+    const boxX = (pageW - boxW) / 2;
+    pdf.setDrawColor(197, 162, 103);
+    pdf.setLineWidth(0.8);
+    pdf.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'S');
+
+    pdf.setTextColor(197, 162, 103);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(46);
+    pdf.text(String(cars.length), pageW / 2, boxY + 25, { align: 'center' });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(180, 180, 180);
+    pdf.text('ARAÇ', pageW / 2, boxY + 35, { align: 'center' });
+
+    // Alt iletişim bloğu
+    const contactY = pageH - 50;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.setTextColor(197, 162, 103);
+    pdf.text('İLETİŞİM', pageW / 2, contactY, { align: 'center' });
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    pdf.setTextColor(240, 240, 240);
+    let cy = contactY + 8;
+    if (user?.phone) { pdf.text(user.phone, pageW / 2, cy, { align: 'center' }); cy += 6; }
+    if (user?.email) { pdf.text(user.email, pageW / 2, cy, { align: 'center' }); cy += 6; }
+    if (user?.address) {
+      pdf.setFontSize(9);
+      pdf.setTextColor(180, 180, 180);
+      pdf.text(user.address, pageW / 2, cy, { align: 'center', maxWidth: pageW - 40 });
+    }
+
+    // Footer
+    pdf.setFontSize(7);
+    pdf.setTextColor(140, 140, 140);
+    pdf.text('Powered by MacTech', pageW / 2, pageH - 10, { align: 'center' });
+
+    // Alt gold şerit
+    pdf.setFillColor(197, 162, 103);
+    pdf.rect(0, pageH - 3, pageW, 3, 'F');
+  };
+
   /** Tüm sayfaları capture edip A4 pdf üret */
   const buildCatalogPdf = async () => {
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageW = 210, pageH = 297, margin = 12;
     const availW = pageW - margin * 2;
     const availH = pageH - margin * 2;
+
+    // ✨ İlk sayfa: Kapak
+    await addCoverPage(pdf);
 
     setProgress({ current: 0, total: cars.length });
     for (let i = 0; i < cars.length; i += 1) {
@@ -203,7 +324,8 @@ const MultiShareModal = ({ isOpen, onClose, cars = [], onShared }) => {
       });
       const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
-      if (i > 0) pdf.addPage();
+      // Kapaktan sonra her araç yeni sayfada
+      pdf.addPage();
       pdf.setFillColor(11, 11, 12);
       pdf.rect(0, 0, pageW, pageH, 'F');
 
