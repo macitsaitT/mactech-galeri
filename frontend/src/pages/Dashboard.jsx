@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { formatCurrency } from '../utils/helpers';
+import { formatCurrency, CAPITAL_CATEGORIES } from '../utils/helpers';
 import {
   Car, TrendingUp, Wallet, Package, ShoppingCart, CreditCard, FileText, Calendar,
   BarChart3, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Filter, Plus,
@@ -31,7 +31,7 @@ const CHART_COLORS = ['#d4a030', '#22c55e', '#ef4444', '#3b82f6', '#a855f7'];
 const PIE_COLORS = ['#d4a030', '#f59e0b', '#22c55e', '#3b82f6'];
 
 const Dashboard = ({ onOpenReport }) => {
-  const { cars, transactions, loading, capital, user, refreshCapital } = useApp();
+  const { cars, transactions, loading, capital, user, refreshCapital, fetchData } = useApp();
   // ✅ 'satis' rolü Sermaye/Kasa modülünü göremez
   const canSeeCapital = (user?.role || 'admin') !== 'satis';
   const isSalesRole = (user?.role || 'admin') === 'satis';
@@ -73,7 +73,7 @@ const Dashboard = ({ onOpenReport }) => {
   }, [dateRange.start, dateRange.end, fetchFinanceSummary, cars.length, transactions.length]);
 
   const activeCars = useMemo(() => cars.filter(c => !c.deleted), [cars]);
-  const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted), [transactions]);
+  const activeTransactions = useMemo(() => transactions.filter(t => !t.deleted && !CAPITAL_CATEGORIES.includes(t.category)), [transactions]);
 
   // Filter transactions by date range
   const filteredTx = useMemo(() => {
@@ -373,6 +373,7 @@ const Dashboard = ({ onOpenReport }) => {
             onSaved={() => {
               fetchFinanceSummary(dateRange.start, dateRange.end);
               refreshCapital?.();
+              fetchData?.(true);
             }}
           />
           <OperatingBreakdownModal

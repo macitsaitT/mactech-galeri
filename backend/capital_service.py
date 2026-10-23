@@ -14,6 +14,21 @@ from pymongo import ReturnDocument
 
 from db import db
 
+CAPITAL_INCREASE_CATEGORY = "Sermaye Artırımı"
+CAPITAL_DECREASE_CATEGORY = "Sermaye Azaltımı"
+CAPITAL_CATEGORIES = {CAPITAL_INCREASE_CATEGORY, CAPITAL_DECREASE_CATEGORY}
+
+
+async def sync_founding_from_tx(org_id: str, tx: dict, delta: float) -> None:
+    """Sermaye işlemi değişince (silme/güncelleme/geri yükleme) başlangıç sermayesini de aynı delta ile güncelle."""
+    if delta == 0 or tx.get("category") not in CAPITAL_CATEGORIES:
+        return
+    await db.org_settings.update_one(
+        {"org_id": org_id},
+        {"$inc": {"founding_capital": delta}, "$set": {"updated_at": _now()}},
+        upsert=True,
+    )
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()

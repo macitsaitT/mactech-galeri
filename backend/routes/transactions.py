@@ -7,7 +7,7 @@ from db import db
 from auth import get_current_user
 from models import TransactionCreate, Transaction
 from helpers import build_data_filter, log_activity
-from capital_service import apply_delta
+from capital_service import apply_delta, sync_founding_from_tx
 
 router = APIRouter()
 
@@ -169,6 +169,7 @@ async def update_transaction(transaction_id: str, updates: dict, current_user: d
             allow_negative=True,
             user_id=current_user["user_id"],
         )
+        await sync_founding_from_tx(org_id, new_doc, net_delta)
         # ✅ Uygulandıysa flag ayarla
         updates["capital_applied"] = True
 
@@ -232,6 +233,7 @@ async def delete_transaction(transaction_id: str, permanent: bool = False, curre
             allow_negative=True,  # iptal ederken bakiye eksiye düşebilir
             user_id=current_user["user_id"],
         )
+        await sync_founding_from_tx(org_id, existing, reverse_delta)
 
     if permanent:
         await db.transactions.delete_one({"id": transaction_id})

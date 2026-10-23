@@ -69,6 +69,8 @@ OPERATING_CATEGORIES = {
 NEUTRAL_CATEGORIES = {
     "Kapora İadesi",
     "Çalışan Payı",
+    "Sermaye Artırımı",
+    "Sermaye Azaltımı",
 }
 
 

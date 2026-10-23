@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { FileText, Download, Printer, Building2, Package, Tag, Key, Car, Search, Users, TrendingUp, Wallet, CalendarDays } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { formatCurrency, formatDate, openPrintableHTML } from '../../utils/helpers';
+import { formatCurrency, formatDate, openPrintableHTML, CAPITAL_CATEGORIES } from '../../utils/helpers';
 import { fileAPI, usersAPI, capitalAPI } from '../../services/api';
 import VehicleExpensesModal from './VehicleExpensesModal';
 import { Plus } from 'lucide-react';
@@ -287,7 +287,7 @@ const ReportModal = ({ isOpen, onClose }) => {
     }).sort((a, b) => new Date(a.sold_date) - new Date(b.sold_date));
 
     // Yıl içinde tüm transactions
-    const yTx = activeTransactions.filter(t => t.date && t.date >= yStart && t.date <= yEnd);
+    const yTx = activeTransactions.filter(t => t.date && t.date >= yStart && t.date <= yEnd && !CAPITAL_CATEGORIES.includes(t.category));
     const businessExpense = yTx
       .filter(t => t.type === 'expense' && !t.car_id)
       .reduce((s, t) => s + (t.amount || 0), 0);

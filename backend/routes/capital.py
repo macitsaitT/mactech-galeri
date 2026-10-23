@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
 from datetime import datetime, timezone
+import uuid
 
 from auth import get_current_user
 from db import db
-from capital_service import get_capital, apply_delta
+from capital_service import get_capital, apply_delta, sync_founding_from_tx, CAPITAL_INCREASE_CATEGORY, CAPITAL_DECREASE_CATEGORY
 
 router = APIRouter()
 
@@ -124,20 +125,32 @@ async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dic
     delta = amount if body.type == "increase" else -amount if body.type == "decrease" else amount - current
     if delta != 0:
         is_inc = delta > 0
-        label = "Sermaye artırımı" if is_inc else "Sermaye azaltımı"
+        category = CAPITAL_INCREASE_CATEGORY if is_inc else CAPITAL_DECREASE_CATEGORY
+        tx_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+        description = body.description or f"{category}: ₺{abs(delta):,.0f}".replace(",", ".")
         await apply_delta(
             org_id,
             delta,
             reason="capital_increase" if is_inc else "capital_decrease",
-            ref_type="manual",
-            description=body.description or f"{label}: ₺{abs(delta):,.0f}".replace(",", "."),
+            ref_type="transaction",
+            ref_id=tx_id,
+            description=description,
             user_id=current_user.get("user_id"),
         )
-    await db.org_settings.update_one(
-        {"org_id": org_id},
-        {"$inc": {"founding_capital": delta}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
-        upsert=True,
-    )
+        await db.transactions.insert_one({
+            "id": tx_id, "type": "income" if is_inc else "expense",
+            "category": category, "description": description,
+            "amount": abs(delta), "date": now.date().isoformat(),
+            "car_id": None, "user_id": current_user["user_id"], "org_id": org_id,
+            "created_by": current_user["user_id"], "deleted": False, "deleted_at": None,
+            "created_at": now.isoformat(), "capital_applied": True,
+        })
+        await db.org_settings.update_one(
+            {"org_id": org_id},
+            {"$inc": {"founding_capital": delta}, "$set": {"updated_at": now.isoformat()}},
+            upsert=True,
+        )
     new_value = current + delta
     return {"ok": True, "founding_capital": new_value}
 
@@ -312,6 +325,8 @@ _TX_LINKED_REASONS = {
     "transaction_update",
     "transaction_restore",
     "transaction_delete",
+    "capital_increase",
+    "capital_decrease",
 }
 
 
@@ -375,7 +390,7 @@ async def delete_movement(movement_id: str, current_user: dict = Depends(get_cur
                             allow_negative=True,
                             user_id=current_user.get("user_id"),
                         )
-                # Transaction'ı tamamen sil (hard delete)
+                        await sync_founding_from_tx(org_id, tx, reverse_delta)
                 res = await db.transactions.delete_one({"id": tx_id, "org_id": org_id})
                 tx_removed = res.deleted_count > 0
 

@@ -1,3 +1,7 @@
+// Sermaye artırım/azaltım işlemleri — kasayı etkiler ama kâr/gider analizlerine girmez
+export const CAPITAL_CATEGORIES = ['Sermaye Artırımı', 'Sermaye Azaltımı'];
+
+
 // Format number with thousand separators (Turkish format)
 export const formatNumber = (num) => {
   if (num === null || num === undefined || num === '') return '';
