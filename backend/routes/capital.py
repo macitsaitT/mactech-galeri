@@ -101,35 +101,39 @@ async def set_founding_capital(body: FoundingCapitalSet, current_user: dict = De
 
 
 class FoundingCapitalAdjust(BaseModel):
-    amount: float = Field(..., gt=0)
-    type: Literal["increase", "decrease"]
+    amount: float = Field(..., ge=0)
+    type: Literal["increase", "decrease", "set"]
     description: Optional[str] = ""
 
 
 @router.post("/capital/founding/adjust")
 async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dict = Depends(get_current_user)):
-    """Sermaye artırımı/azaltımı — başlangıç sermayesi ve kasa aynı tutarda değişir."""
+    """Sermaye artırımı/azaltımı/yeni tutar — başlangıç sermayesi ve kasa aynı tutarda değişir."""
     _require_finance_role(current_user)
     org_id = current_user.get("org_id", current_user["user_id"])
     doc = await db.org_settings.find_one({"org_id": org_id}, {"_id": 0, "founding_capital": 1})
     current = float((doc or {}).get("founding_capital", 0) or 0)
     amount = float(body.amount)
+    if body.type != "set" and amount <= 0:
+        raise HTTPException(status_code=400, detail="Tutar sıfırdan büyük olmalı.")
     if body.type == "decrease" and amount > current:
         raise HTTPException(
             status_code=400,
             detail=f"Azaltılacak tutar mevcut sermayeden (₺{current:,.2f}) büyük olamaz.",
         )
-    is_inc = body.type == "increase"
-    label = "Sermaye artırımı" if is_inc else "Sermaye azaltımı"
-    await apply_delta(
-        org_id,
-        amount if is_inc else -amount,
-        reason="capital_increase" if is_inc else "capital_decrease",
-        ref_type="manual",
-        description=body.description or f"{label}: ₺{amount:,.2f}",
-        user_id=current_user.get("user_id"),
-    )
-    new_value = current + amount if is_inc else current - amount
+    delta = amount if body.type == "increase" else -amount if body.type == "decrease" else amount - current
+    if delta != 0:
+        is_inc = delta > 0
+        label = "Sermaye artırımı" if is_inc else "Sermaye azaltımı"
+        await apply_delta(
+            org_id,
+            delta,
+            reason="capital_increase" if is_inc else "capital_decrease",
+            ref_type="manual",
+            description=body.description or f"{label}: ₺{abs(delta):,.2f}",
+            user_id=current_user.get("user_id"),
+        )
+    new_value = current + delta
     await db.org_settings.update_one(
         {"org_id": org_id},
         {"$set": {"founding_capital": new_value, "updated_at": datetime.now(timezone.utc).isoformat()}},

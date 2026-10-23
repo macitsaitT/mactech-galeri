@@ -14,7 +14,7 @@ const MODES = [
 const MODE_HINT = {
   increase: 'Girilen tutar sermayeye eklenir ve kasaya nakit girişi olarak işlenir.',
   decrease: 'Girilen tutar sermayeden düşülür ve kasadan nakit çıkışı olarak işlenir.',
-  set: 'Sadece sermaye rakamını düzeltir, kasayı etkilemez.',
+  set: 'Sermaye girdiğiniz tutara ayarlanır, aradaki fark kadar kasaya giriş veya kasadan çıkış yapılır.',
 };
 
 const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) => {
@@ -49,8 +49,7 @@ const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) =>
     }
     setSaving(true);
     try {
-      if (mode === 'set') await capitalAPI.setFounding(val);
-      else await capitalAPI.adjustFounding(val, mode);
+      await capitalAPI.adjustFounding(val, mode);
       toast.success(mode === 'increase' ? 'Sermaye artırıldı' : mode === 'decrease' ? 'Sermaye azaltıldı' : 'Sermaye güncellendi');
       onSaved?.();
       onClose();
