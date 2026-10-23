@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Landmark, Gem, Wallet, Car, TrendingUp, TrendingDown, Briefcase, AlertCircle, Info
+  Landmark, Gem, Wallet, Car, TrendingUp, TrendingDown, Briefcase, AlertCircle, Info, Pencil
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { cn } from '../../lib/utils';
@@ -13,7 +13,7 @@ import { cn } from '../../lib/utils';
  * - Kasadan çıkan para stoka bağlandı → toplam varlık değişmez
  * - Öz Sermaye = Başlangıç + Net Kâr − İşletme Giderleri
  */
-const Card = ({ title, value, subtitle, icon: Icon, accent = 'default', testId, badge, warning }) => {
+const Card = ({ title, value, subtitle, icon: Icon, accent = 'default', testId, badge, warning, onEdit }) => {
   const accentMap = {
     default: 'border-border bg-card',
     gold: 'border-ti-gold/40 bg-gradient-to-br from-ti-gold/10 to-card shadow-[inset_0_0_0_1px_rgba(197,162,103,0.15)]',
@@ -46,6 +46,18 @@ const Card = ({ title, value, subtitle, icon: Icon, accent = 'default', testId, 
           <span className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-ti-gold/15 text-ti-gold">
             {badge}
           </span>
+        )}
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-md border border-ti-gold/40 text-ti-gold hover:bg-ti-gold/15 transition-colors"
+            data-testid="edit-founding-btn"
+            title="Sermaye Düzenle"
+          >
+            <Pencil size={11} />
+            Düzenle
+          </button>
         )}
       </div>
       <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground mb-1">{title}</p>
@@ -122,6 +134,7 @@ export const FinanceSummaryCards = ({ summary, onEditFounding, canEditFounding }
             : 'Sabit öz sermaye referansı'}
           icon={Landmark}
           accent="default"
+          onEdit={canEditFounding ? onEditFounding : undefined}
         />
 
         {/* 2. Güncel Öz Sermaye — En önemli kart */}

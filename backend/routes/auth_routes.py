@@ -289,7 +289,6 @@ async def login(request: Request, credentials: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Erişim kontrolü
-    from middleware.subscription_check import check_user_access
     access_check = check_user_access(user)
     if not access_check["has_access"]:
         raise HTTPException(status_code=403, detail={

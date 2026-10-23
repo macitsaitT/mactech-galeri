@@ -242,7 +242,7 @@ async def list_expense_categories(current_user: dict = Depends(get_current_user)
     """Frontend'in kategori sınıflandırmasını anlaması için referans listesi."""
     _require_finance_role(current_user)
     from services.expense_classifier import (
-        VEHICLE_COST_CATEGORIES, OPERATING_CATEGORIES, NEUTRAL_CATEGORIES
+        OPERATING_CATEGORIES, NEUTRAL_CATEGORIES
     )
     return {
         "vehicle_cost": sorted(VEHICLE_COST_CATEGORIES),

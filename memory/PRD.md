@@ -82,3 +82,6 @@ Araç envanteri, müşteri yönetimi, dijital sözleşmeler, çoklu şube, **MUH
 - `/app/frontend/src/pages/Dashboard.jsx` (güncellendi)
 - `/app/MACTECH_TECHNICAL_DOCUMENTATION.md`
 - `/app/OTO_CARI_REKLAM_VITRINI.md`
+
+## 2026-06 — Genel Bakış: Başlangıç Sermayesi kartına "Düzenle" butonu eklendi (FinanceSummaryCards.jsx, data-testid=edit-founding-btn) → FoundingCapitalModal açar. Test: screenshot (masaüstü+mobil) PASS.
+## Bekleyen: Vadeli satış %3 faiz (kullanıcı şimdilik erteledi), sözleşme imza boyutu (P1), Meta Pixel/GA4 (P2)

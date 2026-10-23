@@ -35,7 +35,7 @@ class TestAppointmentsAPI:
                     f"{BASE_URL}/api/appointments/{app_id}",
                     headers=self.headers
                 )
-            except:
+            except Exception:
                 pass
     
     def test_get_appointments_list(self):
