@@ -86,3 +86,4 @@ Araç envanteri, müşteri yönetimi, dijital sözleşmeler, çoklu şube, **MUH
 ## 2026-06 — Genel Bakış: Başlangıç Sermayesi kartına "Düzenle" butonu eklendi (FinanceSummaryCards.jsx, data-testid=edit-founding-btn) → FoundingCapitalModal açar. Test: screenshot (masaüstü+mobil) PASS.
 ## Bekleyen: Vadeli satış %3 faiz (kullanıcı şimdilik erteledi), sözleşme imza boyutu (P1), Meta Pixel/GA4 (P2)
 ## 2026-06 — Sermaye Düzenle penceresi: Artır/Azalt/Yeni Tutar. Artır/Azalt kasayı da aynı tutarda değiştirir (POST /api/capital/founding/adjust, reason capital_increase/capital_decrease). Yeni Tutar sadece rakamı düzeltir (PUT /api/capital/founding). Test: curl + screenshot PASS.
+## 2026-06 — Fix: "Yeni Tutar" da kasayı fark kadar etkiler (tüm modlar POST /api/capital/founding/adjust, type increase|decrease|set). founding_capital $inc ile atomik. Mobil sidebar X taşması düzeltildi. iteration_61 PASS.

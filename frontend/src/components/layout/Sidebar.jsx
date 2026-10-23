@@ -149,13 +149,13 @@ const Sidebar = ({ activeView, setActiveView, isOpen, onClose, onOpenReport }) =
           <img
             src="/assets/images/oto-cari-horizontal.png"
             alt="Oto-Cari Otomotiv • Powered by MacTech"
-            className="h-20 w-auto max-w-full object-contain select-none"
+            className="h-20 w-auto min-w-0 flex-1 object-contain object-left select-none"
             draggable={false}
             data-testid="sidebar-logo"
           />
           <button
             onClick={onClose}
-            className="md:hidden p-2 text-white/70 hover:text-ti-gold transition-colors"
+            className="md:hidden flex-shrink-0 p-2 text-white/70 hover:text-ti-gold transition-colors"
             data-testid="sidebar-close-btn"
           >
             <X size={20} />

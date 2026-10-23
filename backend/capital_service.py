@@ -71,9 +71,9 @@ async def apply_delta(
                 detail={
                     "error": "insufficient_capital",
                     "message": (
-                        f"Yetersiz sermaye! Mevcut bakiye: ₺{avail:,.2f} — "
-                        f"Gerekli: ₺{need:,.2f}. Lütfen önce Kasa Girişi yapın."
-                    ),
+                        f"Yetersiz sermaye! Mevcut bakiye: ₺{avail:,.0f} — "
+                        f"Gerekli: ₺{need:,.0f}. Lütfen önce Kasa Girişi yapın."
+                    ).replace(",", "."),
                     "available": avail,
                     "required": need,
                 },

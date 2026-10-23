@@ -32,7 +32,7 @@ const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) =>
   if (!isOpen) return null;
 
   const val = parseFloat(amount);
-  const valid = !isNaN(val) && val > 0;
+  const valid = !isNaN(val) && (mode === 'set' ? val >= 0 : val > 0);
   const newValue = !valid ? null
     : mode === 'increase' ? currentValue + val
     : mode === 'decrease' ? currentValue - val

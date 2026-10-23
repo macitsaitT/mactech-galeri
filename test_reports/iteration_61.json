@@ -1,0 +1,36 @@
+{
+  "summary": "Tested the Founding Capital adjust feature (Artır / Azalt / Yeni Tutar) end to end. Backend: 8 of 8 pytest tests pass. In all three modes the founding capital and the cash balance (kasa) change by the same delta. The bug fix works: the 'set' mode now moves the cash by (new - old). Decrease fails with 400 when the cash is too low (insufficient_capital) or when the amount is larger than the current founding capital, and nothing changes in either case. Zero, negative and invalid-type inputs are rejected with 400/422. Movements are recorded with reason capital_increase / capital_decrease. Frontend (1920px): the Düzenle button opens the modal; increase 50k, decrease 20k and set 10M all updated both the Başlangıç Sermayesi and Kasadaki Nakit cards correctly. The 'Yeni sermaye' preview is correct, error toasts show, and the modal stays open with values unchanged on error. Mobile (390px): the modal and cards lay out fine with no horizontal overflow. Test account restored to founding 10.000.000 / cash 145.000 (checked in the UI and via the API).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/capital/founding/adjust", "issue": "The insufficient_capital message formats amounts in US style (₺145,000.00), but the rest of the Turkish UI uses ₺145.000. The 'decrease > current' message has the same problem."},
+      {"endpoint": "POST /api/capital/founding/adjust", "issue": "Not atomic: founding_capital is read, then the cash delta is applied, then founding_capital is written with $set. Two requests at the same time could leave founding and cash out of step. Consider $inc on org_settings for increase/decrease."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Sidebar (mobile, closed state)", "issue": "Pre-existing, not related to this feature: the sidebar close 'X' icon peeks out at the top-left (x≈5, y≈55) on every page at 390px. The logo image likely pushes the close button past the edge of the hidden aside.", "selector": "[data-testid='sidebar-close-btn']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "FoundingCapitalModal", "issues": ["Yeni Tutar mode cannot set 0 because the frontend requires val > 0, while the backend allows 0 for 'set'. This is a minor inconsistency and may be intentional."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter61_founding_adjust.py", "/app/test_reports/pytest/pytest_iter61.xml"],
+  "action_items": [
+    "(Low) Show amounts in Turkish format in the founding/insufficient_capital error messages",
+    "(Low) Fix the sidebar close X peeking out on mobile",
+    "(Optional) Make the founding adjust atomic with $inc"
+  ],
+  "critical_code_review_comments": [
+    "adjust_founding_capital: the founding-capital update is a read-modify-write, so concurrent requests can race. apply_delta itself uses atomic $inc.",
+    "If apply_delta succeeds but the org_settings update fails, cash and founding capital diverge, because there is no transaction."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter61_founding_adjust.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "test_branch_6b287ede@test.com / Password123!",
+  "seed_data_creation": "None. Movement entries from the tests stay in history (capital_increase/decrease pairs); final values restored to founding 10.000.000 / cash 145.000.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Founding adjust regression: tests/test_iter61_founding_adjust.py (restores values automatically). On mobile, use the bottom nav 'Genel' to reach the dashboard."
+}

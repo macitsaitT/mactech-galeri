@@ -119,7 +119,7 @@ async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dic
     if body.type == "decrease" and amount > current:
         raise HTTPException(
             status_code=400,
-            detail=f"Azaltılacak tutar mevcut sermayeden (₺{current:,.2f}) büyük olamaz.",
+            detail=f"Azaltılacak tutar mevcut sermayeden (₺{current:,.0f}) büyük olamaz.".replace(",", "."),
         )
     delta = amount if body.type == "increase" else -amount if body.type == "decrease" else amount - current
     if delta != 0:
@@ -130,15 +130,15 @@ async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dic
             delta,
             reason="capital_increase" if is_inc else "capital_decrease",
             ref_type="manual",
-            description=body.description or f"{label}: ₺{abs(delta):,.2f}",
+            description=body.description or f"{label}: ₺{abs(delta):,.0f}".replace(",", "."),
             user_id=current_user.get("user_id"),
         )
-    new_value = current + delta
     await db.org_settings.update_one(
         {"org_id": org_id},
-        {"$set": {"founding_capital": new_value, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        {"$inc": {"founding_capital": delta}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True,
     )
+    new_value = current + delta
     return {"ok": True, "founding_capital": new_value}
 
 
