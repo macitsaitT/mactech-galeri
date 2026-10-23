@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide Emergent platform badge */
+#emergent-badge { display: none !important; }
+
+@layer base {
+  :root {
+    /* Oto-Cari Gold = #C5A267 → hsl(38, 45%, 59%) */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 38 45% 59%;
+    --primary-foreground: 0 0% 6%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 38 45% 59%;
+    --accent-foreground: 0 0% 6%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 38 45% 59%;
+    --radius: 0.5rem;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 45% 59%;
+    --warning-foreground: 0 0% 0%;
+
+    /* Oto-Cari brand tokens */
+    --ti-gold: 38 45% 59%;      /* #C5A267 */
+    --ti-gold-light: 38 55% 70%; /* hover/glow */
+    --ti-gold-dark: 36 40% 42%;  /* deeper accent */
+    --ti-black: 0 0% 4%;
+    --ti-charcoal: 0 0% 8%;
+  }
+
+  .dark {
+    /* Oto-Cari Dark Theme — Deep Black + Gold (#C5A267) */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 38 45% 59%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 38 45% 59%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 38 20% 18%;
+    --input: 0 0% 14%;
+    --ring: 38 45% 59%;
+    
+    --success: 142 76% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 45% 59%;
+    --warning-foreground: 0 0% 4%;
+
+    --ti-gold: 38 45% 59%;
+    --ti-gold-light: 38 55% 70%;
+    --ti-gold-dark: 36 40% 42%;
+    --ti-black: 0 0% 4%;
+    --ti-charcoal: 0 0% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md;
+  }
+
+  /* Oto-Cari Gold gradient (#C5A267 → deeper) */
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(38, 55%, 65%) 0%, hsl(36, 45%, 48%) 100%);
+  }
+
+  /* Asphalt gradient background — pure black */
+  .gradient-asphalt {
+    background: radial-gradient(ellipse at top, hsl(0, 0%, 8%) 0%, hsl(0, 0%, 3%) 100%);
+  }
+
+  /* Text gradient gold */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(38, 60%, 70%) 0%, hsl(36, 45%, 50%) 100%);
+  }
+
+  /* Number formatting */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Truncate multiple lines */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Safe area for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Animation classes */
+@layer utilities {
+  .animate-in {
+    animation: animateIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+}
+
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Hover lift effect */
+.hover-lift {
+  @apply transition-all duration-300;
+}
+
+.hover-lift:hover {
+  @apply -translate-y-1 shadow-lg;
+}
+
+/* Active press effect */
+.active-press:active {
+  @apply scale-95;
+}
+
+/* Input number hide arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Focus visible ring */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+
+/* Tab label responsive visibility */
+.tab-label-full {
+  display: none;
+}
+.tab-label-short {
+  display: inline;
+}
+@media (min-width: 640px) {
+  .tab-label-full {
+    display: inline;
+  }
+  .tab-label-short {
+    display: none;
+  }
+}

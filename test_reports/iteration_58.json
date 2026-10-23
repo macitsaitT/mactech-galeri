@@ -1,0 +1,46 @@
+{
+  "summary": "Iter 58 — Digital Contracts (frontend-only feature). 11/11 acceptance criteria PASS via Playwright e2e. Backend regression sanity: /api health 200 + /api/auth/login 200 with iter50 admin token (no backend changes in iter58, deep regression already covered by iter57's 32/32 pass).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "VehicleCard (grid view) — dropdown shows 'Sözleşme Oluştur' with data-testid=contract-<carId>; opens contract-modal",
+    "VehicleListRow (list view) — dropdown shows 'Sözleşme Oluştur' with data-testid=contract-row-<carId>; opens contract-modal (trigger is vehicle-row-menu-<carId>)",
+    "Modal renders 3 type buttons: contract-type-kapora / contract-type-delivery / contract-type-sale",
+    "Default 'sale' shows: contract-sale-price, contract-payment-method, contract-delivery-date, contract-sale-prev-deposit — does NOT show contract-due-date / contract-delivery-notes",
+    "Switch to 'kapora' → reveals contract-deposit-amount + contract-due-date; hides payment-method",
+    "Switch to 'delivery' → reveals contract-delivery-notes; hides contract-sale-price",
+    "contract-buyer-select lists all non-deleted customers (4 options: 1 placeholder + 3 active customers)",
+    "Both signature canvases render: signature-canvas-seller + signature-canvas-buyer. Placeholder text 'Bu alana imzanızı atın' visible while empty",
+    "Empty state → parent border-dashed; After programmatic mouse-draw → border-solid (visual state transition VERIFIED via className inspect)",
+    "signature-clear-seller restores dashed border (empty state re-applied)",
+    "Validation: clicking contract-print-btn without buyer selected fires sonner toast 'Alıcı (müşteri) seçin'",
+    "contract-print-btn opens window.open popup (about:blank) → wrote contract HTML — popup title='Araç Satış Sözleşmesi - 34TF33C-227845' + body contains 'SATIŞ SÖZLEŞMESİ'",
+    "contract-download-btn fires <a download> event — filename pattern '<PLATE>-<6digits>_sale.html' verified (e.g., 34TF33C-227918_sale.html)",
+    "Backend sanity: /api 200, POST /api/auth/login 200 (token returned)"
+  ],
+  "failed_tests": [],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SignaturePadComponent.jsx — clean: retina-aware (devicePixelRatio) canvas scaling, useImperativeHandle exposes isEmpty/toDataURL/clear cleanly, endStroke listener updates `empty` state ⇒ border style transitions correctly. window resize handler properly cleaned up in useEffect return.",
+    "contractTemplates.js — pure functions returning self-contained HTML strings, no React deps. Proper HTML escaping via esc() prevents XSS on customer/car field injection. A4 print stylesheet (@page size:A4 margin:18mm 16mm) + auto window.print() via setTimeout(300ms) inside printable popup ⇒ user-friendly. Signatures embedded as base64 data URLs in <img> ⇒ no asset loading concerns when opened in a new window.",
+    "ContractModal.jsx:84 — openPrintable correctly handles popup-blocker case via toast.error('Pop-up engellendi'). Print path strips no script; Download path uses `.replace(/<script[\\s\\S]*?<\\/script>/g, '')` to strip auto-print script from the saved file — correct because the user can manually open the saved HTML and decide.",
+    "ContractModal.jsx:38 — useEffect dependency only [isOpen, car] with eslint-disable — intentional to avoid re-resetting fields on every customer/user change. Acceptable.",
+    "ContractModal.jsx — contract-sale-prev-deposit and contract-deposit-amount both bind to the same state `depositAmount`. Reasonable since 'previously paid kapora' on sale and 'kapora amount' on kapora contract semantically share the field, but worth a single comment to document intent.",
+    "ContractModal.jsx:65 — `onClick={() => padRef.current?.clear() || setEmpty(true)}` in SignaturePadComponent: relies on padRef.current.clear() returning undefined (falsy) ⇒ short-circuit always runs setEmpty(true). Works, but `() => { padRef.current?.clear(); setEmpty(true); }` would be cleaner / less surprising.",
+    "InventoryPage.jsx — contractCarId state + ContractModal wiring symmetric with shareCarId/ShareCardModal ⇒ consistent pattern. Both modals receive cars.find(c=>c.id===id) so they auto-reflect any AppContext-level updates.",
+    "No backend changes — POST endpoints not introduced; all contract generation is client-side. Acceptable for v1 (no audit trail), but for v2 main agent may want to POST a saved-contract record + persist signature PNGs to backend for org-level history."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (sanity only)", "frontend": "100% (14/14 e2e assertions)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "No new seed. Used existing org's 5 stock cars + 3 customers (Test Müşteri · 5550000000 first). Programmatic mouse draw on canvas via page.mouse.down/move/up — no persisted data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 58 = frontend-only Digital Contracts. Key selectors: contract-<carId> (grid), contract-row-<carId> (list — trigger is vehicle-row-menu-<carId>, NOT vehicle-menu-<carId>), contract-modal, contract-type-{kapora|delivery|sale}, contract-buyer-select, contract-sale-price, contract-deposit-amount, contract-due-date, contract-delivery-date, contract-delivery-notes, contract-payment-method, contract-sale-prev-deposit, signature-block-{seller|buyer}, signature-canvas-{seller|buyer}, signature-clear-{seller|buyer}, contract-print-btn, contract-download-btn. signature_pad v5.1.3 installed via yarn. To draw on canvas in tests: use page.mouse.down/move/up over canvas.bounding_box(); state flips empty→filled when endStroke fires (border-dashed→border-solid). Print uses window.open + setTimeout(()=>window.print(),300) — capture via page.expect_event('popup'). Download uses Blob + <a download> click — capture via page.expect_download.",
+  "rca of the issue": "N/A — feature validated end-to-end; no blocking bugs found."
+}

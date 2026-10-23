@@ -1,0 +1,41 @@
+{
+  "summary": "Iter 34: Verified new 'Yıl Sonu Kapanış Raporu' (yearend) report type in ReportModal end-to-end. All 9 requested frontend test items PASS. No issues found in the new feature. Pre-existing /api/notifications mixed-content warning from iter 29-33 still observed but unchanged (not in scope this iter).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login → Reports modal opens via [data-testid='nav-reports']",
+    "report-type-yearend button rendered with CalendarDays icon and 'Yıl Sonu' label",
+    "yearend-year-picker, yearend-year-select rendered when yearend selected",
+    "Default year = 2026 (current year). Last 10 years selectable (2017-2026, 10 options confirmed)",
+    "yearend-summary-cards rendered with 4 cards: Satılan Araç, Toplam Satış, Toplam Maliyet, Brüt Kâr",
+    "yearend-net-result big card rendered showing 'Brüt Kâr + İşletme Geliri − İşletme Gideri' formula text",
+    "Detail cards present: Çalışan Payı, Araç Giderleri, İşletme Gideri, İşletme Geliri",
+    "Yıl Sonu Stok card rendered (5 araç / ₺1.100.000 stokta) and Manuel Kasa Giriş/Çıkış card rendered",
+    "yearend-cars-table rendered with all 8 expected headers: Tarih, Araç, Plaka, Alış, Giderler, Çal. Payı, Satış, Kâr/Zarar (footer TOPLAM only renders when rows exist — by design)",
+    "Year change (2026→2025) auto-updates report-start-date to 2025-01-01 and report-end-date to 2025-12-31",
+    "Print button (data-testid='print-btn') triggers window.open without errors (openPrintableHTML invoked, 2 calls observed)",
+    "Report type switching regression: capital, profitloss, general, sold, yearend all toggle active state (bg-primary class) without state corruption"
+  ],
+  "failed_tests": [],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ReportModal.jsx is now 1243 lines — exceeds the 700-line guideline. Recommend splitting yearend/capital/profitloss/general render sections into separate sub-components (e.g., YearendReport.jsx, CapitalReport.jsx) for maintainability.",
+    "yearendData useMemo (line 413-505) duplicates filter logic from profitLossData (line 346-381). Could extract a shared `computeCarFinancials(car, transactions)` helper.",
+    "useEffect at line 222 fires capitalAPI.movements(2000) every time yearendYear changes — wasteful. Should only fetch once when yearend type is selected (the second useEffect at line 239 already handles capital with limit=500). Recommend dedup or guard with a loaded flag.",
+    "doPrint() always uses generic buildPrintHTML with totals/displayTransactions — for yearend report type, the print output will NOT match the rich on-screen yearend layout (no carRows, no net result). Print is technically 'working' (no error), but yearend printout is essentially empty/wrong content. RECOMMEND: add a yearend-specific print template to buildPrintHTML or branch on reportType in doPrint.",
+    "DialogContent missing aria-describedby — Radix accessibility warning logged in console (low priority)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only test)", "frontend": "100% (9/9 items)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "None — used existing branch data. Test branch had 0 sold cars in 2025/2026, so empty-state of yearend-cars-table was verified ('2025 yılında satılan araç yok' message). Stock card showed 5 araç / ₺1.100.000 confirming render with real data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Yıl Sonu Kapanış Raporu feature fully verified. The only meaningful action item for main agent is the print-template gap: yearend report's print/PDF currently uses the generic transaction print template, not a yearend-specific layout — print does not error, but exported content won't match the on-screen yearend cards/table. Pre-existing /api/notifications mixed-content from iter 29-33 still present but out of scope.",
+  "rca_of_the_issue": null
+}

@@ -1,0 +1,177 @@
+{
+  "identity": {
+    "name": "Aslanbaş Oto - The Asphalt Suite",
+    "persona": "The Performance Pro",
+    "tone": "Confident, Robust, Luxurious, Efficient",
+    "description": "A high-performance mobile-first CRM for car dealers. Dark mode default to evoke showroom luxury and reduce glare. High contrast for outdoor legibility."
+  },
+  "typography": {
+    "font_family": {
+      "headings": "\"Barlow Condensed\", sans-serif",
+      "body": "\"Manrope\", sans-serif",
+      "mono": "\"JetBrains Mono\", monospace"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&display=swap');"
+    ],
+    "usage": {
+      "h1": "font-heading font-bold text-4xl tracking-tight uppercase",
+      "h2": "font-heading font-semibold text-2xl tracking-tight",
+      "h3": "font-heading font-medium text-xl",
+      "body": "font-body text-base leading-relaxed",
+      "label": "font-heading font-bold text-sm tracking-widest uppercase text-muted-foreground",
+      "number": "font-body font-bold tabular-nums"
+    }
+  },
+  "colors": {
+    "theme_strategy": "dark_mode_default",
+    "palette": {
+      "light": {
+        "background": "210 40% 98%",
+        "foreground": "222 47% 11%",
+        "card": "0 0% 100%",
+        "card_foreground": "222 47% 11%",
+        "popover": "0 0% 100%",
+        "popover_foreground": "222 47% 11%",
+        "primary": "46 65% 52%",
+        "primary_foreground": "222 47% 11%",
+        "secondary": "210 40% 96.1%",
+        "secondary_foreground": "222 47% 11%",
+        "muted": "210 40% 96.1%",
+        "muted_foreground": "215 16% 47%",
+        "accent": "210 40% 96.1%",
+        "accent_foreground": "222 47% 11%",
+        "destructive": "0 84.2% 60.2%",
+        "destructive_foreground": "210 40% 98%",
+        "border": "214.3 31.8% 91.4%",
+        "input": "214.3 31.8% 91.4%",
+        "ring": "46 65% 52%",
+        "radius": "0.5rem"
+      },
+      "dark": {
+        "background": "222 47% 11%",
+        "foreground": "210 40% 98%",
+        "card": "217 33% 17%",
+        "card_foreground": "210 40% 98%",
+        "popover": "217 33% 17%",
+        "popover_foreground": "210 40% 98%",
+        "primary": "46 65% 52%",
+        "primary_foreground": "222 47% 11%",
+        "secondary": "217 33% 17%",
+        "secondary_foreground": "210 40% 98%",
+        "muted": "217 33% 17%",
+        "muted_foreground": "215 20% 65%",
+        "accent": "217 33% 17%",
+        "accent_foreground": "210 40% 98%",
+        "destructive": "0 62.8% 30.6%",
+        "destructive_foreground": "210 40% 98%",
+        "border": "217 33% 17%",
+        "input": "217 33% 17%",
+        "ring": "46 65% 52%"
+      }
+    },
+    "semantics": {
+      "brand_primary": "The 'Lion Gold' - Used for key actions (Add, Save) and active states.",
+      "brand_background": "Deep Asphalt/Gunmetal - evokes premium automotive paint.",
+      "status_success": "Emerald Green - Profit, Sold, Active.",
+      "status_error": "Brake Light Red - Expenses, Delete, Overdue.",
+      "status_warning": "Amber/Orange - Pending, Consignment."
+    }
+  },
+  "layout": {
+    "spacing_scale": "generous",
+    "border_radius": "rounded-lg",
+    "mobile_first": true,
+    "grid_system": {
+      "dashboard": "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
+      "inventory": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+      "form": "grid-cols-1 md:grid-cols-2 gap-6"
+    },
+    "structure": {
+      "max_width": "max-w-7xl mx-auto",
+      "padding_x": "px-4 md:px-8",
+      "padding_y": "py-6 md:py-8"
+    }
+  },
+  "components": {
+    "ui_library": "shadcn/ui",
+    "icon_library": "lucide-react",
+    "custom_components": [
+      {
+        "name": "VehicleCard",
+        "description": "Card with top image, details below. Badges for status. Price prominent.",
+        "path": "/src/components/vehicles/VehicleCard.jsx"
+      },
+      {
+        "name": "StatCard",
+        "description": "Simple card with Label, Big Number, and Trend Indicator.",
+        "path": "/src/components/dashboard/StatCard.jsx"
+      },
+      {
+        "name": "BottomNav",
+        "description": "Fixed bottom navigation for mobile with 4-5 items.",
+        "path": "/src/components/layout/BottomNav.jsx"
+      },
+      {
+        "name": "Fab",
+        "description": "Floating Action Button for primary add actions on mobile.",
+        "path": "/src/components/ui/fab.jsx"
+      }
+    ],
+    "styling_rules": {
+      "buttons": "rounded-full font-bold uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-95",
+      "cards": "border border-border/50 shadow-sm hover:border-primary/50 transition-colors bg-card",
+      "inputs": "h-12 bg-background/50 border-border focus:border-primary focus:ring-primary/20"
+    }
+  },
+  "visual_enhancers": {
+    "gradients": "Use subtle radial gradients in backgrounds (e.g., bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 to-slate-950)",
+    "glassmorphism": "Use backdrop-blur-md for BottomNav and Sticky Headers. bg-background/80",
+    "shadows": "shadow-lg for floating elements, shadow-sm for cards.",
+    "textures": "Optional: subtle noise texture overlay on the main background for 'asphalt' feel."
+  },
+  "images": {
+    "strategy": "Use high-quality car placeholders until user uploads. Dark environments preferred.",
+    "placeholders": [
+      {
+        "category": "dashboard_hero",
+        "url": "https://images.unsplash.com/photo-1661220715153-95724e5f3500?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Dark luxury car interior"
+      },
+      {
+        "category": "inventory_placeholder",
+        "url": "https://images.unsplash.com/photo-1763165562062-91d744691c65?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Black sports car in showroom"
+      },
+      {
+        "category": "customer_placeholder",
+        "url": "https://images.unsplash.com/photo-1696861270495-7f35c35c3273?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Professional handshake"
+      }
+    ]
+  },
+  "motion": {
+    "type": "professional",
+    "transitions": "transition-all duration-300 ease-out",
+    "page_transition": "animate-in fade-in slide-in-from-bottom-4 duration-500",
+    "hover_effects": "hover:translate-y-[-2px] hover:shadow-lg"
+  },
+  "instructions_to_main_agent": [
+    "1. Update /app/frontend/src/index.css with the provided HSL values for both light and dark themes.",
+    "2. Add the Google Fonts import to index.css or index.html.",
+    "3. Update tailwind.config.js to include 'font-heading' and 'font-body' families.",
+    "4. Create a Layout component that includes a Mobile BottomNav (visible on small screens) and a Sidebar (visible on large screens).",
+    "5. Use the 'Lion Gold' (primary color) sparingly for CTAs to maintain luxury feel.",
+    "6. Ensure all inputs have `data-testid` attributes.",
+    "7. For the Inventory List, use a Card layout on mobile and a Table layout on desktop (responsive design).",
+    "8. Implement a 'Dark Mode Toggle' in the Settings, but default to Dark."
+  ],
+  "universal_guidelines": [
+    "Do not use generic centered layouts.",
+    "Use glass-morphism for overlays and sticky headers.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than typical for a 'luxury' feel.",
+    "NEVER use transparent backgrounds for dropdowns/popovers.",
+    "All interactive elements MUST include data-testid."
+  ]
+}

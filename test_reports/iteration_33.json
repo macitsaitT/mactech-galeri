@@ -1,0 +1,73 @@
+{
+  "summary": "Iter 33: Verified all 9 bug-fix items end-to-end. Backend 9/9 pytest pass — allow_negative=True for transactions, full sale flow (PATCH car→sale income→employee_share expense), DELETE /capital/movements with revert + 400-block on transaction-bound, customer DELETE, branches CRUD regression. Frontend: Customers bulk delete buttons, Sold date filter, Capital (Sermaye) report type with all 4 cards + table, Capital Detail modal with delete-movement-* buttons all present. Dashboard loads cleanly. Mixed Content /api/notifications HTTP regression from iter 29-30 still present (LOW).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Notifications loading on Dashboard",
+        "issue": "Mixed Content error: /api/notifications/?unread_only=false is being called over HTTP (insecure) while the page is HTTPS, request blocked. 'Bildirimler yüklenemedi' fires twice on every Dashboard load. Pre-existing regression carried over from iter 29-30.",
+        "affected_selectors": ["NotificationBell"]
+      }
+    ],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: GET /api/capital returns amount",
+    "Backend: GET /api/capital/movements list",
+    "Backend: GET /api/branches list",
+    "Backend: POST/PUT/DELETE /api/branches CRUD",
+    "Backend: DELETE /api/customers/{id} works",
+    "Backend: POST /api/transactions expense w/ car_id returns 200 even when capital=0 (allow_negative=True; no insufficient_capital thrown)",
+    "Backend: Full sale flow — PATCH car status=Satıldı + employee_share, POST income Araç Satışı, POST expense Çalışan Payı (all 200)",
+    "Backend: DELETE /api/capital/movements/{id} on manual_deposit reverts balance and removes movement",
+    "Backend: DELETE /api/capital/movements/{id} on transaction-bound movement returns 400 with proper error",
+    "Frontend: Login → Dashboard, NET KÂR card visible",
+    "Frontend: customer-bulk-toggle-btn and customer-bulk-delete-btn present on Müşteriler page; toggle opens 'Sil (0)' button",
+    "Frontend: sold-date-filter / sold-start-date / sold-end-date all present on Satılan Araçlar page",
+    "Frontend: view-mode-toggle (Kart/Liste) present on Satılan Araçlar page",
+    "Frontend: Reports → report-type-capital exists; clicking renders capital-table + KASA GİRİŞİ / KASA ÇIKIŞI / NET AKIŞ / SON BAKİYE cards (verified visually with real numbers)",
+    "Frontend: Sermaye Detayı modal opens with 4 delete-movement-* buttons rendered for manual entries"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter31.py",
+    "/app/test_reports/pytest/iter31_results.xml"
+  ],
+  "action_items": [
+    "[LOW/regression] Fix /api/notifications endpoint URL — frontend NotificationBell is calling http:// instead of https://. Likely a hardcoded URL or missing axios baseURL using REACT_APP_BACKEND_URL. Same issue flagged in iter 29 + 30.",
+    "[Optional] sold-clear-date data-testid only renders when dates are filled — by design but worth confirming."
+  ],
+  "critical_code_review_comments": [
+    "transactions.py: clean atomic capital flow with allow_negative=True on create/update/restore — correct fix for negative-balance expense recording. Insert rollback path on failure is proper.",
+    "capital.py DELETE /capital/movements/{id} guard set _DELETABLE_REASONS = {manual_deposit, manual_withdrawal, manual_set, capital_initialize} prevents deletion of transaction-bound movements — verified 400 returned.",
+    "Dashboard.netProfit formula now correctly subtracts Çalışan Payı per user request — visible NET KÂR card present.",
+    "handleCancelSale change (customer kept, type→Potansiyel) is the correct soft-revert pattern.",
+    "Mixed Content /api/notifications regression should be fixed at axios baseURL level (use process.env.REACT_APP_BACKEND_URL consistently)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter31.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9)",
+    "frontend": "95% (all requested features working; 1 pre-existing notifications regression)"
+  },
+  "test_credentials": {
+    "email": "test_branch_6b287ede@test.com",
+    "password": "Password123!",
+    "note": "Use button[type='submit'] for login click."
+  },
+  "seed_data_creation": "Created/cleaned: TEST_iter31 cars, transactions, customers and manual capital movement (₺1234 deposit). All test data cleaned via DELETE in fixtures.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 9 bug-fix items from the user list are verified working. Backend pytest: /app/backend/tests/test_iter31.py covers expense-with-zero-capital, full sale flow (PATCH car), capital movement delete (revert + transaction-bound block), branches CRUD, customer delete. Only outstanding issue is recurring /api/notifications mixed-content HTTP error — main agent should grep frontend for any hardcoded http:// or notifications-specific baseURL.",
+  "rca_of_the_issue": {
+    "issue": "Bildirimler yüklenemedi — Mixed Content blocked",
+    "root_cause": "axios call to /api/notifications/ resolves to http:// while page is https://. Likely a hardcoded URL or missing protocol in NotificationBell/services notifications module.",
+    "reproduction": "1) Open frontend 2) Login 3) Console: 'Mixed Content: ... insecure XMLHttpRequest endpoint http://.../api/notifications/?unread_only=false'.",
+    "mitigation": "Ensure notifications axios call uses REACT_APP_BACKEND_URL (https). Grep frontend for 'notifications/?unread_only' or 'notifications/' to find the offending caller."
+  }
+}

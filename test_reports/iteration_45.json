@@ -1,0 +1,60 @@
+{
+  "summary": "Iter 45 — P3 testing for 4 new features: (1) Digest Settings (GET/PUT /api/digest/settings + per-org day/hour scheduling), (2) Wanted Cars CRUD + match engine, (3) Installments Overdue list, (4) Stock Aging stats. Backend pytest: 11/11 PASS (digest settings admin/satis 403, PUT persists day=fri/hour=18; wanted-cars create with match_count, list, matches/{id}, matches-for-car/{car_id}, soft-delete; installments/overdue/list rows+totals shape; stats/stock-aging rows/buckets/totals shape). APScheduler startup log 'Digest scheduler started (hourly tick, per-org day/hour)' confirmed in /var/log/supervisor/backend.err.log. Frontend Playwright: Sidebar nav-wanted-cars/nav-stock-aging/nav-receivables PRESENT. WantedCarsPage: wanted-add-btn opens modal with wanted-form-customer + wanted-form-submit. StockAgingPage: aging-buckets + aging-table PRESENT. ReceivablesPage: summary-overdue + filter-all/overdue/upcoming PRESENT (table only renders when data exists — currently empty state shown, expected). Settings DigestPanel: digest-enabled-toggle + digest-day-select(SELECT) + digest-hour-select(SELECT) + digest-save-settings-btn PRESENT; selecting day=fri+hour=18 and clicking save fires PUT /api/digest/settings with body {\"enabled\":true,\"day\":\"fri\",\"hour\":18} (verified via request interception); toast.success wired in code.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "WantedCarsPage modal", "issues": ["DialogContent missing aria-describedby — Radix accessibility warning. Non-blocking but should add Description for a11y."]},
+      {"screen": "ReceivablesPage", "issues": ["receivables-table testid only renders when filtered.length>0; empty state shows text message. Acceptable, but consider always rendering table with empty <tbody> for selector consistency."]}
+    ]
+  },
+  "passed_tests": [
+    "GET /api/digest/settings admin → 200 {enabled, day, hour, recipient, timezone}",
+    "GET /api/digest/settings satis → 403",
+    "PUT /api/digest/settings {enabled:true, day:'fri', hour:18} → 200 + persists (verified via subsequent GET)",
+    "POST /api/wanted-cars invalid customer_id → 404",
+    "POST /api/wanted-cars valid → 200 with match_count int",
+    "GET /api/wanted-cars → list with match_count per item",
+    "GET /api/wanted-cars/{id}/matches → {wanted_car, matches[], count}",
+    "GET /api/wanted-cars/matches-for-car/{car_id} → {car, matching_requests[], count}",
+    "DELETE /api/wanted-cars/{id} → soft-delete (removed from list)",
+    "GET /api/installments/overdue/list → {rows[{installment_id, customer_name, per_term_amount, paid_amount, expected_paid, overdue_amount, remaining_amount, days_overdue, is_overdue}], totals{overdue_count, overdue_amount, upcoming_count, total_remaining}}",
+    "GET /api/stats/stock-aging → {rows[{plate, brand, model, days_in_stock, daily_cost, accumulated_cost, is_stale}], buckets{0-30, 31-60, 61-90, 91+}, totals}",
+    "APScheduler hourly tick log confirmed",
+    "Frontend sidebar shows nav-wanted-cars + nav-stock-aging + nav-receivables for admin",
+    "WantedCarsPage modal: wanted-form-customer + wanted-form-submit render",
+    "StockAgingPage: aging-buckets grid + aging-table render",
+    "ReceivablesPage: summary-overdue + 3 filter buttons render",
+    "DigestPanel saves day=fri+hour=18 → fires correct PUT body and toast.success wired"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter45_p3.py",
+    "/app/test_reports/pytest/iter45_p3.xml"
+  ],
+  "action_items": [
+    "OPTIONAL (a11y): Add DialogDescription or aria-describedby to WantedCarsPage modal DialogContent (Radix warning).",
+    "OPTIONAL (UX): Render <table data-testid='receivables-table'> always, with empty <tbody> message inside, so selector is stable when no rows. Currently selector missing on empty data.",
+    "Existing minor finding from iter44 still open: DigestPanel axios error toast on /preview has no detail (line ~80) — already noted. Fixed-in-iter44 'crm_token' key still used correctly here."
+  ],
+  "critical_code_review_comments": [
+    "routes/wanted_cars.py:111 — _count_matches_for_request loops cars per item in list_wanted (N+1 over org cars). For an org with 1000 wanted+5000 cars, this is 5M iterations per /api/wanted-cars GET. Consider: fetch cars ONCE outside loop and pass to helper, or aggregate inside MongoDB.",
+    "routes/wanted_cars.py:50 _car_matches_request — case-insensitive substring match for brand/model is loose; e.g. 'Audi' would also match 'audio'. Consider whole-word/exact match by default with optional 'fuzzy=true' flag.",
+    "routes/digest.py:218 — admins query loads ALL admins each tick (hourly). Add DB index on {role:1, digest_enabled:1} OR run only if enabled=true at query level.",
+    "routes/installments.py:155 (overdue list) — _enrich runs per installment with separate DB query per item (N+1). Pre-fetch transactions grouped by installment_id like stats.py:73 does for cars.",
+    "routes/installments.py:190 months_passed calculation has off-by-one risk: '(today.day >= start_date.day)' counts current month as paid even if today.day == start_date.day exactly — usually correct, but if start_date.day=31 and today is 30th of next month, will mistakenly skip. Consider relativedelta from python-dateutil.",
+    "routes/stats.py:241 stock-aging — yearly_rate default 18% hardcoded; reads owner.stock_cost_yearly_pct but no PUT endpoint exposed to set this. Add admin settings endpoint or document how to update.",
+    "ReceivablesPage.jsx:86 — table only rendered when filtered.length>0 makes data-testid unstable for selectors; render empty <tbody> with placeholder row instead.",
+    "WantedCarsPage modal raises Radix DialogContent aria-describedby warning — add <DialogDescription> for a11y."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter45_p3.py (NEW — 11 pytest tests covering all 4 P3 features)"
+  ],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% on present-element checks (receivables-table empty-state expected)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "Ephemeral TEST_WantedCust_<uuid> customer created+torn down inside fixture; one wanted_car created+soft-deleted; ephemeral TEST_satis_<uuid> sub-user for 403 test created+deleted. Digest settings reset to default {mon, 9, enabled:true} at end of test.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 45 P3 backlog (digest settings UI, wanted cars, receivables, stock aging) fully validated end-to-end. Reusable regression file: /app/backend/tests/test_iter45_p3.py (export REACT_APP_BACKEND_URL before pytest). Note: receivables-table data-testid only renders when there is at least one installment in DB; create one for full UI assertions if needed. Wanted cars match engine uses substring case-insensitive match — be aware in test data setup."
+}

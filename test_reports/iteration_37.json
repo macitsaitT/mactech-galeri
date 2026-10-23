@@ -1,0 +1,45 @@
+{
+  "summary": "Iter 37 RETEST of CapitalDetailModal bulk-delete fix. Primary bug (page reload) STAYS FIXED — nav_count diff=0, URL unchanged across both bulk and single delete. However the secondary issue from iter 36 (modal closes/unmounts after successful bulk delete) is NOT FIXED. Despite the proposed fix moving setSelectionMode(false) before await Promise.allSettled, the Sermaye Detay modal still unmounts after bulk delete completes — total-capital-amount becomes invisible, dashboard is shown behind. The defensive Dialog onOpenChange={(open)=>{if(!open) onClose();}} doesn't help because Radix is itself firing onOpenChange(false) due to focus loss when the focused bulk-delete-btn unmounts during the toolbar swap.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CapitalDetailModal.handleBulkDelete", "issue": "Modal still closes after bulk delete completes despite setSelectionMode(false) being moved before await. RCA: When user clicks bulk-delete-btn, the click handler synchronously calls setSelectionMode(false) which causes the toolbar to re-render WITHOUT the bulk-delete-btn (it's swapped for the 'Seç' button). The currently-focused element (bulk-delete-btn) is removed from DOM mid-event. Radix Dialog's focus-trap detects focus leaving the dialog and calls onOpenChange(false) → onClose() → modal unmounts. The defensive onOpenChange guard (only calling onClose on open=false) does NOT help because Radix is the one firing it with open=false.", "selector": "[data-testid=\"total-capital-amount\"]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login → Dashboard renders OK",
+    "Capital Detail modal opens via [data-testid=\"capital-amount-display\"]",
+    "'Seç' button (enter-selection-mode-btn) visible & clickable on cash tab",
+    "Selection mode toolbar shows toggle-select-all-btn, bulk-delete-btn, exit-selection-mode-btn",
+    "Selecting 2 rows updates Sil button label correctly to 'Sil (2)'",
+    "Bulk delete: URL unchanged, no framenavigated event → NO page reload (PRIMARY BUG STAYS FIXED)",
+    "No 'capital-error-msg' shown after delete",
+    "Single-row delete also: no reload, no nav events"
+  ],
+  "failed_tests": [
+    "Modal stays open after bulk delete — STILL FAILS, modal unmounts",
+    "Selection mode auto-exits to 'Seç' button after bulk delete — N/A because modal already gone",
+    "Tab switch cash↔inventory regression — N/A (modal closed before this step could run)",
+    "Single-delete-while-modal-open regression — N/A (modal closed)"
+  ],
+  "test_report_links": ["/app/.screenshots/iter37_final.png"],
+  "action_items": [
+    "Modal close after bulk delete is NOT fixed by current approach. Try ONE of these: (a) Add onInteractOutside={(e)=>e.preventDefault()} and/or onFocusOutside={(e)=>e.preventDefault()} handlers on <DialogContent> to prevent Radix from auto-closing on focus loss. This is the cleanest fix. (b) Before setSelectionMode(false), explicitly move focus to a stable element inside the dialog: e.g. dialogTitleRef.current?.focus() or document.querySelector('[data-testid=\"capital-tab-cash\"]')?.focus(). (c) Wrap state updates in flushSync from react-dom and refocus next render. Recommended: Option (a) — add `onInteractOutside={(e)=>e.preventDefault()}` to DialogContent. This is the standard Radix workaround for this focus-trap quirk."
+  ],
+  "critical_code_review_comments": [
+    "The current fix order: setBulkDeleting(true) → setSelectionMode(false) → await Promise.allSettled. React batches the two synchronous setStates so re-render happens immediately, removing the focused bulk-delete-btn from DOM. Radix Dialog FocusOutside detects this and dispatches onOpenChange(false). The defensive onOpenChange does nothing because Radix legitimately wants to close.",
+    "Better approach: leave selectionMode unchanged during the async delete; show 'Siliniyor...' on bulk-delete-btn (which already happens). Only after Promise.allSettled, set selectionMode=false. The button stays mounted and disabled during deletion → no focus loss. The original concern about focus-trap-during-disabled is unfounded; disabled buttons CAN keep focus in modern browsers.",
+    "Alternative: add onInteractOutside={(e)=>e.preventDefault()} to <DialogContent> to make modal only closeable via explicit Kapat / X / onClose call.",
+    "Reload+refreshCapital+fetchData triple call still happens after every delete; consider consolidating."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "62% (8/13) — primary no-reload goal PASS, modal-stays-open RETEST FAIL"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "Attempted to seed 4 manual_deposit movements via POST /api/capital/adjust → all returned 422 (likely backend payload schema mismatch — uses different field names). Test fell back to deleting first 2 existing movements (₺3.338.900 → ₺3.338.830 capital change confirms backend deletion succeeded).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 37 retest result: bulk-delete no-reload is solid, but modal-stays-open is still broken with same RCA as iter 36. The 'move setSelectionMode before await' fix did not help because the focused button still unmounts synchronously. Recommend trying onInteractOutside/onFocusOutside preventDefault on DialogContent (Option a in action_items). After re-fix, run the same playwright flow: login → click capital-amount-display → enter-selection-mode-btn → click 2 rows → bulk-delete-btn → wait 3s → check total-capital-amount is still visible. Note: /api/capital/adjust returns 422 for {amount, type, description} payload — schema may differ; check backend if seeding needed.",
+  "rca_of_the_issue": "Bulk delete handler synchronously calls setSelectionMode(false) which causes React to re-render, removing the bulk-delete-btn (currently focused due to user click) from DOM. Radix Dialog's FocusScope detects focus leaving its content and dispatches onOpenChange(false), which the parent's onClose handler honors → modal unmounts. The 'defensive' onOpenChange guard `if (!open) onClose()` doesn't prevent this because Radix is *legitimately* asking to close. The fix needs to either prevent Radix from auto-closing on focus-loss (onInteractOutside/onFocusOutside preventDefault) OR keep the focused element mounted (don't swap toolbar until after async completes)."
+}

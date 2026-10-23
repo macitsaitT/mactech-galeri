@@ -1,0 +1,54 @@
+{
+  "summary": "Iter 50 — FINAL backend regression after migrate_sold_by_user_id was hooked into FastAPI startup. 14/14 tests PASS (12 new full regression + 2 retained Satıcı multi-car). Backend boots cleanly (no startup exceptions, /api/health=200, supervisor logs show 'Application startup complete' across all 4 recent restarts). Migration is idempotent (ran backfill twice in-process — no errors, no duplicate writes). All 7 review-request features validated end-to-end via pytest.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/cars", "issue": "Pydantic Car response_model does NOT declare sold_by_user_id / sold_by_name fields, so they are stripped from API response (extra='ignore' in models.py:115). Frontend cannot read these fields from the cars list — they exist in DB and are exposed only via /api/stats/employee-performance (sold_by_user_id bucketing) and /api/digest. If a UI screen needs to show 'Satıcı: X' on a car card, the model must be extended with these two optional fields. Persistence is correct; only response surface is missing."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "passed_tests": [
+    "TestStartupHealth::test_health_200 — /api/health 200 healthy",
+    "TestStartupHealth::test_root_running — /api/ 200 status=running",
+    "TestSoldByAttribution::test_patch_satildi_persists_sold_by — PATCH /api/cars/{id} status=Satıldı with explicit sold_by_user_id+name persists; verified via /api/stats/employee-performance bucket sold_count incremented for the seller; revert (status=Stokta) clears the fields",
+    "TestTransactionsBatch::test_batch_create — POST /api/transactions/batch creates 3 tx atomically; created_count=3, error_count=0; all 3 ids visible in subsequent GET /api/transactions",
+    "TestTransactionsBatch::test_batch_empty_400 — empty array → 400",
+    "TestTransactionsBatch::test_batch_too_large_400 — 51 items → 400 (cap=50)",
+    "TestSatisRoleBlockedFromCapital::test_satis_get_capital_403 — role=satis user → GET /api/capital → 403",
+    "TestSatisRoleBlockedFromCapital::test_satis_capital_movements_403 — role=satis → GET /api/capital/movements → 403",
+    "TestSatisRoleBlockedFromCapital::test_satis_capital_adjust_403 — role=satis → POST /api/capital/adjust → 403",
+    "TestSatisRoleBlockedFromCapital::test_users_post_persists_name_and_me_returns_it — POST /api/users with name field persists; satis user's /api/auth/me returns the same name",
+    "TestPermissionsRealtime::test_permissions_version_bumps_on_put — PUT /api/permissions writes user_overrides AND bumps version uuid; GET /api/permissions/version reflects new tag; GET /api/permissions returns user_overrides round-trip with capital_view=false",
+    "TestMigrationIdempotency::test_backfill_runs_twice_without_error — backfill_sold_by_user_id(db) called twice in-process against live DB; both runs return without exception, second run is no-op (already-set rows excluded by Mongo $or query in migrations/migrate_sold_by_user_id.py:18-23)",
+    "test_seller_multi_car_lifecycle — Iter50 retained: 1 satıcıdan 2 araç → tip Satıcı; 1 sil → hâlâ Satıcı (2. araç var); 2.yi sil → Potansiyel'e revert; detail endpoint sold_to_us_cars=2, total_amount=700K",
+    "test_seller_change_via_put — PUT seller A→B: A revert Potansiyel, B Satıcı; PATCH ile boş seller → B revert Potansiyel"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter50_full_regression.py",
+    "/app/backend/tests/test_iter50_seller_multi_car.py",
+    "/app/test_reports/pytest/iter50_full.xml"
+  ],
+  "action_items": [
+    "OPTIONAL (P3): Extend Pydantic CarBase (models.py:46) with `sold_by_user_id: Optional[str] = ''` and `sold_by_name: Optional[str] = ''` so GET /api/cars exposes these fields — currently they're stripped from response by extra='ignore'. Frontend Dashboard 'Satış Elemanları' widget already gets them from /api/stats/employee-performance, but a per-car listing (e.g., StokTable or CarDetailModal) would need direct field access. Persistence is correct, only the API response surface is incomplete."
+  ],
+  "critical_code_review_comments": [
+    "/app/backend/migrations/migrate_sold_by_user_id.py:18-23 — Idempotency guard is correct (filters out rows that already have sold_by_user_id non-null/non-empty). Second invocation is a no-op. ✓",
+    "/app/backend/server.py:166-170 — Migration call wrapped in try/except with logger.warning on failure → server boot will NEVER fail because of this script. Good defensive practice. ✓",
+    "/app/backend/routes/capital.py:18-24 — _require_finance_role correctly restricts to {admin, owner, muhasebe}. 'satis' rejected with 403 + Turkish message. ✓",
+    "/app/backend/routes/cars.py:128-163 — PATCH endpoint has comprehensive sold_by attribution: explicit user_id from frontend wins, falls back to current_user, validates user belongs to org, clears on sale revert. ✓",
+    "/app/backend/routes/transactions.py:32-91 — Batch endpoint validates each item with TransactionCreate, 50-item cap, per-item try/except so partial success is possible (created/errors split in response). Capital atomic via apply_delta. Good. Minor: a single tx insert failure does not roll back the kasa delta inside the per-item except — actually it does NOT rollback; if insert_one fails after apply_delta, delta is leaked. Recommend wrapping in a transaction or implementing reverse_delta in the except branch. (LOW priority since insert_one rarely fails after a successful apply_delta in MongoDB.)",
+    "/app/backend/routes/users.py:73-90 — PUT /permissions correctly assigns a new uuid to 'version' on each write, ensuring the 25s frontend poll detects changes within ~25s. ✓",
+    "/app/backend/models.py:114-115 — Car has extra='ignore'; new DB fields (sold_by_user_id, sold_by_name) are dropped from response. See action item."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter50_full_regression.py (NEW — 12 pytest test, 5 sınıf)"
+  ],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "N/A (backend-only request)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!", "note": "Iter 30 admin still works; for fresh users, tests self-register with uuid-suffixed emails to avoid 429 rate-limit"},
+  "seed_data_creation": "Each test creates its own scoped data (cars, customers, transactions, users) and cleans up in finally/fixture teardown. No persistent test pollution.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 50 is the FINAL backend regression — all 7 features in the review request validated. Migration script (migrate_sold_by_user_id.py) is wired into server.py:166-170 startup event with safe try/except, runs on every cold start, and is idempotent (Mongo query excludes already-migrated rows). For future iterations: GET /api/cars does NOT return sold_by_user_id/sold_by_name due to Pydantic extra='ignore' on Car model — use /api/stats/employee-performance or extend the model. To create role=satis test users: use admin token + POST /api/users with payload {email, password, company_name, phone (EXACTLY 11 digits starting with 0), role='satis', name}. Phone validation is strict — '0555' + 7 digits. Password must satisfy validate_password rules (Password123! works). All ratelimits are at 200/min/IP, comfortable for full pytest run (~14 calls).",
+  "rca of the issue": "N/A — no failing tests after fixes. Initial test fixes: (a) added 'date' field to TransactionCreate batch payload (required), (b) phone padded to exactly 11 digits to pass validate_phone, (c) sold_by_user_id verification switched from GET /api/cars (which strips the field) to /api/stats/employee-performance (which buckets by sold_by_user_id). All 3 were test-script issues, not backend bugs."
+}

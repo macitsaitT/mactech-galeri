@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+motor
+pymongo
+python-dotenv
+python-multipart
+PyJWT
+bcrypt
+requests
+cryptography
+python-docx

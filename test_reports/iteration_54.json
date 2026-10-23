@@ -1,0 +1,41 @@
+{
+  "summary": "Iter 54 — Dashboard year-selector enhancement validated end-to-end. Backend regression 20/20 PASS (iter50+51+52). Frontend e2e: year-select element exists with 'Yıl Seç…' placeholder + 7 year options (2026..2020); selecting 2025 deactivates 'Bu Ay' preset and activates year-select (bg-primary); clicking 'Bu Ay' resets year to '' and reactivates preset; clicking 'Özel' resets year AND opens custom-start/custom-end inputs; selecting a year while Özel is active deactivates Özel. Date range is correctly piped via useMemo (selectedYear → getYearRange(year)). All data-testid attributes present and working.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "passed_tests": [
+    "Backend regression 20/20 PASS (test_iter50_full_regression.py 12/12 + test_iter51_sold_by_fields.py 2/2 + test_iter52_founding_capital.py 6/6)",
+    "Frontend: year-select element renders with data-testid='year-select' inside date-filter",
+    "Frontend: default option label = 'Yıl Seç…' with empty value",
+    "Frontend: 7 year options present with values ['2026','2025','2024','2023','2022','2021','2020']",
+    "Frontend: 'Bu Ay' preset active by default (bg-primary class present)",
+    "Frontend: selecting 2025 → year-select.value='2025', Bu Ay loses bg-primary, year-select gains bg-primary",
+    "Frontend: clicking 'Bu Ay' preset → year-select.value resets to '', Bu Ay regains bg-primary",
+    "Frontend: selecting 2024 then clicking 'Özel' → year resets to '' AND custom-start/custom-end inputs become visible",
+    "Frontend: selecting year while Özel was active → Özel preset loses bg-primary (correct mutually exclusive behavior)",
+    "Frontend: no console errors / pageerrors during entire dashboard interaction"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/test_reports/pytest/iter54_regression.xml",
+    "/app/backend/tests/test_iter50_full_regression.py",
+    "/app/backend/tests/test_iter51_sold_by_fields.py",
+    "/app/backend/tests/test_iter52_founding_capital.py"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Dashboard.jsx:44-48 — dateRange useMemo correctly prioritizes selectedYear → showCustom → preset. Dependency array includes selectedYear. Clean precedence.",
+    "Dashboard.jsx:330 — preset onClick resets all three state pieces (setPreset(p.id), setShowCustom(false), setSelectedYear('')). Correct mutual exclusion.",
+    "Dashboard.jsx:341-347 — Özel button also resets selectedYear before opening custom. Correct.",
+    "Dashboard.jsx:360-365 — year-select onChange: when y is non-empty also sets showCustom(false). Symmetric reset. Note: preset state is NOT reset to a non-active value but the active condition `preset === p.id && !showCustom && !selectedYear` ensures no preset visually highlights when year is chosen. Clean approach.",
+    "dateRange.js:42-48 — getYearRange returns '${y}-01-01' to '${y}-12-31'. Uses string interpolation (no Date timezone gotcha). Correct.",
+    "Minor (UX nit, non-blocking): Native <select> styling won't perfectly match the rest of the design system (uses browser-default dropdown chrome on options). However option elements have inline bg-background/text-foreground classes — acceptable. Consider migrating to shadcn Select in future iteration if pixel-perfect chrome is desired."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "100% (10/10 assertions)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "None — read-only UI test; no transactions created.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 54: Dashboard date filter now has a native <select data-testid='year-select'> alongside presets. Year list = current year + 6 previous (computed at render time via new Date().getFullYear()). dateRange precedence: selectedYear > custom > preset. Selecting year clears showCustom; clicking any preset clears selectedYear; clicking Özel clears selectedYear AND opens custom. To re-test: login → Genel Bakış → use page.locator('[data-testid=year-select]').select_option('2025'). Note: dashboard text may appear identical between 'Bu Ay' and a year if the org has no transactions in either window — this is not a bug, verify state transitions (input_value, bg-primary class on buttons) instead.",
+  "rca of the issue": "N/A — feature enhancement validated; no bug present."
+}

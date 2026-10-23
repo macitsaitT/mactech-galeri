@@ -1,0 +1,46 @@
+{
+  "summary": "Iter 49 — Verified bug fix for AddCarModal inline expenses now using AppContext.addTransaction. Code review confirms correct implementation. Playwright UI partially verified: legacy 'Kaydet & Masraf Ekle' button (save-and-open-expenses-btn) is REMOVED in CREATE mode (count=0 in 3 runs). save-car-btn + cancel-car-btn present; open-expenses-btn hidden in CREATE mode. Full end-to-end Stok-aracı save flow blocked by Sahiplik tab UX complexity (ownership card click in headless playwright closes modal, full submit could not be completed in browser run). Backend behavior was independently validated in iter 48 (4/4 PASS). Recommend main agent self-test E2E in real browser or add data-testid to ownership-stock card.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login → quick-add-car opens AddCarModal (3 runs)",
+    "save-and-open-expenses-btn data-testid count = 0 in CREATE mode (legacy button REMOVED as expected)",
+    "save-car-btn count = 1 in CREATE mode",
+    "cancel-car-btn count = 1 in CREATE mode",
+    "open-expenses-btn count = 0 in CREATE mode (only shown when editingCar?.id exists, per AddCarModal.jsx:1584)",
+    "Code review: AddCarModal.jsx:385 imports addTransaction from useApp()",
+    "Code review: AddCarModal.jsx:531-538 inline expense loop calls addTransaction() (NOT transactionsAPI.create directly)",
+    "Code review: AppContext.jsx:247-252 addTransaction calls refreshStats + refreshCapital after each create",
+    "Code review: App.js:175 handleSaveCar returns newCar (AddCarModal can read carId)",
+    "Code review: AddCarModal.jsx:1597-1615 footer has only Cancel + Save (legacy save-and-open-expenses-btn deleted)"
+  ],
+  "failed_tests": [
+    "End-to-end Stok-araç save with 2 inline expenses + capital/stats verification — could not complete in playwright due to ownership card requiring real click to reveal price + inline expense panel; programmatic clicks via get_by_text('Stok Araç') closed the modal in headless mode."
+  ],
+  "test_report_links": [
+    "/app/test_reports/iteration_49.json",
+    "Backend regression already in /app/backend/tests/test_iter48_inline_expenses.py (iter 48 — 4/4 PASS)"
+  ],
+  "action_items": [
+    "OPTIONAL (testability): Add data-testid='ownership-stock' and data-testid='ownership-consignment' to the Stok Araç / Konsinye selector cards in AddCarModal Sahiplik tab so playwright can deterministically click them. Currently no testid exists on those cards.",
+    "RECOMMENDED: Main agent should self-test the full save flow (open AddCarModal → fill plate/brand/model/prices → add 2 inline expenses → Save) and then verify GET /api/capital decreased by purchase+1500+800, GET /api/stats total_expense increased by same, GET /api/transactions has 3 new tx (Araç Alımı + 2 inline) — backend layer already PASS in iter 48 and frontend wiring is correct per code review."
+  ],
+  "critical_code_review_comments": [
+    "AddCarModal.jsx:385 — addTransaction is correctly destructured from useApp(); fix is structurally correct.",
+    "AddCarModal.jsx:526-549 — sequential await loop for pending_expenses; partial-failure already handled with okCount + toast.error message. Good.",
+    "App.js:146-177 — handleSaveCar now returns newCar (or updated/null on failure). AddCarModal can pass savedCar.id to addTransaction for car_id linkage.",
+    "AppContext.jsx:247-252 — addTransaction triggers refreshStats + refreshCapital in parallel via Promise.all → Dashboard 'Toplam Gider' & Kasa banner will update reactively."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (regression from iter 48)", "frontend": "60% — UI buttons (save/cancel/open-expenses/legacy-removed) verified; full E2E save flow blocked by Sahiplik tab card selection in headless playwright"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!"},
+  "seed_data_creation": "No persistent seed data created; modal did not commit a new car in any of the 3 playwright attempts due to Sahiplik tab interaction issue.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "ARAÇ GİRİŞİ → Sahiplik / Konsinye tab requires clicking the 'Stok Araç' card to reveal prices + inline-expense panel. There is no data-testid on those ownership cards (only on tab-ownership). To E2E test, EITHER (a) add testid='ownership-stock' to that card OR (b) use page.locator('div:has(> div > h4:text(\"Stok Araç\"))').click() with proper selector; in this run clicking text 'Stok Araç' caused the modal to close (likely text matched something else on the page). Capital before fix run: 145000, total_expense: 0. Test plate: 34IT* unique. Expected after: cap=92700, total_expense=52300, 3 new tx for car (50000 Araç Alımı + 1500 + 800). All other UI testid assertions PASS in CREATE mode (legacy btn removed). Bug fix is correctly implemented per code review.",
+  "rca of the issue": "Original bug: AddCarModal called transactionsAPI.create directly, bypassing AppContext.addTransaction → setTransactions/refreshStats/refreshCapital never triggered → Dashboard/Kasa/Reports stale. ROOT CAUSE confirmed at AddCarModal.jsx:530-538 fix: now uses addTransaction(...) via useApp() context. Additionally App.js:152-175 handleSaveCar now returns newCar so AddCarModal can correctly read car_id for inline expenses. Footer legacy 'Kaydet & Masraf Ekle' button removed (verified). Playwright limitation: Sahiplik ownership selector cards lack data-testid making programmatic save flow brittle — recommended adding ownership-stock/ownership-consignment testids."
+}

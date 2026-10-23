@@ -1,0 +1,42 @@
+{
+  "summary": "Iter 52 — Backend (20/20 PASS) + Frontend (8/8 testids + end-to-end prompt-driven update flow PASS). Verified new founding_capital field on GET /api/capital, new PUT /api/capital/founding endpoint (validates >=0, blocks satis role with 403), and Dashboard 4-tile hierarchy (Sermaye/Net Kâr/Araç Masraf/Toplam Sermaye). Existing iter50+iter51 regression intact. The Araç Masraf auto-formula (Toplam Sermaye − Sermaye − Net Kâr = ₺1.245.000 − ₺1.000.000 − ₺0 = ₺245.000) renders correctly. Clicking capital-tile-founding opens a window.prompt; submitting 5000000 PUTs to /api/capital/founding, refreshes capital context, and the tile re-renders showing ₺5.000.000. Backend GET confirms persistence.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "passed_tests": [
+    "Backend test_iter52_founding_capital.py — 6/6 PASS: TestFoundingCapitalFieldExposure::test_get_capital_contains_founding_capital_key, TestFoundingCapitalPersistence (put_persists_and_get_reflects, zero_accepted, negative_rejected→422), TestSatisRoleBlockedFromFounding (satis_get_capital_403, satis_put_founding_403)",
+    "Backend regression test_iter51_sold_by_fields.py — 2/2 PASS (no regression)",
+    "Backend regression test_iter50_full_regression.py — 12/12 PASS (no regression)",
+    "Frontend: all 4 new tiles present — capital-tile-founding (₺1.000.000), capital-tile-netprofit (₺0), capital-tile-aracmasraf (₺245.000), capital-tile-total (₺1.245.000)",
+    "Frontend: all preserved testids present — capital-cash-chip (₺145.000), capital-inventory-chip (Araç (5) ₺1.100.000), capital-amount-display (₺1.245.000), open-capital-modal-btn",
+    "Frontend: Araç Masraf = Toplam − Sermaye − Net Kâr formula validated visually (1.245.000 − 1.000.000 − 0 = 245.000)",
+    "Frontend e2e: click capital-tile-founding → window.prompt opens with current value text → submit 5000000 → PUT /api/capital/founding 200 → tile re-renders ₺5.000.000 → GET /api/capital returns founding_capital=5000000",
+    "No console errors / pageerrors during dashboard load and founding-update flow"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter52_founding_capital.py",
+    "/app/backend/tests/test_iter51_sold_by_fields.py",
+    "/app/backend/tests/test_iter50_full_regression.py",
+    "/app/test_reports/pytest/iter52_full.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "/app/backend/routes/capital.py:83-100 — PUT /capital/founding clean: Pydantic FoundingCapitalSet enforces amount>=0 (Field ge=0) which converts to 422 on negative input (verified). Uses upsert on org_settings keyed by org_id. updated_at stamped ISO UTC. Good.",
+    "/app/backend/routes/capital.py:59-68 — GET /capital reads founding_capital from db.org_settings with safe defaults (0). Properly rounded. Good.",
+    "/app/frontend/src/components/dashboard/CapitalSummaryCard.jsx — 4-tile layout clean; all data-testids present; founding tile triggers window.prompt() (Turkish text with current value pre-filled); thousand-separator parsing in handleEditFounding correctly handles both '.' (TR thousands) and ',' (TR decimal). Pencil icon affordance is subtle but discoverable on hover.",
+    "/app/frontend/src/services/api.js:241 — capitalAPI.setFounding(amount) wired as PUT /capital/founding {amount}. Matches backend contract.",
+    "/app/frontend/src/pages/Dashboard.jsx:285-293 — props (foundingCapital, netProfit, onFoundingUpdated=refreshCapital) wired correctly; refreshCapital comes from AppContext and reloads /api/capital after PUT — verified the tile re-renders to 5.000.000 within ~1.5s.",
+    "(Minor UX nit, non-blocking) Using window.prompt() for a primary settings interaction is functional but feels dated vs a shadcn Dialog with a numeric input. Consider a proper modal in a future iteration for better mobile UX and validation feedback.",
+    "(Minor) Araç Masraf can go negative (handled: red destructive color); however when negative the label still says 'Araç Masraf' which is semantically odd (it would be 'extra profit / unexplained gain'). Tooltip explains formula — acceptable for v1."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter52_founding_capital.py (NEW — 6 tests for founding_capital field, PUT endpoint, validation, satis-role block)"
+  ],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "100% (8/8 testids, e2e prompt→PUT→refresh PASS, no errors)"},
+  "test_credentials": {"email": "test_branch_6b287ede@test.com", "password": "Password123!", "note": "Active admin used for iter50/51/52"},
+  "seed_data_creation": "Tests self-create satis user + cars and clean up. Founding capital is saved at fixture start and restored at module teardown (so live UI value preserved at ₺1.000.000). E2E frontend test resets founding to 0 after run.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 52 adds founding_capital baseline. Backend contract: GET /api/capital returns 'founding_capital':float (default 0). PUT /api/capital/founding {amount:>=0} → {ok:true, founding_capital:float}. Both endpoints gated by _FINANCE_ROLES (admin/owner/muhasebe); satis→403. Frontend Dashboard CapitalSummaryCard now has 4 tiles (founding/netprofit/aracmasraf/total) above the existing cash/inventory chips. Tile capital-tile-founding triggers window.prompt() — to test programmatically register page.on('dialog', d.accept('value')) BEFORE clicking. Test cmd: cd /app/backend && REACT_APP_BACKEND_URL=$(grep REACT_APP_BACKEND_URL /app/frontend/.env | cut -d= -f2) python -m pytest tests/test_iter52_founding_capital.py tests/test_iter51_sold_by_fields.py tests/test_iter50_full_regression.py -v",
+  "rca of the issue": "N/A — no failing tests; iter52 additions are additive and integration-clean."
+}

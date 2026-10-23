@@ -1,0 +1,51 @@
+{
+  "summary": "Iter 35: Backend-only tests for (1) PUT /api/customers/{id} partial update and (2) DELETE /api/capital/movements/{id} for manual + tx_linked + auto-protected reasons. All 8 tests PASS. Production 422 'name field required' bug verified fixed: PUT customer accepts {} or {type:'Satış Yapıldı'} alone (200). Full sale flow (PATCH car + POST income tx + POST employee_share tx + PUT customer with type only) completes end-to-end with no 422. Capital movement delete behaves correctly for all 3 categories.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "POST /api/customers + PUT /api/customers/{id} with only {type:'Satış Yapıldı'} → 200, name/phone preserved, persisted on GET",
+    "PUT /api/customers/{id} with empty body {} → 200 (no 422)",
+    "PUT /api/customers/{id} with unknown field {foo:'bar'} → 200 (silently ignored, no 422)",
+    "PUT /api/customers/non-existent → 404",
+    "Full sale flow E2E: PATCH /api/cars (status=satıldı) + POST income tx (Araç Satışı) + POST expense tx (Çalışan Payı) + PUT customer({type:'Satış Yapıldı'}) — all 200, no 422",
+    "DELETE /api/capital/movements/{id} for manual_deposit → 200 type='manual', balance reverted by exact -delta",
+    "DELETE /api/capital/movements/{id} for transaction_create (tx_linked) → 200 type='tx_linked', related transaction shows deleted=true in GET /api/transactions",
+    "DELETE /api/capital/movements/{id} for auto-generated transaction_delete movement → 400 (integrity protected)",
+    "DELETE /api/capital/movements/non-existent → 404"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_iter35_partial_update_and_movements.py",
+    "/app/test_reports/pytest/iter35_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "models.CustomerBase has `interested_car_id` (singular, str) but routes/customers.py partial-update allowed list contains `interested_car_ids` (plural). Also `tags` is in the allowed list but is NOT a field on CustomerBase. Customer model uses ConfigDict(extra='ignore') so unknown fields are silently dropped on response — but `update_one({\"$set\": {\"tags\": [...]}})` will still write them to MongoDB. This causes a schema/storage mismatch: data persists in DB but is invisible via API. Recommend either (a) adding `tags: List[str] = []` and renaming to `interested_car_ids: List[str] = []` on CustomerBase, or (b) trimming the allowed set to actual model fields {name, phone, type, notes, interested_car_id}.",
+    "routes/capital.py line 211-212 imports `apply_delta as _apply` and `_tx_delta` inside the function body. The module-level `apply_delta` is already imported at line 9. The local re-import is redundant and `_tx_delta` could be imported at module top to avoid circular-style late imports. Minor.",
+    "Sale-flow currently depends on 4 separate API calls from the frontend (PATCH car, POST income tx, POST employee tx, PUT customer). Any one failing leaves partial state (e.g., car marked sold but no tx). Consider a single transactional endpoint POST /api/sales that atomically performs all four — eliminates the prod-422 class of bugs entirely and ensures rollback semantics.",
+    "PUT /api/customers/{id} silently accepts and discards unknown fields (no 4xx). This is OK for backward compat but consider returning a warning in the response or logging unrecognized keys to catch frontend/backend drift early."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter35_partial_update_and_movements.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8)",
+    "frontend": "n/a (backend-only test requested)"
+  },
+  "test_credentials": {
+    "email": "test_branch_6b287ede@test.com",
+    "password": "Password123!"
+  },
+  "seed_data_creation": "Test creates and cleans up its own data: TEST_-prefixed customers, cars, transactions, and a ₺1234 manual capital deposit. Cleanup uses permanent=true on customers/cars; tx-linked test soft-deletes the test transaction (acceptable, deleted=true filter will hide it).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iter 35 backend bugfix (partial customer update + capital movement delete) fully verified. Test file /app/backend/tests/test_iter35_partial_update_and_movements.py is reusable for regression. Use `export REACT_APP_BACKEND_URL=$(grep REACT_APP_BACKEND_URL /app/frontend/.env | cut -d= -f2)` before pytest. Outstanding (non-blocking): customer model has `interested_car_id` singular but route allows `interested_car_ids` plural and `tags` (not in model) — see code review. Frontend changes (CapitalDetailModal trash button on tx_linked, SaleModal new alert format) were NOT tested per request scope.",
+  "rca_of_the_issue": "Production prod-422 bug: frontend updateCustomer sends only {type:'Satış Yapıldı'} on sale completion, but backend PUT /customers/{id} previously used `customer: CustomerCreate` Pydantic dependency, which made name/phone REQUIRED → FastAPI returned 422 'name Field required'. Fix (verified): switched to `payload: dict = Body(...)`, whitelist allowed keys, $set partial. Verified: empty body / partial body / unknown keys all return 200; sale flow completes."
+}
