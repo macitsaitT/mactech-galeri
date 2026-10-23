@@ -1,42 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { X, Landmark, Info, Loader2 } from 'lucide-react';
+import { X, Landmark, Info, Loader2, Plus, Minus, Pencil } from 'lucide-react';
 import { formatCurrency } from '../../utils/helpers';
 import { capitalAPI } from '../../services/api';
 import { toast } from 'sonner';
+import { cn } from '../../lib/utils';
 
-/**
- * Başlangıç Sermayesi Tanımlama Modalı.
- *
- * Bu değer sabit referans olarak tutulur — işlemler nedeniyle değişmez.
- * Güncel Öz Sermaye = Başlangıç + Net Kâr − İşletme Giderleri formülünde
- * baseline olarak kullanılır.
- */
+const MODES = [
+  { key: 'increase', label: 'Artır', icon: Plus },
+  { key: 'decrease', label: 'Azalt', icon: Minus },
+  { key: 'set', label: 'Yeni Tutar', icon: Pencil },
+];
+
+const MODE_HINT = {
+  increase: 'Girilen tutar sermayeye eklenir ve kasaya nakit girişi olarak işlenir.',
+  decrease: 'Girilen tutar sermayeden düşülür ve kasadan nakit çıkışı olarak işlenir.',
+  set: 'Sadece sermaye rakamını düzeltir, kasayı etkilemez.',
+};
+
 const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) => {
+  const [mode, setMode] = useState('increase');
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setAmount(currentValue > 0 ? String(currentValue) : '');
+      setMode(currentValue > 0 ? 'increase' : 'set');
+      setAmount('');
     }
   }, [isOpen, currentValue]);
 
   if (!isOpen) return null;
 
+  const val = parseFloat(amount);
+  const valid = !isNaN(val) && val > 0;
+  const newValue = !valid ? null
+    : mode === 'increase' ? currentValue + val
+    : mode === 'decrease' ? currentValue - val
+    : val;
+
   const handleSave = async () => {
-    const val = parseFloat(amount);
-    if (isNaN(val) || val < 0) {
+    if (!valid) {
       toast.error('Geçerli bir tutar girin');
+      return;
+    }
+    if (mode === 'decrease' && val > currentValue) {
+      toast.error('Azaltılacak tutar mevcut sermayeden büyük olamaz');
       return;
     }
     setSaving(true);
     try {
-      await capitalAPI.setFounding(val);
-      toast.success('Başlangıç sermayesi kaydedildi');
+      if (mode === 'set') await capitalAPI.setFounding(val);
+      else await capitalAPI.adjustFounding(val, mode);
+      toast.success(mode === 'increase' ? 'Sermaye artırıldı' : mode === 'decrease' ? 'Sermaye azaltıldı' : 'Sermaye güncellendi');
       onSaved?.();
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Kayıt başarısız');
+      const d = err.response?.data?.detail;
+      toast.error((typeof d === 'object' ? d?.message : d) || 'Kayıt başarısız');
     } finally {
       setSaving(false);
     }
@@ -59,8 +79,10 @@ const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) =>
               <Landmark size={20} className="text-ti-gold" />
             </div>
             <div>
-              <h2 className="font-heading font-bold text-lg text-foreground">Başlangıç Sermayesi</h2>
-              <p className="text-xs text-muted-foreground">Sabit öz sermaye referansı</p>
+              <h2 className="font-heading font-bold text-lg text-foreground">Sermaye Düzenle</h2>
+              <p className="text-xs text-muted-foreground">
+                Mevcut: <span className="font-semibold text-foreground" data-testid="founding-current-value">{formatCurrency(currentValue)}</span>
+              </p>
             </div>
           </div>
           <button
@@ -72,43 +94,60 @@ const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) =>
           </button>
         </div>
 
-        <div className="bg-ti-gold/5 border border-ti-gold/20 rounded-lg p-3 mb-5">
-          <div className="flex gap-2">
-            <Info size={14} className="text-ti-gold flex-shrink-0 mt-0.5" />
-            <div className="text-[12px] leading-relaxed text-muted-foreground">
-              <p className="text-foreground font-semibold mb-1">Bu değer şirketinizin <span className="text-ti-gold">öz sermaye baseline</span>'ıdır.</p>
-              <p>İşlemler nedeniyle değişmez. Sistem bu değere göre Güncel Öz Sermaye'yi hesaplar:</p>
-              <p className="font-mono text-[11px] text-ti-gold mt-1.5">
-                Güncel = Başlangıç + Net Kâr − İşletme Giderleri
-              </p>
-            </div>
-          </div>
+        <div className="grid grid-cols-3 gap-2 mb-4" data-testid="founding-mode-tabs">
+          {MODES.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setMode(key)}
+              className={cn(
+                'h-10 rounded-lg border text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors',
+                mode === key
+                  ? key === 'decrease'
+                    ? 'border-rose-500/60 bg-rose-500/15 text-rose-400'
+                    : key === 'increase'
+                      ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-400'
+                      : 'border-ti-gold/60 bg-ti-gold/15 text-ti-gold'
+                  : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+              )}
+              data-testid={`founding-mode-${key}`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-ti-gold/5 border border-ti-gold/20 rounded-lg p-3 mb-4 flex gap-2">
+          <Info size={14} className="text-ti-gold flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] leading-relaxed text-muted-foreground" data-testid="founding-mode-hint">{MODE_HINT[mode]}</p>
         </div>
 
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-2 tracking-wider uppercase">
-              Tutar (₺)
+              {mode === 'set' ? 'Yeni Sermaye (₺)' : mode === 'increase' ? 'Eklenecek Tutar (₺)' : 'Düşülecek Tutar (₺)'}
             </label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Örn: 10000000"
+              placeholder="Örn: 500000"
               autoFocus
               className="w-full h-14 px-4 bg-background border border-border rounded-lg text-xl font-bold tabular-nums focus:border-ti-gold focus:ring-2 focus:ring-ti-gold/20 transition-all outline-none"
               data-testid="founding-amount-input"
             />
-            {amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && (
-              <p className="text-xs text-ti-gold mt-2 tracking-wider">
-                = {formatCurrency(parseFloat(amount))}
-              </p>
+            {valid && (
+              <p className="text-xs text-ti-gold mt-2 tracking-wider">= {formatCurrency(val)}</p>
             )}
           </div>
 
-          {currentValue > 0 && (
-            <p className="text-xs text-muted-foreground bg-muted/40 rounded-lg p-2.5">
-              Mevcut değer: <span className="font-semibold text-foreground">{formatCurrency(currentValue)}</span>
+          {newValue !== null && (
+            <p
+              className={cn('text-xs rounded-lg p-2.5', newValue < 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-muted/40 text-muted-foreground')}
+              data-testid="founding-new-value"
+            >
+              Yeni sermaye: <span className="font-semibold text-foreground">{formatCurrency(newValue)}</span>
             </p>
           )}
 

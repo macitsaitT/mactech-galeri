@@ -247,6 +247,7 @@ export const capitalAPI = {
   deleteMovement: (movementId) => api.delete(`/capital/movements/${movementId}`),
   cleanupDeleted: () => api.post('/capital/movements/cleanup-deleted'),
   setFounding: (amount) => api.put('/capital/founding', { amount }),
+  adjustFounding: (amount, type) => api.post('/capital/founding/adjust', { amount, type }),
 };
 
 // ==================== INSTALLMENTS (Vadeli Satış / Borç Takibi) ====================

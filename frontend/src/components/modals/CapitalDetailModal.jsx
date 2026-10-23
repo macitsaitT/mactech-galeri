@@ -15,6 +15,8 @@ const REASON_LABEL = {
   manual_deposit: 'Kasa Girişi',
   manual_withdrawal: 'Kasa Çıkışı',
   manual_set: 'Bakiye Düzenleme',
+  capital_increase: 'Sermaye Artırımı',
+  capital_decrease: 'Sermaye Azaltımı',
   capital_initialize: 'İlk Kurulum',
   transaction_create: 'İşlem',
   transaction_update: 'İşlem Güncelleme',

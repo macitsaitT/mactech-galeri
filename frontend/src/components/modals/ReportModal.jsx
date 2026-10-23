@@ -317,8 +317,8 @@ const ReportModal = ({ isOpen, onClose }) => {
       const d = (m.created_at || '').slice(0, 10);
       return d && d >= yStart && d <= yEnd;
     });
-    const manualInflow = yearMovements.filter(m => m.reason === 'manual_deposit' || m.reason === 'capital_initialize').reduce((s, m) => s + Math.max(0, Number(m.delta || 0)), 0);
-    const manualOutflow = yearMovements.filter(m => m.reason === 'manual_withdrawal').reduce((s, m) => s + Math.abs(Number(m.delta || 0)), 0);
+    const manualInflow = yearMovements.filter(m => m.reason === 'manual_deposit' || m.reason === 'capital_initialize' || m.reason === 'capital_increase').reduce((s, m) => s + Math.max(0, Number(m.delta || 0)), 0);
+    const manualOutflow = yearMovements.filter(m => m.reason === 'manual_withdrawal' || m.reason === 'capital_decrease').reduce((s, m) => s + Math.abs(Number(m.delta || 0)), 0);
 
     return {
       year: yearendYear,
@@ -673,6 +673,8 @@ const ReportModal = ({ isOpen, onClose }) => {
                             manual_deposit: 'Kasa Girişi',
                             manual_withdrawal: 'Kasa Çıkışı',
                             manual_set: 'Bakiye Düzenleme',
+                            capital_increase: 'Sermaye Artırımı',
+                            capital_decrease: 'Sermaye Azaltımı',
                             capital_initialize: 'İlk Kurulum',
                             transaction_create: 'İşlem',
                             transaction_update: 'Güncelleme',

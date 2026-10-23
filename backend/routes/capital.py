@@ -100,6 +100,44 @@ async def set_founding_capital(body: FoundingCapitalSet, current_user: dict = De
     return {"ok": True, "founding_capital": float(body.amount)}
 
 
+class FoundingCapitalAdjust(BaseModel):
+    amount: float = Field(..., gt=0)
+    type: Literal["increase", "decrease"]
+    description: Optional[str] = ""
+
+
+@router.post("/capital/founding/adjust")
+async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dict = Depends(get_current_user)):
+    """Sermaye artırımı/azaltımı — başlangıç sermayesi ve kasa aynı tutarda değişir."""
+    _require_finance_role(current_user)
+    org_id = current_user.get("org_id", current_user["user_id"])
+    doc = await db.org_settings.find_one({"org_id": org_id}, {"_id": 0, "founding_capital": 1})
+    current = float((doc or {}).get("founding_capital", 0) or 0)
+    amount = float(body.amount)
+    if body.type == "decrease" and amount > current:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Azaltılacak tutar mevcut sermayeden (₺{current:,.2f}) büyük olamaz.",
+        )
+    is_inc = body.type == "increase"
+    label = "Sermaye artırımı" if is_inc else "Sermaye azaltımı"
+    await apply_delta(
+        org_id,
+        amount if is_inc else -amount,
+        reason="capital_increase" if is_inc else "capital_decrease",
+        ref_type="manual",
+        description=body.description or f"{label}: ₺{amount:,.2f}",
+        user_id=current_user.get("user_id"),
+    )
+    new_value = current + amount if is_inc else current - amount
+    await db.org_settings.update_one(
+        {"org_id": org_id},
+        {"$set": {"founding_capital": new_value, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"ok": True, "founding_capital": new_value}
+
+
 @router.post("/capital/adjust")
 async def adjust_capital(body: CapitalAdjust, current_user: dict = Depends(get_current_user)):
     """Manuel kasa girişi (deposit) veya çıkışı (withdrawal)."""
