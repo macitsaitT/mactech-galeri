@@ -7,7 +7,7 @@ from db import db
 from auth import get_current_user
 from models import TransactionCreate, Transaction
 from helpers import build_data_filter, log_activity
-from capital_service import apply_delta, sync_founding_from_tx
+from capital_service import apply_delta, sync_founding_from_tx, CAPITAL_CATEGORIES, CAPITAL_INCREASE_CATEGORY
 
 router = APIRouter()
 
@@ -160,6 +160,11 @@ async def update_transaction(transaction_id: str, updates: dict, current_user: d
     new_doc = {**existing, **updates}
     new_delta = _tx_delta(new_doc) if not new_doc.get("deleted") else 0
     net_delta = new_delta - old_delta
+    founding_delta = (new_delta if new_doc.get("category") in CAPITAL_CATEGORIES else 0) - (
+        old_delta if existing.get("category") in CAPITAL_CATEGORIES else 0
+    )
+    if founding_delta:
+        await sync_founding_from_tx(org_id, {"category": CAPITAL_INCREASE_CATEGORY}, founding_delta)
     if net_delta != 0:
         await apply_delta(
             org_id, net_delta,
@@ -169,7 +174,6 @@ async def update_transaction(transaction_id: str, updates: dict, current_user: d
             allow_negative=True,
             user_id=current_user["user_id"],
         )
-        await sync_founding_from_tx(org_id, new_doc, net_delta)
         # ✅ Uygulandıysa flag ayarla
         updates["capital_applied"] = True
 
@@ -242,7 +246,7 @@ async def delete_transaction(transaction_id: str, permanent: bool = False, curre
     else:
         await db.transactions.update_one(
             {"id": transaction_id},
-            {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat(), "capital_applied": False}},
+            {"$set": {"deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat(), "capital_applied": False, "capital_reverted": bool(was_active)}},
         )
     await log_activity(
         db, current_user=current_user,
@@ -261,8 +265,9 @@ async def restore_transaction(transaction_id: str, current_user: dict = Depends(
     if not existing:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    # ✅ Restore edildiğinde kasa hareketini yeniden uygula
-    if existing.get("capital_applied") and existing.get("deleted"):
+    # ✅ Restore edildiğinde (silinirken kasadan geri alındıysa) kasa hareketini yeniden uygula
+    restore_updates = {"deleted": False, "deleted_at": None}
+    if existing.get("deleted") and existing.get("capital_reverted"):
         delta = _tx_delta(existing)
         await apply_delta(
             org_id, delta,
@@ -272,6 +277,8 @@ async def restore_transaction(transaction_id: str, current_user: dict = Depends(
             allow_negative=True,
             user_id=current_user["user_id"],
         )
+        await sync_founding_from_tx(org_id, existing, delta)
+        restore_updates.update({"capital_applied": True, "capital_reverted": False})
 
-    await db.transactions.update_one({"id": transaction_id}, {"$set": {"deleted": False, "deleted_at": None}})
+    await db.transactions.update_one({"id": transaction_id}, {"$set": restore_updates})
     return await db.transactions.find_one({"id": transaction_id}, {"_id": 0})

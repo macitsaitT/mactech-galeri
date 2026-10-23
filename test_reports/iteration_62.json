@@ -1,0 +1,34 @@
+{
+  "summary": "Iter62: Tested the 'capital changes must affect everywhere' fix. Backend: 6 of 7 pytest cases pass. Increase, decrease and set each create a Sermaye Artırımı/Azaltımı transaction. founding, cash, equity and total assets change by the delta; operating_expense_period and net_profit stay unchanged. Permanent delete of the tx reverts both founding and cash, and so does DELETE /capital/movements/{id} for reason capital_increase. One failure: restore after soft delete re-applies neither cash nor founding. UI (1920x1080) all PASS: Artır 100k updates all 4 cards (+100k) while Dönem İşletme Gideri stays ₺0 and Net Kâr stays ₺240.000. Without a page refresh, Gelir & Gider shows the row (Gelir ₺100.000, Net ₺100.000). After Azalt 30k it shows Gider ₺30.000 / Net ₺70.000 and the dashboard drops by 30k. Yıl Sonu Devri shows year-income ₺100.000 and year-expense ₺30.000. Yeni Tutar 10.080.000 creates a +10.000 tx. Deleting all 3 rows from Gelir & Gider brings the dashboard back to founding ₺10.000.000 / cash ₺145.000. Final state verified via API.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/transactions/{id}/restore", "issue": "Restore does not re-apply cash. Soft delete sets capital_applied=False, but restore only re-applies when capital_applied AND deleted, so the branch never runs (this affects all tx types and existed before this change). Restore also never calls sync_founding_from_tx. Result: a restored Sermaye Artırımı shows up in Gelir & Gider, but cash and founding capital stay unchanged, so the data is inconsistent."},
+      {"endpoint": "PUT /api/transactions/{id}", "issue": "If a capital tx's category is edited to a non-capital category, sync_founding_from_tx checks the NEW category, so the founding_capital share is never reversed. Edge case."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Gelir & Gider", "issues": ["The Gelir/Gider/Net summary cards have no data-testid (minor testability gap)"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter62_capital_everywhere.py", "/app/test_reports/pytest/pytest_iter62.xml"],
+  "action_items": [
+    "Fix restore_transaction: soft delete sets capital_applied=False, so restore should re-apply when deleted is True and capital_applied is False (or store a separate flag), then set capital_applied=True and call sync_founding_from_tx(org_id, tx, delta).",
+    "Optional: in update_transaction, when the category moves into or out of CAPITAL_CATEGORIES, sync founding using the old and new docs separately.",
+    "Optional: add data-testid to the FinancePage Gelir/Gider/Net totals."
+  ],
+  "critical_code_review_comments": [
+    "restore_transaction condition `capital_applied and deleted` can never be true after the soft delete in delete_transaction, which sets capital_applied False.",
+    "adjust_founding_capital: decrease/set uses apply_delta without allow_negative. A decrease larger than cash returns 400 insufficient_capital even when founding capital is high enough. This is probably intended, but the modal should show that message clearly."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter62_capital_everywhere.py"],
+  "success_rate": {"backend": "86% (6/7)", "frontend": "100%"},
+  "test_credentials": "test_branch_6b287ede@test.com / Password123! (admin)",
+  "seed_data_creation": "None left behind. All test capital txs were permanently deleted. Final state: founding 10.000.000 / cash 145.000 / 0 transactions.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "The org has 0 transactions and 7 cars (5 in stock, 2 sold), net_profit 240000. nav testids are nav-dashboard, nav-finance and nav-year-end. FinancePage delete uses window.confirm, so accept dialogs. test_soft_delete_then_restore is expected to fail until the restore fix lands."
+}

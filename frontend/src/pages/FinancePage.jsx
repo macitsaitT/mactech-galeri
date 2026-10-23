@@ -127,7 +127,7 @@ const FinancePage = () => {
             </div>
             <span className="text-muted-foreground text-sm">Gelir</span>
           </div>
-          <p className="font-heading font-bold text-2xl text-success tabular-nums">
+          <p className="font-heading font-bold text-2xl text-success tabular-nums" data-testid="finance-total-income">
             {formatCurrency(totals.income)}
           </p>
         </div>
@@ -139,7 +139,7 @@ const FinancePage = () => {
             </div>
             <span className="text-muted-foreground text-sm">Gider</span>
           </div>
-          <p className="font-heading font-bold text-2xl text-destructive tabular-nums">
+          <p className="font-heading font-bold text-2xl text-destructive tabular-nums" data-testid="finance-total-expense">
             {formatCurrency(totals.expense)}
           </p>
         </div>
@@ -151,7 +151,7 @@ const FinancePage = () => {
             </div>
             <span className="text-muted-foreground text-sm">Net</span>
           </div>
-          <p className={`font-heading font-bold text-2xl tabular-nums ${totals.net >= 0 ? 'text-primary' : 'text-destructive'}`}>
+          <p className={`font-heading font-bold text-2xl tabular-nums ${totals.net >= 0 ? 'text-primary' : 'text-destructive'}`} data-testid="finance-total-net">
             {formatCurrency(totals.net)}
           </p>
         </div>
