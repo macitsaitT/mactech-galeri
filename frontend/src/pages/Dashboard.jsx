@@ -496,7 +496,7 @@ const Dashboard = ({ onOpenReport }) => {
           totalIncome={totalIncome}
           stockInvestmentInExpense={stockInvestmentInExpense}
           operatingExpense={operatingExpense}
-          netProfit={netProfit}
+          netProfit={netProfit + Number(financeSummary?.other_income_period || 0)}
         />
       )}
 

@@ -1,0 +1,36 @@
+{
+  "summary": "Iter64: Tested auto-filling founding capital for legacy accounts and adding non-vehicle income to profit and equity. Backend: 5/5 pytest pass (test_iter64_auto_founding_other_income.py). (1) The baseline matches: founding 1.005.000 (auto), cash 145.000, stock 1.100.000, assets 1.245.000, equity 1.245.000, net profit 240.000. (2) Legacy simulation (founding 0, founding_defined/founding_auto unset): founding = assets − retained earnings, equity == assets, founding_auto=true, and the value persists to Mongo and is stable on the 2nd call. (3) Komisyon 20k gives cash/assets/equity/net_profit +20k each, other_income_period +20k and founding unchanged. Permanent delete reverts everything. (4) Kapora 5k does not change net_profit or other_income. Cash rises 5k but equity does not. (5) founding/adjust increase 100k sets founding_auto=false and raises founding/cash/equity/assets by 100k with net profit unchanged. Deleting the Sermaye Artırımı tx reverts. UI 1920x1080, all PASS: the founding card subtitle is 'Eski kayıtlardan otomatik hesaplandı' and the set-founding banner is absent. Adding Komisyon via Genel İşlem modal (income cats: Komisyon, Diğer Gelir) gives dashboard 1.005.000 / 1.265.000 / 165.000 / Net Kâr 260.000 '2 satış · ₺20.000 diğer gelir' / 1.265.000. The row shows in Gelir & Gider (Gelir ₺20.000). Sermaye Düzenle → Artır 100k gives 1.105.000 'Sabit öz sermaye referansı' / 1.345.000 / 245.000 / 240.000 / 1.345.000 with toast 'Sermaye artırıldı'. Mobile 390x844: 2-col grid, cards 173px, scrollWidth 390, no overflow. Baseline restored and verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/finance/summary", "issue": "The auto-fill only saves when derived > 0. If total_assets <= retained earnings (e.g. heavy past profit with low current assets), founding stays 0 and the card shows '—' again with equity ≠ assets. Consider saving 0 with founding_defined=true or showing an explanation."},
+      {"endpoint": "GET /api/finance/summary", "issue": "A GET endpoint has a write side effect (one-time auto-fill of org_settings). It is acceptable but undocumented. Concurrent first calls are idempotent enough (same value)."},
+      {"endpoint": "Kapora income", "issue": "Kapora raises cash/total assets but not equity (correct: it is a liability). With no liability/Kapora card, equity ≠ total assets will reappear while deposits are open, which is the same perceived inconsistency the user complained about. Consider a subtitle such as 'X₺ kapora (emanet)' on Toplam Varlık or Kasa."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "CashFlowVisual (Dashboard 'Dönem Nakit Akışı')", "issue": "The header text 'Net Kâr (₺240.000) ≠ Kasa' uses Dashboard.jsx's local netProfit useMemo (car sales only). With a Komisyon tx it still showed ₺240.000 while the Net Kâr card showed ₺260.000. It should use summary.net_profit or add other income.", "selector": "pages/Dashboard.jsx:150 netProfit -> CashFlowVisual netProfit prop", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_iter64_auto_founding_other_income.py", "/app/test_reports/pytest/pytest_iter64.xml"],
+  "action_items": [
+    "Dashboard.jsx: make the CashFlowVisual netProfit consistent with summary.net_profit (include non-vehicle income).",
+    "Optional: handle the derived <= 0 case in the finance_summary auto-fill.",
+    "Optional: show open Kapora (liability) on the dashboard so that equity ≠ assets is explained."
+  ],
+  "critical_code_review_comments": [
+    "finance.py: NON_PROFIT_INCOME_CATEGORIES is defined between imports (line 21, before the expense_classifier import). It works, but move it below the imports for readability.",
+    "finance.py: other_income_period date filter uses string compare on t['date'] (YYYY-MM-DD). This is fine if all tx dates are ISO, but it breaks if any have a time component and end_date has no time.",
+    "capital.py: all founding writes set founding_auto=False, which is correct. Deleting the Sermaye Artırımı tx reverts founding but leaves founding_auto=false (expected, since the user touched capital)."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter64_auto_founding_other_income.py"],
+  "success_rate": {"backend": "100%", "frontend": "100% (1 low-priority display inconsistency)"},
+  "test_credentials": "test_branch_6b287ede@test.com / Password123!",
+  "seed_data_creation": "None persisted. Komisyon, Kapora and Sermaye Artırımı test txs were permanently deleted. Baseline restored: org_settings founding_capital=1005000, founding_defined=true, founding_auto=true; cash 145.000, equity 1.245.000.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "test_iter64 file restores the baseline at the end of test_capital_increase via direct Mongo (MONGO_URL/DB_NAME read from backend/.env). Sidebar nav: nav-dashboard, nav-finance. Use a normal click after login wait (a force click right after login sometimes did not navigate). Genel İşlem modal: quick-add-transaction → type-income-btn → transaction-category-select (label Komisyon) → transaction-amount-input → save-transaction-btn. Founding modal: edit-founding-btn → founding-mode-increase → founding-amount-input → founding-save-btn. On mobile use bottom-nav-dashboard."
+}

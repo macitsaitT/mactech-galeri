@@ -109,6 +109,7 @@ export const FinanceSummaryCards = ({ summary, onEditFounding, canEditFounding }
     sold_count_period = 0,
     other_income_period = 0,
     founding_auto = false,
+    open_deposits = 0,
   } = summary;
 
   const equityUp = equity_change >= 0;
@@ -193,7 +194,7 @@ export const FinanceSummaryCards = ({ summary, onEditFounding, canEditFounding }
           testId="card-total-assets"
           title="Toplam Varlık"
           value={formatCurrency(total_assets)}
-          subtitle="Nakit + Stok değeri"
+          subtitle={open_deposits > 0 ? `Nakit + Stok · ${formatCurrency(open_deposits)} kapora emanet` : 'Nakit + Stok değeri'}
           icon={Briefcase}
           accent="default"
         />

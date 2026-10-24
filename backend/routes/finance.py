@@ -179,13 +179,23 @@ async def get_finance_summary(
 
     # 9) Hesaplanmış kartlar
     total_assets = cash_balance + stock_value
+    # Açık kapora (satılmamış araçlar için alınan emanet) — borç kalemi, öz sermayeye dahil değil
+    unsold_ids = {c.get("id") for c in stock_cars}
+    deposit_txs = await db.transactions.find(
+        {"org_id": org_id, "deleted": {"$ne": True}, "car_id": {"$in": list(unsold_ids)},
+         "category": {"$in": ["Kapora", "Kapora Eklemesi", "Kapora İadesi"]}},
+        {"_id": 0, "amount": 1, "type": 1},
+    ).to_list(20000)
+    open_deposits = max(0.0, sum(
+        float(t.get("amount", 0) or 0) * (1 if t.get("type") == "income" else -1) for t in deposit_txs
+    ))
     retained_earnings = total_net_profit_all_time + other_income_all_time - total_operating_all_time
 
     # Sermaye hiç tanımlanmamışsa eski kayıtlardan bir kereye mahsus otomatik doldur:
-    # Başlangıç Sermayesi = Toplam Varlık − birikmiş kâr  →  Öz Sermaye = Toplam Varlık
+    # Başlangıç Sermayesi = Toplam Varlık − kapora emanet − birikmiş kâr  →  Öz Sermaye = Varlık − Borç
     founding_auto = bool(founding_doc.get("founding_auto"))
     if founding_capital <= 0 and not founding_doc.get("founding_defined"):
-        derived = round(total_assets - retained_earnings, 2)
+        derived = round(total_assets - open_deposits - retained_earnings, 2)
         if derived > 0:
             founding_capital = derived
             founding_auto = True
@@ -246,6 +256,7 @@ async def get_finance_summary(
         "other_income_period": round(other_income_period, 2),
         "other_income_all_time": round(other_income_all_time, 2),
         "founding_auto": founding_auto,
+        "open_deposits": round(open_deposits, 2),
         "vehicle_investment_period": round(vehicle_investment_period, 2),
         "loss_amount": round(loss_amount, 2),
         "profit_amount": round(profit_amount, 2),
