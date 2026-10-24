@@ -107,6 +107,8 @@ export const FinanceSummaryCards = ({ summary, onEditFounding, canEditFounding }
     equity_change = 0,
     equity_change_pct = 0,
     sold_count_period = 0,
+    other_income_period = 0,
+    founding_auto = false,
   } = summary;
 
   const equityUp = equity_change >= 0;
@@ -131,7 +133,7 @@ export const FinanceSummaryCards = ({ summary, onEditFounding, canEditFounding }
           value={showFoundingPlaceholder ? '—' : formatCurrency(founding_capital)}
           subtitle={showFoundingPlaceholder
             ? (canEditFounding ? '👆 Tanımlamak için tıkla' : 'Henüz tanımlanmadı')
-            : 'Sabit öz sermaye referansı'}
+            : founding_auto ? 'Eski kayıtlardan otomatik hesaplandı' : 'Sabit öz sermaye referansı'}
           icon={Landmark}
           accent="default"
           onEdit={canEditFounding ? onEditFounding : undefined}
@@ -178,9 +180,10 @@ export const FinanceSummaryCards = ({ summary, onEditFounding, canEditFounding }
           testId="card-net-profit"
           title={profitUp ? 'Net Kâr' : 'Net Zarar'}
           value={formatCurrency(net_profit)}
-          subtitle={sold_count_period > 0
-            ? `${sold_count_period} satış · brüt kâr−maliyet`
-            : 'Sadece satılan araçlardan'}
+          subtitle={[
+            sold_count_period > 0 ? `${sold_count_period} satış` : null,
+            other_income_period > 0 ? `${formatCurrency(other_income_period)} diğer gelir` : null,
+          ].filter(Boolean).join(' · ') || 'Araç satışı + diğer gelirler'}
           icon={profitUp ? TrendingUp : TrendingDown}
           accent={profitUp ? 'profit' : 'loss'}
         />

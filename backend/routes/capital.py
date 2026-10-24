@@ -95,7 +95,7 @@ async def set_founding_capital(body: FoundingCapitalSet, current_user: dict = De
     org_id = current_user.get("org_id", current_user["user_id"])
     await db.org_settings.update_one(
         {"org_id": org_id},
-        {"$set": {"founding_capital": float(body.amount), "updated_at": datetime.now(timezone.utc).isoformat()}},
+        {"$set": {"founding_capital": float(body.amount), "founding_defined": True, "founding_auto": False, "updated_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True,
     )
     return {"ok": True, "founding_capital": float(body.amount)}
@@ -118,7 +118,7 @@ async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dic
         # İlk tanımlama: para zaten kasada (eski kayıtlar), kasaya tekrar eklenmez
         await db.org_settings.update_one(
             {"org_id": org_id},
-            {"$set": {"founding_capital": float(body.amount), "founding_defined": True, "updated_at": datetime.now(timezone.utc).isoformat()}},
+            {"$set": {"founding_capital": float(body.amount), "founding_defined": True, "founding_auto": False, "updated_at": datetime.now(timezone.utc).isoformat()}},
             upsert=True,
         )
         return {"ok": True, "founding_capital": float(body.amount), "initial": True}
@@ -156,7 +156,7 @@ async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dic
         })
         await db.org_settings.update_one(
             {"org_id": org_id},
-            {"$inc": {"founding_capital": delta}, "$set": {"founding_defined": True, "updated_at": now.isoformat()}},
+            {"$inc": {"founding_capital": delta}, "$set": {"founding_defined": True, "founding_auto": False, "updated_at": now.isoformat()}},
             upsert=True,
         )
     new_value = current + delta

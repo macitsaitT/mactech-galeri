@@ -16,7 +16,9 @@ from typing import Optional
 
 from db import db
 from auth import get_current_user
-from capital_service import get_capital
+from capital_service import get_capital, CAPITAL_CATEGORIES
+
+NON_PROFIT_INCOME_CATEGORIES = {"Araç Satışı", "Kapora", "Kapora Eklemesi"} | CAPITAL_CATEGORIES
 from services.expense_classifier import classify_expense, VEHICLE_COST_CATEGORIES
 
 router = APIRouter()
@@ -52,9 +54,9 @@ async def get_finance_summary(
 
     # 1) Başlangıç Sermayesi
     founding_doc = await db.org_settings.find_one(
-        {"org_id": org_id}, {"_id": 0, "founding_capital": 1}
-    )
-    founding_capital = float((founding_doc or {}).get("founding_capital", 0) or 0)
+        {"org_id": org_id}, {"_id": 0, "founding_capital": 1, "founding_defined": 1, "founding_auto": 1}
+    ) or {}
+    founding_capital = float(founding_doc.get("founding_capital", 0) or 0)
 
     # 2) Kasadaki Nakit
     cap = await get_capital(org_id)
@@ -69,6 +71,18 @@ async def get_finance_summary(
         {"org_id": org_id, "type": "expense", "deleted": {"$ne": True}},
         {"_id": 0},
     ).to_list(50000)
+
+    # Araç satışı dışı gelirler (komisyon, kira, diğer) — kâra eklenir; kapora ve sermaye hareketleri hariç
+    income_txs = await db.transactions.find(
+        {"org_id": org_id, "type": "income", "deleted": {"$ne": True},
+         "category": {"$nin": list(NON_PROFIT_INCOME_CATEGORIES)}},
+        {"_id": 0, "amount": 1, "date": 1},
+    ).to_list(50000)
+    other_income_all_time = sum(float(t.get("amount", 0) or 0) for t in income_txs)
+    other_income_period = sum(
+        float(t.get("amount", 0) or 0) for t in income_txs
+        if not (start_date and end_date) or (t.get("date") and start_date <= t["date"] <= end_date)
+    )
 
     # Araç bazlı gider haritası
     tx_by_car: dict = {}
@@ -165,7 +179,25 @@ async def get_finance_summary(
 
     # 9) Hesaplanmış kartlar
     total_assets = cash_balance + stock_value
-    current_equity = founding_capital + total_net_profit_all_time - total_operating_all_time
+    retained_earnings = total_net_profit_all_time + other_income_all_time - total_operating_all_time
+
+    # Sermaye hiç tanımlanmamışsa eski kayıtlardan bir kereye mahsus otomatik doldur:
+    # Başlangıç Sermayesi = Toplam Varlık − birikmiş kâr  →  Öz Sermaye = Toplam Varlık
+    founding_auto = bool(founding_doc.get("founding_auto"))
+    if founding_capital <= 0 and not founding_doc.get("founding_defined"):
+        derived = round(total_assets - retained_earnings, 2)
+        if derived > 0:
+            founding_capital = derived
+            founding_auto = True
+            await db.org_settings.update_one(
+                {"org_id": org_id},
+                {"$set": {"founding_capital": derived, "founding_defined": True, "founding_auto": True,
+                          "updated_at": datetime.now(timezone.utc).isoformat()}},
+                upsert=True,
+            )
+
+    net_profit += other_income_period
+    current_equity = founding_capital + retained_earnings
 
     # 10) İşletme gideri kategori kırılımı (grafik için)
     operating_breakdown = {}
@@ -211,6 +243,9 @@ async def get_finance_summary(
         "operating_expense_period": round(operating_expense, 2),
         "total_operating_all_time": round(total_operating_all_time, 2),
         "total_net_profit_all_time": round(total_net_profit_all_time, 2),
+        "other_income_period": round(other_income_period, 2),
+        "other_income_all_time": round(other_income_all_time, 2),
+        "founding_auto": founding_auto,
         "vehicle_investment_period": round(vehicle_investment_period, 2),
         "loss_amount": round(loss_amount, 2),
         "profit_amount": round(profit_amount, 2),
