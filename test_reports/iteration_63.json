@@ -1,0 +1,32 @@
+{
+  "summary": "Iter63: Tested the first founding-capital definition on a legacy account (founding=0) plus regressions. Backend: 15/15 pytest pass (8 new in test_iter63_initial_founding.py, 7 from iter62 incl. soft delete -> restore, which now passes). UI 1920x1080, all PASS: with founding=0 the card shows '—', equity ₺240.000 and the banner 'Doğru muhasebe için → Başlangıç sermayenizi tanımlayın'. The modal opens with 'Yeni Tutar' active and the hint starting 'İlk tanımlama'. Saving 10.000.000 gives founding ₺10.000.000, equity ₺10.240.000, cash ₺145.000 (unchanged), total assets ₺1.245.000 (unchanged), banner removed, and no capital row in Gelir & Gider. After that the modal defaults to Artır with the normal hint. Artır 100k gives 10.100.000 / 10.340.000 / 245.000 / 1.345.000 and Gelir & Gider shows a 'Sermaye Artırımı' row (finance-total-income ₺100.000). Azalt 100k returns everything to baseline (Gider ₺100.000, Net ₺0). Yıl Sonu Devri shows 2 işlem, Gelir ₺100.000 and Gider ₺100.000. Deleting both rows in Gelir & Gider restores dashboard baseline. Mobile 390x844: 6 cards in a 2-column grid, no horizontal overflow (scrollWidth=390), and the modal fits (358px wide). Final state verified: founding 10.000.000, cash 145.000, no capital txs left.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/capital/founding/adjust (initial branch)", "issue": "The first definition writes no capital_movements or activity_log entry, so there is no audit trail of when or who defined capital."},
+      {"endpoint": "POST /api/capital/founding/adjust", "issue": "Edge case: 'Yeni Tutar 0' when cash >= founding creates a Sermaye Azaltımı and lowers cash. The next Artır is then treated as an 'initial definition' and does NOT add cash, which is inconsistent. Consider an explicit flag (e.g. founding_defined_at) instead of current<=0."},
+      {"endpoint": "POST /api/transactions/{id}/restore", "issue": "Restore now works via capital_reverted. Transactions soft-deleted BEFORE this fix lack the flag, so restoring them will not re-apply cash (legacy data only)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_iter63_initial_founding.py", "/app/backend/tests/test_iter62_capital_everywhere.py", "/app/backend/tests/iter63_helper.py", "/app/test_reports/pytest/pytest_iter63.xml"],
+  "action_items": [
+    "Optional: log a capital_movement/activity entry (amount, delta 0, reason 'founding_initial') for the first definition, for auditability.",
+    "Optional: replace the `current <= 0` initial-definition check with a persisted flag so that 'set 0 then Artır' adds cash correctly."
+  ],
+  "critical_code_review_comments": [
+    "capital.py adjust_founding_capital: the decrease/set path calls apply_delta without allow_negative. A decrease larger than cash returns 400 even when founding is larger (carried over from iter62; may be intentional).",
+    "transactions.py update_transaction: founding_delta now uses the old vs new category correctly, which fixes the iter62 edge case."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter63_initial_founding.py", "/app/backend/tests/iter63_helper.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "test_branch_6b287ede@test.com / Password123!",
+  "seed_data_creation": "None persisted. All TEST/capital txs were permanently deleted. Final state: founding 10.000.000, cash 145.000.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Auth is not a localStorage token (an in-browser fetch got 403). Use python requests with login for API setup (see iter63_helper.py: cleanup|zero|state). On mobile the app lands on Stok Araçlar; use [data-testid=bottom-nav-dashboard]. The sidebar nav uses nav-{id} (dashboard, finance, year-end). test_year_end_transfer.py and test_trash_softdelete_restore.py skip, because they use legacy creds/fixtures."
+}
