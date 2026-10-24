@@ -119,7 +119,11 @@ const FoundingCapitalModal = ({ isOpen, onClose, currentValue = 0, onSaved }) =>
 
         <div className="bg-ti-gold/5 border border-ti-gold/20 rounded-lg p-3 mb-4 flex gap-2">
           <Info size={14} className="text-ti-gold flex-shrink-0 mt-0.5" />
-          <p className="text-[12px] leading-relaxed text-muted-foreground" data-testid="founding-mode-hint">{MODE_HINT[mode]}</p>
+          <p className="text-[12px] leading-relaxed text-muted-foreground" data-testid="founding-mode-hint">
+            {currentValue <= 0 && mode !== 'decrease'
+              ? 'İlk tanımlama: Sermaye kaydedilir. Kasadaki mevcut paranız aynı kalır, öz sermaye ve tüm hesaplar buna göre güncellenir.'
+              : MODE_HINT[mode]}
+          </p>
         </div>
 
         <div className="space-y-4">

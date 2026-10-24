@@ -114,6 +114,14 @@ async def adjust_founding_capital(body: FoundingCapitalAdjust, current_user: dic
     org_id = current_user.get("org_id", current_user["user_id"])
     doc = await db.org_settings.find_one({"org_id": org_id}, {"_id": 0, "founding_capital": 1})
     current = float((doc or {}).get("founding_capital", 0) or 0)
+    if current <= 0 and body.type in ("set", "increase"):
+        # İlk tanımlama: para zaten kasada (eski kayıtlar), kasaya tekrar eklenmez
+        await db.org_settings.update_one(
+            {"org_id": org_id},
+            {"$set": {"founding_capital": float(body.amount), "updated_at": datetime.now(timezone.utc).isoformat()}},
+            upsert=True,
+        )
+        return {"ok": True, "founding_capital": float(body.amount), "initial": True}
     amount = float(body.amount)
     if body.type != "set" and amount <= 0:
         raise HTTPException(status_code=400, detail="Tutar sıfırdan büyük olmalı.")
